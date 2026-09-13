@@ -1,0 +1,463 @@
+{
+  "_meta": {
+    "description": "Orion RTM benchmark dataset — 30 curated requirement-test pairs for empirical evaluation.",
+    "label_distribution": {"Covered": 10, "Partial": 10, "Drifted": 10},
+    "created": "2026-09-13",
+    "engine": "Orion Hybrid (0.6*semantic + 0.4*structural)",
+    "embedding_model": "BAAI/bge-small-en-v1.5 via ONNX",
+    "source": "Synthetic SRS-style requirements paired with realistic pytest test snippets"
+  },
+  "pairs": [
+
+    {
+      "id": "P01",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-101",
+        "title": "API Response Time",
+        "description": "The REST API must respond to all read requests within 200 milliseconds under normal load (< 100 concurrent users)."
+      },
+      "test": {
+        "function_name": "test_api_response_within_200ms",
+        "docstring": "Verify that the API responds within the 200ms SLA under standard load.",
+        "source_code": "@traces('REQ-101')\ndef test_api_response_within_200ms(api_client, benchmark):\n    \"\"\"Verify that the API responds within the 200ms SLA under standard load.\"\"\"\n    start = time.time()\n    response = api_client.get('/api/v1/items')\n    elapsed_ms = (time.time() - start) * 1000\n    assert response.status_code == 200\n    assert elapsed_ms < 200, f'Response took {elapsed_ms:.1f}ms, expected < 200ms'"
+      }
+    },
+
+    {
+      "id": "P02",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-102",
+        "title": "User Authentication — JWT",
+        "description": "The system must authenticate users using JWT tokens. Tokens must expire after 24 hours. Failed authentication must return HTTP 401."
+      },
+      "test": {
+        "function_name": "test_jwt_authentication_and_expiry",
+        "docstring": "Test that JWT authentication returns 401 on invalid token and token expires after 24 hours.",
+        "source_code": "@traces('REQ-102')\ndef test_jwt_authentication_and_expiry(client, expired_token, valid_token):\n    \"\"\"Test that JWT authentication returns 401 on invalid token.\"\"\"\n    response = client.get('/protected', headers={'Authorization': f'Bearer {expired_token}'})\n    assert response.status_code == 401\n    response2 = client.get('/protected', headers={'Authorization': f'Bearer {valid_token}'})\n    assert response2.status_code == 200"
+      }
+    },
+
+    {
+      "id": "P03",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-103",
+        "title": "Data Persistence — PostgreSQL",
+        "description": "All user records must be persisted in PostgreSQL. No data loss must occur on application restart. Records must be retrievable by user_id."
+      },
+      "test": {
+        "function_name": "test_user_record_persists_across_restart",
+        "docstring": "Ensure user records survive application restart and are retrievable by user_id.",
+        "source_code": "@traces('REQ-103')\ndef test_user_record_persists_across_restart(db_session, sample_user):\n    \"\"\"Ensure user records survive application restart and are retrievable by user_id.\"\"\"\n    db_session.add(sample_user)\n    db_session.commit()\n    db_session.expire_all()\n    retrieved = db_session.get(User, sample_user.id)\n    assert retrieved is not None\n    assert retrieved.id == sample_user.id\n    assert retrieved.email == sample_user.email"
+      }
+    },
+
+    {
+      "id": "P04",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-104",
+        "title": "Password Complexity Policy",
+        "description": "Passwords must be at least 12 characters long, contain at least one uppercase letter, one digit, and one special character (!@#$%^&*)."
+      },
+      "test": {
+        "function_name": "test_password_complexity_requirements",
+        "docstring": "Validate password complexity policy: 12 chars, 1 uppercase, 1 digit, 1 special char.",
+        "source_code": "@traces('REQ-104')\ndef test_password_complexity_requirements(password_validator):\n    \"\"\"Validate password complexity: 12 chars, uppercase, digit, special char.\"\"\"\n    assert password_validator.is_valid('Short1!') is False\n    assert password_validator.is_valid('nouppercase1!longpass') is False\n    assert password_validator.is_valid('NoDigitSpecial!longpass') is False\n    assert password_validator.is_valid('ValidPass1!abcde') is True\n    assert len('ValidPass1!abcde') >= 12"
+      }
+    },
+
+    {
+      "id": "P05",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-105",
+        "title": "Rate Limiting",
+        "description": "The API must enforce rate limiting of no more than 100 requests per minute per authenticated user. Excess requests must return HTTP 429."
+      },
+      "test": {
+        "function_name": "test_rate_limiting_returns_429",
+        "docstring": "Confirm rate limiter blocks requests exceeding 100/min and returns 429.",
+        "source_code": "@traces('REQ-105')\ndef test_rate_limiting_returns_429(api_client, auth_headers):\n    \"\"\"Confirm rate limiter blocks after 100 requests and returns 429.\"\"\"\n    for i in range(100):\n        r = api_client.get('/api/v1/data', headers=auth_headers)\n        assert r.status_code == 200\n    overflow = api_client.get('/api/v1/data', headers=auth_headers)\n    assert overflow.status_code == 429"
+      }
+    },
+
+    {
+      "id": "P06",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-106",
+        "title": "File Upload Size Limit",
+        "description": "The system must reject file uploads larger than 10 MB. Uploads within the limit must succeed and return HTTP 201."
+      },
+      "test": {
+        "function_name": "test_file_upload_size_enforcement",
+        "docstring": "Verify 10MB file upload limit: rejects oversized files and accepts valid ones.",
+        "source_code": "@traces('REQ-106')\ndef test_file_upload_size_enforcement(api_client, auth_headers):\n    \"\"\"Verify 10MB upload limit is enforced.\"\"\"\n    small_file = create_file_bytes(size_mb=5)\n    r1 = api_client.post('/upload', data=small_file, headers=auth_headers)\n    assert r1.status_code == 201\n    big_file = create_file_bytes(size_mb=15)\n    r2 = api_client.post('/upload', data=big_file, headers=auth_headers)\n    assert r2.status_code == 413"
+      }
+    },
+
+    {
+      "id": "P07",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-107",
+        "title": "Audit Log Creation",
+        "description": "Every write operation (POST, PUT, DELETE) must create an immutable audit log entry containing: user_id, action, resource, and ISO 8601 timestamp."
+      },
+      "test": {
+        "function_name": "test_audit_log_created_on_write",
+        "docstring": "Ensure audit log entry is created with correct fields on POST/PUT/DELETE.",
+        "source_code": "@traces('REQ-107')\ndef test_audit_log_created_on_write(api_client, db_session, auth_headers):\n    \"\"\"Ensure audit log entry created with user_id, action, resource, timestamp.\"\"\"\n    r = api_client.post('/api/v1/items', json={'name': 'widget'}, headers=auth_headers)\n    assert r.status_code == 201\n    logs = db_session.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(1).all()\n    assert len(logs) == 1\n    assert logs[0].user_id is not None\n    assert logs[0].action == 'CREATE'\n    assert logs[0].resource == 'items'\n    assert logs[0].timestamp is not None"
+      }
+    },
+
+    {
+      "id": "P08",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-108",
+        "title": "Search Result Pagination",
+        "description": "All list endpoints must support pagination. Default page size must be 20 items. Maximum page size must not exceed 100 items."
+      },
+      "test": {
+        "function_name": "test_pagination_defaults_and_max",
+        "docstring": "Test that list endpoints paginate with default=20 and enforce max=100.",
+        "source_code": "@traces('REQ-108')\ndef test_pagination_defaults_and_max(api_client):\n    \"\"\"Test list pagination: default page size 20, max 100.\"\"\"\n    r = api_client.get('/api/v1/items')\n    assert r.status_code == 200\n    assert len(r.json()['items']) <= 20\n    r2 = api_client.get('/api/v1/items', params={'page_size': 50})\n    assert len(r2.json()['items']) <= 50\n    r3 = api_client.get('/api/v1/items', params={'page_size': 200})\n    assert len(r3.json()['items']) <= 100"
+      }
+    },
+
+    {
+      "id": "P09",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-109",
+        "title": "Cache TTL for Read Endpoints",
+        "description": "Frequently accessed read endpoints must cache responses with a TTL of 60 seconds. Subsequent requests within the TTL must return cached data."
+      },
+      "test": {
+        "function_name": "test_read_endpoint_caching_ttl",
+        "docstring": "Verify that read endpoint serves cached response within 60s TTL window.",
+        "source_code": "@traces('REQ-109')\ndef test_read_endpoint_caching_ttl(api_client, cache_mock):\n    \"\"\"Verify caching TTL is 60 seconds on read endpoints.\"\"\"\n    r1 = api_client.get('/api/v1/catalogue')\n    assert r1.status_code == 200\n    r2 = api_client.get('/api/v1/catalogue')\n    assert r2.status_code == 200\n    assert cache_mock.get_calls == 2\n    assert cache_mock.last_ttl == 60\n    assert r1.json() == r2.json()"
+      }
+    },
+
+    {
+      "id": "P10",
+      "ground_truth": "Covered",
+      "requirement": {
+        "id": "REQ-110",
+        "title": "TLS Enforcement",
+        "description": "All HTTP connections must be redirected to HTTPS. The system must reject plaintext HTTP requests with HTTP 301 redirect."
+      },
+      "test": {
+        "function_name": "test_http_redirects_to_https",
+        "docstring": "Test that plain HTTP requests are redirected to HTTPS with 301.",
+        "source_code": "@traces('REQ-110')\ndef test_http_redirects_to_https(http_client):\n    \"\"\"Verify plain HTTP is redirected to HTTPS with status 301.\"\"\"\n    response = http_client.get('http://api.example.com/v1/ping', allow_redirects=False)\n    assert response.status_code == 301\n    assert response.headers['Location'].startswith('https://')"
+      }
+    },
+
+    {
+      "id": "P11",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-111",
+        "title": "Email Notification on Failure",
+        "description": "The system must send email notifications within 5 minutes when a critical service failure occurs. Notification must include service name, error code, and ISO timestamp."
+      },
+      "test": {
+        "function_name": "test_email_sent_on_critical_failure",
+        "docstring": "Check that an email is sent when a service failure is detected.",
+        "source_code": "@traces('REQ-111')\ndef test_email_sent_on_critical_failure(mailer_mock, failure_event):\n    \"\"\"Check email is sent on critical failure.\"\"\"\n    trigger_failure(failure_event)\n    assert mailer_mock.sent_count == 1\n    assert mailer_mock.last_recipient is not None"
+      }
+    },
+
+    {
+      "id": "P12",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-112",
+        "title": "Database Connection Pool",
+        "description": "The database connection pool must maintain a minimum of 5 connections and a maximum of 50 connections. Connections must time out after 30 seconds of inactivity."
+      },
+      "test": {
+        "function_name": "test_db_connection_pool_initialized",
+        "docstring": "Check that the database connection pool is initialized correctly.",
+        "source_code": "@traces('REQ-112')\ndef test_db_connection_pool_initialized(db_engine):\n    \"\"\"Check DB pool is initialized.\"\"\"\n    pool = db_engine.pool\n    assert pool is not None\n    assert pool.size() >= 1"
+      }
+    },
+
+    {
+      "id": "P13",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-113",
+        "title": "Retry on Transient Errors",
+        "description": "HTTP client calls must automatically retry up to 3 times on transient errors (5xx, network timeouts). Retry delay must use exponential back-off starting at 1 second."
+      },
+      "test": {
+        "function_name": "test_http_client_retries_on_error",
+        "docstring": "Verify HTTP client retries on 5xx errors.",
+        "source_code": "@traces('REQ-113')\ndef test_http_client_retries_on_error(http_client_mock):\n    \"\"\"Verify HTTP client retries on server errors.\"\"\"\n    http_client_mock.configure_failures(count=2, status=503)\n    result = http_client_mock.get('/api/health')\n    assert result.status_code == 200\n    assert http_client_mock.call_count == 3"
+      }
+    },
+
+    {
+      "id": "P14",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-114",
+        "title": "Throughput Requirement",
+        "description": "The system must sustain at least 500 transactions per second (TPS) under peak load with no more than 1% error rate."
+      },
+      "test": {
+        "function_name": "test_system_handles_concurrent_requests",
+        "docstring": "Check that the system handles 100 concurrent requests without errors.",
+        "source_code": "@traces('REQ-114')\ndef test_system_handles_concurrent_requests(api_client):\n    \"\"\"Verify system handles concurrent requests.\"\"\"\n    import concurrent.futures\n    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as pool:\n        futures = [pool.submit(api_client.get, '/api/v1/ping') for _ in range(100)]\n        results = [f.result() for f in futures]\n    assert all(r.status_code == 200 for r in results)"
+      }
+    },
+
+    {
+      "id": "P15",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-115",
+        "title": "Session Timeout Policy",
+        "description": "User sessions must expire after 30 minutes of inactivity. The system must return HTTP 401 on expired session access and clear the session cookie."
+      },
+      "test": {
+        "function_name": "test_session_expires_eventually",
+        "docstring": "Test that sessions do expire after some time.",
+        "source_code": "@traces('REQ-115')\ndef test_session_expires_eventually(api_client, session_token):\n    \"\"\"Test that sessions expire after inactivity.\"\"\"\n    import time\n    time.sleep(2)\n    response = api_client.get('/api/dashboard', headers={'Cookie': f'session={session_token}'})\n    assert response.status_code in (200, 401)"
+      }
+    },
+
+    {
+      "id": "P16",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-116",
+        "title": "Data Encryption at Rest",
+        "description": "All PII fields (email, phone, address) must be encrypted at rest using AES-256. Encrypted values must not be readable in plain text from the database."
+      },
+      "test": {
+        "function_name": "test_user_email_field_is_stored",
+        "docstring": "Check that user data is stored in the database.",
+        "source_code": "@traces('REQ-116')\ndef test_user_email_field_is_stored(db_session, test_user):\n    \"\"\"Verify user record is persisted.\"\"\"\n    db_session.add(test_user)\n    db_session.commit()\n    stored = db_session.query(User).filter_by(id=test_user.id).first()\n    assert stored is not None\n    assert stored.email is not None"
+      }
+    },
+
+    {
+      "id": "P17",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-117",
+        "title": "Webhook Delivery Guarantee",
+        "description": "Webhooks must be delivered at-least-once with a maximum delivery time of 60 seconds. Failed deliveries must be retried up to 5 times with exponential back-off."
+      },
+      "test": {
+        "function_name": "test_webhook_is_delivered",
+        "docstring": "Test that webhook payloads are eventually delivered to the endpoint.",
+        "source_code": "@traces('REQ-117')\ndef test_webhook_is_delivered(webhook_service, mock_endpoint):\n    \"\"\"Verify webhook is delivered to endpoint.\"\"\"\n    webhook_service.trigger(event='order.created', payload={'id': 1})\n    assert mock_endpoint.received_count >= 1"
+      }
+    },
+
+    {
+      "id": "P18",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-118",
+        "title": "CPU Utilization Ceiling",
+        "description": "Under normal operating conditions the server CPU utilization must not exceed 70%. Autoscaling must trigger when CPU exceeds 80% for more than 60 seconds."
+      },
+      "test": {
+        "function_name": "test_server_cpu_is_reasonable",
+        "docstring": "Check that server CPU does not spike excessively during a load test.",
+        "source_code": "@traces('REQ-118')\ndef test_server_cpu_is_reasonable(load_generator, metrics_client):\n    \"\"\"Verify CPU doesn't spike unreasonably during moderate load.\"\"\"\n    load_generator.run(rps=50, duration_seconds=10)\n    avg_cpu = metrics_client.average_cpu_percent(last_seconds=10)\n    assert avg_cpu < 90"
+      }
+    },
+
+    {
+      "id": "P19",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-119",
+        "title": "GDPR Data Deletion",
+        "description": "On user deletion request, all PII data must be permanently deleted within 72 hours. A deletion receipt must be provided with a unique confirmation ID."
+      },
+      "test": {
+        "function_name": "test_user_deletion_removes_record",
+        "docstring": "Test that user deletion removes the user record from the database.",
+        "source_code": "@traces('REQ-119')\ndef test_user_deletion_removes_record(api_client, db_session, auth_headers, test_user):\n    \"\"\"Verify user record is deleted on DELETE request.\"\"\"\n    r = api_client.delete(f'/api/v1/users/{test_user.id}', headers=auth_headers)\n    assert r.status_code == 200\n    result = db_session.query(User).filter_by(id=test_user.id).first()\n    assert result is None"
+      }
+    },
+
+    {
+      "id": "P20",
+      "ground_truth": "Partial",
+      "requirement": {
+        "id": "REQ-120",
+        "title": "Health Check Endpoint",
+        "description": "A /health endpoint must respond within 50 milliseconds, return HTTP 200, and include component status for DB, cache, and message queue in a JSON payload."
+      },
+      "test": {
+        "function_name": "test_health_endpoint_returns_200",
+        "docstring": "Verify that the /health endpoint responds with HTTP 200.",
+        "source_code": "@traces('REQ-120')\ndef test_health_endpoint_returns_200(api_client):\n    \"\"\"Verify health check returns 200.\"\"\"\n    response = api_client.get('/health')\n    assert response.status_code == 200"
+      }
+    },
+
+    {
+      "id": "P21",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-121",
+        "title": "Login Attempt Lock-out",
+        "description": "After 5 consecutive failed login attempts the account must be locked for 15 minutes. Locked accounts must return HTTP 423."
+      },
+      "test": {
+        "function_name": "test_login_fails_with_wrong_password",
+        "docstring": "Test that login with wrong password returns an error.",
+        "source_code": "@traces('REQ-121')\ndef test_login_fails_with_wrong_password(api_client):\n    \"\"\"Test login failure with bad credentials.\"\"\"\n    response = api_client.post('/auth/login', json={'username': 'user', 'password': 'wrong'})\n    assert response.status_code == 401"
+      }
+    },
+
+    {
+      "id": "P22",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-122",
+        "title": "Vector Search Latency",
+        "description": "Semantic vector search over 1 million embeddings must complete in under 100 milliseconds at the 99th percentile. pgvector HNSW index must be used."
+      },
+      "test": {
+        "function_name": "test_database_query_runs",
+        "docstring": "Test that a database query completes without raising an exception.",
+        "source_code": "@traces('REQ-122')\ndef test_database_query_runs(db_session):\n    \"\"\"Test basic database query execution.\"\"\"\n    result = db_session.execute('SELECT 1').fetchone()\n    assert result is not None"
+      }
+    },
+
+    {
+      "id": "P23",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-123",
+        "title": "Zero-downtime Deployment",
+        "description": "Rolling deployments must achieve zero downtime. During deployment no request must receive HTTP 503. Health checks must pass within 30 seconds of pod startup."
+      },
+      "test": {
+        "function_name": "test_application_starts_up",
+        "docstring": "Verify the application can be instantiated without errors.",
+        "source_code": "@traces('REQ-123')\ndef test_application_starts_up(app_factory):\n    \"\"\"Test application initialisation does not raise.\"\"\"\n    app = app_factory()\n    assert app is not None"
+      }
+    },
+
+    {
+      "id": "P24",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-124",
+        "title": "Multi-factor Authentication",
+        "description": "Users must be required to complete MFA (TOTP or SMS) when logging in from a new device or IP address. MFA bypass must return HTTP 403."
+      },
+      "test": {
+        "function_name": "test_user_can_login",
+        "docstring": "Basic test that a user can log in with correct credentials.",
+        "source_code": "@traces('REQ-124')\ndef test_user_can_login(api_client, valid_user):\n    \"\"\"Test standard login flow with correct credentials.\"\"\"\n    r = api_client.post('/auth/login', json={'username': valid_user.username, 'password': valid_user.raw_password})\n    assert r.status_code == 200\n    assert 'access_token' in r.json()"
+      }
+    },
+
+    {
+      "id": "P25",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-125",
+        "title": "Backup and Recovery RTO",
+        "description": "Database backups must be taken every 6 hours. Recovery Time Objective (RTO) must not exceed 1 hour. Backups must be stored in a geographically separate region."
+      },
+      "test": {
+        "function_name": "test_configuration_file_exists",
+        "docstring": "Check that a configuration file is present.",
+        "source_code": "@traces('REQ-125')\ndef test_configuration_file_exists():\n    \"\"\"Check that config file is present in the project root.\"\"\"\n    import os\n    assert os.path.exists('config.yaml') or os.path.exists('.env')"
+      }
+    },
+
+    {
+      "id": "P26",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-126",
+        "title": "Memory Usage Ceiling",
+        "description": "The application heap must not exceed 512 MB under normal load. JVM/process GC pause must not exceed 200ms. Memory leaks must trigger alerts via Prometheus."
+      },
+      "test": {
+        "function_name": "test_module_import_succeeds",
+        "docstring": "Test that the core module can be imported.",
+        "source_code": "@traces('REQ-126')\ndef test_module_import_succeeds():\n    \"\"\"Test that the application module imports without error.\"\"\"\n    import app\n    assert app is not None"
+      }
+    },
+
+    {
+      "id": "P27",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-127",
+        "title": "Input Sanitization — XSS Prevention",
+        "description": "All user-supplied text inputs must be sanitized to prevent XSS attacks. HTML tags and JavaScript events must be stripped or escaped before storage."
+      },
+      "test": {
+        "function_name": "test_post_request_succeeds",
+        "docstring": "Test that a POST request with JSON body returns a success response.",
+        "source_code": "@traces('REQ-127')\ndef test_post_request_succeeds(api_client):\n    \"\"\"Verify POST endpoint accepts JSON.\"\"\"\n    r = api_client.post('/api/v1/items', json={'name': 'test item', 'value': 42})\n    assert r.status_code in (200, 201)"
+      }
+    },
+
+    {
+      "id": "P28",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-128",
+        "title": "CORS Policy",
+        "description": "CORS must only allow requests from whitelisted origins. Requests from non-whitelisted origins must be rejected with HTTP 403. The allowed origins list must be configurable via environment variable."
+      },
+      "test": {
+        "function_name": "test_api_returns_json",
+        "docstring": "Verify that the API returns a JSON response.",
+        "source_code": "@traces('REQ-128')\ndef test_api_returns_json(api_client):\n    \"\"\"Verify API endpoints return JSON content type.\"\"\"\n    r = api_client.get('/api/v1/status')\n    assert r.status_code == 200\n    assert r.headers.get('Content-Type', '').startswith('application/json')"
+      }
+    },
+
+    {
+      "id": "P29",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-129",
+        "title": "Graceful Shutdown",
+        "description": "On SIGTERM, the application must finish processing all in-flight requests within 30 seconds before shutting down. New requests must return HTTP 503 during shutdown."
+      },
+      "test": {
+        "function_name": "test_environment_variable_set",
+        "docstring": "Check that required environment variables are present.",
+        "source_code": "@traces('REQ-129')\ndef test_environment_variable_set():\n    \"\"\"Verify required env vars are set.\"\"\"\n    import os\n    assert os.environ.get('DATABASE_URL') is not None"
+      }
+    },
+
+    {
+      "id": "P30",
+      "ground_truth": "Drifted",
+      "requirement": {
+        "id": "REQ-130",
+        "title": "API Versioning",
+        "description": "The API must support versioned endpoints under /api/v{N}/ paths. Deprecated versions must respond with HTTP 410 Gone after the sunset date. Version negotiation must follow semantic versioning."
+      },
+      "test": {
+        "function_name": "test_list_endpoint_returns_list",
+        "docstring": "Verify that the list endpoint returns a list in the response body.",
+        "source_code": "@traces('REQ-130')\ndef test_list_endpoint_returns_list(api_client):\n    \"\"\"Check list endpoint returns a list.\"\"\"\n    r = api_client.get('/api/v1/items')\n    assert r.status_code == 200\n    assert isinstance(r.json(), (list, dict))"
+      }
+    }
+
+  ]
+}

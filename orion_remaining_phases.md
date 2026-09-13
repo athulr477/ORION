@@ -17,9 +17,9 @@ This document specifies the remaining phases, architecture, and manual action it
 | **Phase 6** | Requirement-Diff Tracking & Jira Changelog Parsing | **Done** | `scripts/verify_phase6.py` |
 | **Phase 7** | Evidence-Grounded LLM Verbalization (Ollama Llama 3.1 8B) | **Done** | `scripts/verify_phase7.py` |
 | **Phase 8** | Interactive Dashboard (React + Vite, RTM table, Heatmap, Slider) | **Done** | `scripts/verify_phase8.py` |
-| **Phase 9** | Real GitHub App Integration & Pull Request Check Runs | **Pending** | *Specification below* |
-| **Phase 10** | Benchmark Evaluation Framework (30-Pair Dataset vs Baselines) | **Pending** | *Specification below* |
-| **Phase 11** | Production Async Pipeline & Real Ingestion Connectors | **Pending** | *Specification below* |
+| **Phase 9** | Real GitHub App Integration & Pull Request Check Runs | **Done** | `scripts/verify_phase9.py` (30/30) |
+| **Phase 10** | Benchmark Evaluation Framework (30-Pair Dataset vs Baselines) | **Done** | `scripts/verify_phase10.py` (21/21) & `evaluation_report.md` |
+| **Phase 11** | Jira REST API Integration (ADF parser, JQL sync, drift alerts) | **Done** | `scripts/verify_jira_sync.py` (28/28) |
 
 ---
 
