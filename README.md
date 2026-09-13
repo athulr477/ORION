@@ -112,8 +112,8 @@ In a controlled benchmark on a 30-pair ground-truth dataset (10 Covered, 10 Part
 Clone the repository and install backend dependencies:
 
 ```powershell
-git clone https://github.com/your-org/orion.git
-cd ORION
+git clone https://github.com/your-username/orion.git
+cd orion
 
 # Create and activate virtual environment
 python -m venv .venv
@@ -129,24 +129,30 @@ Copy the example environment configuration and fill in your credentials:
 cp .env.example .env
 ```
 
-Your `.env` should contain:
+Your `.env` should contain (see `.env.example` for a full template):
 ```env
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/orion
-EMBEDDING_PROVIDER=onnx
-LLM_PROVIDER=ollama
-OLLAMA_BASE_URL=http://localhost:11434
+DATABASE_URL=postgresql+asyncpg://orion:your_password@localhost:5432/orion_db
+DATABASE_URL_SYNC=postgresql://orion:your_password@localhost:5432/orion_db
+
+# Webhook secrets (HMAC-SHA256)
+JIRA_WEBHOOK_SECRET=your-jira-webhook-secret
+GITHUB_WEBHOOK_SECRET=your-github-webhook-secret
 
 # GitHub App Integration
+# Create a GitHub App at github.com/settings/apps and install it on your repo.
 GITHUB_APP_ID=your_app_id
 GITHUB_APP_INSTALLATION_ID=your_installation_id
-GITHUB_APP_PRIVATE_KEY_PATH=D:\PROJECTS\ORION\github-app.pem
-GITHUB_WEBHOOK_SECRET=your_webhook_secret
+GITHUB_APP_PRIVATE_KEY_PATH=./secrets/github-app.pem
 
 # Jira Cloud Integration
 JIRA_BASE_URL=https://your-domain.atlassian.net
 JIRA_USER_EMAIL=your_email@domain.com
 JIRA_API_TOKEN=your_jira_api_token
-JIRA_PROJECT_KEY=SCRUM
+JIRA_PROJECT_KEY=YOUR_PROJECT_KEY
+
+# LLM Verbalization (optional — falls back to deterministic template)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
 ```
 
 ### 3. Start Database & Run Migrations
