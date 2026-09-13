@@ -1,0 +1,465 @@
+"""GitHub App webhook routes — Phase 9.
+
+Listens for pull_request events from GitHub.
+For each PR touching test files with @traces decorators, runs the
+Orion hybrid risk engine end-to-end and reports a native GitHub Check Run.
+
+Endpoint:
+    POST /api/v1/github/events
+
+Flow:
+    1. Verify X-Hub-Signature-256 HMAC.
+    2. Filter: only process pull_request events with action in
+       [opened, synchronize, reopened]. Return 200 for all others.
+    3. Parse owner/repo/pull_number/head_sha from payload.
+    4. Resolve installation_id from payload (fallback to settings).
+    5. Get Installation Access Token.
+    6. Create in_progress Check Run → get check_run_id.
+    7. Fetch changed test files from the PR.
+    8. For each test file:
+       a. Fetch raw content from GitHub API.
+       b. Parse @traces decorators → requirement IDs.
+       c. Look up requirement in DB.
+       d. Extract code assertions + compute embedding.
+       e. Compute structural + semantic scores → classify.
+       f. Run Phase 7 verbalization for Partial/Drifted.
+    9. Aggregate: worst status wins (Drifted > Partial > Covered).
+    10. Complete Check Run with conclusion + markdown table.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import hmac
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from orion.analysis.risk_engine import classify
+from orion.analysis.structural_matcher import compute_structural_score
+from orion.config import settings
+from orion.database import get_session_context
+from orion.embedding.engine import cosine_similarity, embed_text
+from orion.embedding.text_builder import build_requirement_text, build_test_text
+from orion.extraction.code_extractor import extract_assertions
+from orion.extraction.requirement_extractor import extract_constraints
+from orion.github.auth import get_installation_token
+from orion.github.client import (
+    build_check_summary,
+    complete_check_run,
+    create_check_run,
+    fail_check_run,
+    fetch_file_content,
+    fetch_pr_files,
+)
+from orion.github.schemas import GitHubPRPayload
+from orion.ingestion.parsers import extract_test_functions
+from orion.models.requirement import Requirement
+from orion.models.test_case import TestCase
+from orion.models.traceability_matrix import TraceabilityMatrix, TraceabilityStatus
+from orion.verbalization.service import verbalize_entry
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/github", tags=["github"])
+
+# Actions that trigger a traceability analysis
+_ANALYSED_ACTIONS = {"opened", "synchronize", "reopened"}
+
+
+# ---------------------------------------------------------------------------
+# Signature verification helper (inline — avoids coupling to ingestion pkg)
+# ---------------------------------------------------------------------------
+
+async def _verify_github_signature_raw(request: Request) -> bytes:
+    """Read body and verify X-Hub-Signature-256.
+
+    Returns the raw body bytes so the caller can parse JSON separately.
+
+    Raises:
+        HTTPException 401: If signature is missing or invalid.
+    """
+    body = await request.body()
+    secret = settings.github_webhook_secret
+
+    raw_header = request.headers.get("X-Hub-Signature-256", "")
+    if not raw_header and secret:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing X-Hub-Signature-256 header",
+        )
+
+    if secret:
+        signature = raw_header.removeprefix("sha256=")
+        expected = hmac.new(
+            secret.encode("utf-8"),
+            body,
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(expected, signature):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid GitHub webhook signature",
+            )
+
+    return body
+
+
+# ---------------------------------------------------------------------------
+# Core analysis — runs in a background task
+# ---------------------------------------------------------------------------
+
+async def _analyse_pr(
+    owner: str,
+    repo: str,
+    pull_number: int,
+    head_sha: str,
+    installation_id: int,
+    check_run_id: int,
+    token: str,
+) -> None:
+    """Run the full Orion analysis for a PR and complete the GitHub Check Run.
+
+    This runs as a FastAPI BackgroundTask so the webhook endpoint can
+    return 202 Accepted immediately within GitHub's 10-second timeout.
+    """
+    results: list[dict] = []
+
+    try:
+        # ------------------------------------------------------------------
+        # Fetch changed test files
+        # ------------------------------------------------------------------
+        test_files = fetch_pr_files(owner, repo, pull_number, token)
+        if not test_files:
+            logger.info(
+                "PR #%d in %s/%s: no test files changed — skipping analysis",
+                pull_number, owner, repo,
+            )
+            conclusion, title, summary = build_check_summary([])
+            complete_check_run(owner, repo, check_run_id, conclusion, title, summary, token)
+            return
+
+        # ------------------------------------------------------------------
+        # For each test file, run the hybrid pipeline
+        # ------------------------------------------------------------------
+        async with get_session_context() as session:
+            for file_info in test_files:
+                filename = file_info["filename"]
+                logger.info("Analysing test file: %s", filename)
+
+                # Fetch raw file content from GitHub
+                try:
+                    file_content = fetch_file_content(owner, repo, filename, head_sha, token)
+                except Exception as exc:
+                    logger.warning("Could not fetch %s from GitHub: %s", filename, exc)
+                    continue
+
+                # Parse @traces decorators → test functions
+                functions = extract_test_functions(file_content)
+                if not functions:
+                    logger.info("No @traces decorators found in %s", filename)
+                    continue
+
+                for func_data in functions:
+                    for req_external_id in func_data.traced_requirements:
+                        result = await _classify_pair(
+                            session=session,
+                            req_external_id=req_external_id,
+                            func_data=func_data,
+                            file_path=filename,
+                        )
+                        if result:
+                            results.append(result)
+
+        # ------------------------------------------------------------------
+        # Aggregate & complete Check Run
+        # ------------------------------------------------------------------
+        conclusion, title, summary = build_check_summary(results)
+        complete_check_run(owner, repo, check_run_id, conclusion, title, summary, token)
+
+        logger.info(
+            "PR #%d in %s/%s: analysis complete — %d pairs, conclusion=%s",
+            pull_number, owner, repo, len(results), conclusion,
+        )
+
+    except Exception as exc:
+        logger.exception(
+            "Unhandled error analysing PR #%d in %s/%s",
+            pull_number, owner, repo,
+        )
+        fail_check_run(owner, repo, check_run_id, str(exc), token)
+
+
+async def _classify_pair(
+    session: AsyncSession,
+    req_external_id: str,
+    func_data,
+    file_path: str,
+) -> dict | None:
+    """Run the Orion hybrid classification pipeline for one requirement-test pair.
+
+    Args:
+        session: Async database session.
+        req_external_id: Requirement external ID from @traces decorator.
+        func_data: Parsed test function data (from ingestion/parsers.py).
+        file_path: File path within the repository.
+
+    Returns:
+        Dict with classification results, or None if the requirement is not found in DB.
+    """
+    # Look up the requirement in the database
+    stmt = (
+        select(Requirement)
+        .where(Requirement.external_id == req_external_id)
+    )
+    result = await session.execute(stmt)
+    requirement = result.scalar_one_or_none()
+
+    if requirement is None:
+        logger.warning(
+            "Requirement %s not found in DB — "
+            "it may need to be ingested first via /webhooks/jira",
+            req_external_id,
+        )
+        return None
+
+    # -----------------------------------------------------------------------
+    # Phase 3: Structural extraction (both sides)
+    # -----------------------------------------------------------------------
+    req_constraints = requirement.constraints_extracted
+    if req_constraints is None:
+        req_constraints = extract_constraints(requirement.description or "")
+        # Persist for future use
+        requirement.constraints_extracted = req_constraints
+        await session.flush()
+
+    code_assertions = extract_assertions(func_data.source_code)
+    assertions_dict = {"assertions": [a.__dict__ for a in code_assertions]}
+
+    # -----------------------------------------------------------------------
+    # Phase 4: Semantic embeddings
+    # -----------------------------------------------------------------------
+    req_embedding = requirement.embedding
+    if req_embedding is None:
+        req_text = build_requirement_text(requirement.title, requirement.description or "")
+        req_embedding = embed_text(req_text)
+        requirement.embedding = req_embedding
+        await session.flush()
+
+    test_text = build_test_text(
+        function_name=func_data.function_name,
+        docstring=func_data.docstring,
+        assertions_extracted=assertions_dict,
+    )
+    test_embedding = embed_text(test_text)
+
+    semantic_score = cosine_similarity(req_embedding, test_embedding)
+
+    # -----------------------------------------------------------------------
+    # Phase 5: Structural matching + hybrid classification
+    # -----------------------------------------------------------------------
+    structural_score = compute_structural_score(req_constraints, code_assertions)
+    risk_result = classify(semantic_score, structural_score)
+
+    # -----------------------------------------------------------------------
+    # Upsert into traceability_matrix
+    # -----------------------------------------------------------------------
+    test_external_id = f"{file_path}::{func_data.function_name}"
+
+    # Find or create the TestCase record
+    tc_stmt = select(TestCase).where(TestCase.external_id == test_external_id)
+    tc_result = await session.execute(tc_stmt)
+    test_case = tc_result.scalar_one_or_none()
+
+    if test_case is None:
+        import uuid
+        test_case = TestCase(
+            id=uuid.uuid4(),
+            external_id=test_external_id,
+            function_name=func_data.function_name,
+            file_path=file_path,
+            source_code=func_data.source_code,
+            docstring=func_data.docstring,
+            requirement_id=requirement.id,
+            assertions_extracted=assertions_dict,
+            embedding=test_embedding,
+        )
+        session.add(test_case)
+        await session.flush()
+    else:
+        test_case.source_code = func_data.source_code
+        test_case.docstring = func_data.docstring
+        test_case.requirement_id = requirement.id
+        test_case.assertions_extracted = assertions_dict
+        test_case.embedding = test_embedding
+        await session.flush()
+
+    # Find or upsert traceability matrix entry
+    tm_stmt = (
+        select(TraceabilityMatrix)
+        .options(
+            selectinload(TraceabilityMatrix.requirement),
+            selectinload(TraceabilityMatrix.test_case),
+        )
+        .where(
+            TraceabilityMatrix.requirement_id == requirement.id,
+            TraceabilityMatrix.test_case_id == test_case.id,
+        )
+    )
+    tm_result = await session.execute(tm_stmt)
+    entry = tm_result.scalar_one_or_none()
+
+    if entry is None:
+        import uuid
+        entry = TraceabilityMatrix(
+            id=uuid.uuid4(),
+            requirement_id=requirement.id,
+            test_case_id=test_case.id,
+        )
+        session.add(entry)
+
+    entry.semantic_score = risk_result.semantic_score
+    entry.structural_score = risk_result.structural_score
+    entry.risk_score = risk_result.risk_score
+    entry.confidence = risk_result.confidence
+    entry.status = TraceabilityStatus(risk_result.status)
+    await session.flush()
+
+    # -----------------------------------------------------------------------
+    # Phase 7: LLM verbalization for Partial/Drifted
+    # -----------------------------------------------------------------------
+    audit_summary: str | None = None
+    if risk_result.status in ("Partial", "Drifted"):
+        try:
+            # Attach loaded relationships for verbalization
+            entry.requirement = requirement
+            entry.test_case = test_case
+            audit_summary = await verbalize_entry(session, entry)
+        except Exception:
+            logger.warning(
+                "Verbalization failed for %s ↔ %s",
+                req_external_id, func_data.function_name,
+                exc_info=True,
+            )
+
+    await session.commit()
+
+    return {
+        "req_id": req_external_id,
+        "req_title": requirement.title,
+        "test_fn": func_data.function_name,
+        "file_path": file_path,
+        "status": risk_result.status,
+        "risk_score": risk_result.risk_score,
+        "semantic_score": risk_result.semantic_score,
+        "structural_score": risk_result.structural_score,
+        "audit_summary": audit_summary or entry.audit_summary,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Webhook endpoint
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/events",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Receive GitHub App webhook events (pull_request)",
+    description=(
+        "Accepts GitHub App webhook events. For pull_request events with "
+        "action=opened/synchronize/reopened, runs the Orion hybrid traceability "
+        "engine on changed test files and posts a GitHub Check Run result."
+    ),
+)
+async def github_app_events(
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> dict:
+    """Handle GitHub App webhook events.
+
+    Returns 202 Accepted immediately; analysis runs in the background
+    to stay within GitHub's 10-second webhook timeout.
+    """
+    # 1. Verify signature and read body
+    body = await _verify_github_signature_raw(request)
+
+    # 2. Check event type header
+    event_type = request.headers.get("X-GitHub-Event", "")
+    if event_type == "ping":
+        logger.info("GitHub App ping received — webhook is connected ✓")
+        return {"status": "pong"}
+
+    if event_type != "pull_request":
+        logger.debug("Ignoring GitHub event: %s", event_type)
+        return {"status": "ignored", "event": event_type}
+
+    # 3. Parse payload
+    import json
+    try:
+        raw = json.loads(body)
+        payload = GitHubPRPayload.model_validate(raw)
+    except Exception as exc:
+        logger.error("Failed to parse GitHub PR payload: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid payload: {exc}",
+        )
+
+    # 4. Filter by action
+    if payload.action not in _ANALYSED_ACTIONS:
+        logger.debug("Ignoring pull_request action: %s", payload.action)
+        return {"status": "ignored", "action": payload.action}
+
+    owner = payload.owner
+    repo = payload.repo
+    pull_number = payload.pull_number
+    head_sha = payload.head_sha
+
+    if not all([owner, repo, pull_number, head_sha]):
+        logger.error("Incomplete PR payload: owner=%s repo=%s pr=%s sha=%s",
+                     owner, repo, pull_number, head_sha)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Incomplete pull_request payload — missing owner/repo/number/sha",
+        )
+
+    # 5. Resolve installation ID (payload wins over settings)
+    installation_id = payload.installation_id or settings.github_app_installation_id
+
+    logger.info(
+        "PR #%d opened/synced in %s/%s @ %s (installation=%s)",
+        pull_number, owner, repo, head_sha[:8], installation_id,
+    )
+
+    # 6. Get installation token + create Check Run immediately
+    try:
+        token = get_installation_token(installation_id)
+        check_run_id = create_check_run(owner, repo, head_sha, token)
+    except Exception as exc:
+        logger.error("Failed to create Check Run: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Could not authenticate with GitHub: {exc}",
+        )
+
+    # 7. Enqueue background analysis
+    background_tasks.add_task(
+        _analyse_pr,
+        owner=owner,
+        repo=repo,
+        pull_number=pull_number,
+        head_sha=head_sha,
+        installation_id=installation_id,
+        check_run_id=check_run_id,
+        token=token,
+    )
+
+    return {
+        "status": "accepted",
+        "check_run_id": check_run_id,
+        "pr": pull_number,
+        "repo": f"{owner}/{repo}",
+    }
