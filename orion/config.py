@@ -34,5 +34,11 @@ class Settings(BaseSettings):
     github_app_installation_id: int = 0
     github_app_private_key_path: str = ""
 
+    # Phase 11 — Jira REST API Integration
+    jira_base_url: str = ""
+    jira_user_email: str = ""
+    jira_api_token: str = ""
+    jira_project_key: str = "SCRUM"
+
 
 settings = Settings()

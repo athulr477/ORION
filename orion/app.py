@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from orion.dashboard.routes import router as dashboard_router
 from orion.github.routes import router as github_router
 from orion.ingestion.routes import router as ingestion_router
+from orion.jira.routes import router as jira_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,7 +39,8 @@ app.add_middleware(
 # Mount routers
 app.include_router(ingestion_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
-app.include_router(github_router, prefix="/api/v1")  # Phase 9 — GitHub App
+app.include_router(github_router, prefix="/api/v1")   # Phase 9 — GitHub App
+app.include_router(jira_router, prefix="/api/v1")     # Phase 11 — Jira REST API
 
 
 @app.get("/health", tags=["system"])
