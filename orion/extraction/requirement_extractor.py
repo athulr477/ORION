@@ -69,6 +69,9 @@ _OPERATOR_PATTERNS: list[tuple[str, str]] = [
     (r"shall\s+not\s+exceed", "<="),
     (r"should\s+not\s+exceed", "<="),
     (r"cannot\s+exceed", "<="),
+    (r"not\s+to\s+exceed", "<="),       # FIX: 'not to exceed 500ms' — must appear before bare 'exceeds?'
+    (r"not\s+take\s+longer\s+than", "<="),  # FIX: 'should not take longer than 100ms'
+    (r"take\s+no\s+longer\s+than", "<="),
     (r"no\s+more\s+than", "<="),
     (r"no\s+greater\s+than", "<="),
     (r"no\s+longer\s+than", "<="),
@@ -164,10 +167,12 @@ def _extract_threshold_constraints(text: str) -> list[ConstraintData]:
     text_lower = text.lower()
 
     for pattern_str, operator in _OPERATOR_PATTERNS:
-        # Build regex: operator_pattern + optional words + number + optional unit
+        # Build regex: operator_pattern + optional article/filler word + number + optional unit
+        # FIX: allow an optional article (a/an/the) between the operator phrase and the number
+        # e.g. 'cannot exceed a 100ms threshold' — the 'a' was blocking the match
         full_pattern = (
             rf"({pattern_str})"
-            rf"\s+"
+            rf"\s+(?:a|an|the)?\s*"
             rf"({_NUMBER_PATTERN})"
             rf"\s*"
             rf"({_UNIT_PATTERN})?"
