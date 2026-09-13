@@ -16,7 +16,7 @@ Unlike conventional semantic retrieval approaches that evaluate traceability sol
 
 ## 🌟 Key Features
 
-* **Bi-Directional Jira Cloud Integration:** Syncs issues via JQL (`project = "SCRUM"`), recursively decodes complex Atlassian Document Format (ADF) payloads into plain text, and posts automated drift audit comments back onto tickets with duplicate suppression.
+* **Bi-Directional Jira Cloud Integration:** Syncs issues via JQL (`project = "YOUR_PROJECT_KEY"`), recursively decodes complex Atlassian Document Format (ADF) payloads into plain text, and posts automated drift audit comments back onto tickets with duplicate suppression.
 * **Native GitHub App Check Runs:** Authenticates using RS256 JWTs and installation access tokens to intercept Pull Request webhooks, evaluate traceability, and post native GitHub Check Runs with pass/neutral/fail statuses and line annotations.
 * **Dual-Sided Structural Extraction:**
   * **Requirement Constraints:** Regex & NLP extract quantitative boundaries (`<= 100ms`, `== 200`, `timeout > 5s`).
