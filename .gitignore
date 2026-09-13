@@ -27,3 +27,8 @@ Thumbs.db
 
 # Database
 pgdata/
+
+.env
+*.pem
+secrets/
+
