@@ -34,6 +34,7 @@ const COLUMNS = [
   { key: 'semantic_score', label: 'Semantic', sortable: true },
   { key: 'structural_score', label: 'Structural', sortable: true },
   { key: 'confidence', label: 'Confidence', sortable: true },
+  { key: 'actions', label: 'RBAC ACTION', sortable: false },
 ];
 
 /**
@@ -49,6 +50,9 @@ export default function MatrixTable({
   statusFilter,
   search,
   reclassifiedMap,
+  overrideMap = {},
+  currentUser,
+  onOverrideRisk,
   loading,
   onSort,
   onFilter,
@@ -57,6 +61,22 @@ export default function MatrixTable({
   onRowClick,
 }) {
   const [searchInput, setSearchInput] = useState(search || '');
+
+  const handleOverrideClick = (row) => {
+    const currentVal = overrideMap?.[row.id] ?? row.risk_score ?? 0.5;
+    const input = window.prompt(
+      `[RBAC Security Check: QA Lead Authorized]\n\nEnter overridden risk score (0.0 to 1.0) for ${row.requirement_external_id}:`,
+      String(currentVal)
+    );
+    if (input !== null) {
+      const parsed = parseFloat(input);
+      if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
+        onOverrideRisk?.(row.id, parsed);
+      } else {
+        alert('Invalid score. Please enter a numerical value between 0.0 and 1.0.');
+      }
+    }
+  };
 
   const handleSearchKeyDown = useCallback(
     (e) => {
@@ -150,6 +170,12 @@ export default function MatrixTable({
                 const newStatus = getNewStatus(row.id);
                 const displayStatus = newStatus || row.status;
                 const changed = newStatus && newStatus !== row.status;
+                const effectiveRiskScore =
+                  overrideMap?.[row.id] != null ? overrideMap[row.id] : row.risk_score;
+                const isOverridden = overrideMap?.[row.id] != null;
+                const isQALead =
+                  currentUser?.role?.includes('QA Lead') ||
+                  currentUser?.role?.includes('Administrator');
 
                 return (
                   <tr key={row.id} onClick={() => onRowClick(row)} id={`row-${row.id}`}>
@@ -163,10 +189,36 @@ export default function MatrixTable({
                     <td>
                       <StatusBadge status={displayStatus} changed={changed} />
                     </td>
-                    <td><ScoreCell value={row.risk_score} /></td>
+                    <td>
+                      <ScoreCell value={effectiveRiskScore} />
+                      {isOverridden && (
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: '10px',
+                            color: 'var(--accent-blue, #58a6ff)',
+                            marginTop: '2px',
+                          }}
+                        >
+                          Manual Override
+                        </span>
+                      )}
+                    </td>
                     <td><ScoreCell value={row.semantic_score} /></td>
                     <td><ScoreCell value={row.structural_score} /></td>
                     <td><ScoreCell value={row.confidence} /></td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      {/* RBAC Rule 2: Override button disabled for developers */}
+                      <button
+                        disabled={!isQALead}
+                        title={!isQALead ? 'Requires QA Lead permissions to override' : 'Override risk score'}
+                        className="pagination-btn"
+                        style={!isQALead ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+                        onClick={isQALead ? () => handleOverrideClick(row) : undefined}
+                      >
+                        {isQALead ? 'Override' : 'Locked'}
+                      </button>
+                    </td>
                   </tr>
                 );
               })

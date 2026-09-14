@@ -86,7 +86,7 @@ async def verify() -> bool:
             return False
 
         joined_req, joined_test = rows[0]
-        print(f"  ✓ Join returned 1 row:")
+        print("  ✓ Join returned 1 row:")
         print(f"    Requirement: {joined_req.external_id} — {joined_req.title}")
         print(f"    Test case:   {joined_test.function_name} ({joined_test.file_path})")
         print(f"    FK match:    {joined_test.requirement_id == joined_req.id}")
@@ -107,7 +107,7 @@ async def verify() -> bool:
         )
         session.add(tm)
         await session.flush()
-        print(f"  ✓ Traceability entry inserted:")
+        print("  ✓ Traceability entry inserted:")
         print(f"    semantic_score:   {tm.semantic_score}")
         print(f"    structural_score: {tm.structural_score}")
         print(f"    risk_score:       {tm.risk_score:.3f}")
@@ -134,7 +134,7 @@ async def verify() -> bool:
             return False
 
         r, t, m = rows[0]
-        print(f"  ✓ Full join returned 1 row:")
+        print("  ✓ Full join returned 1 row:")
         print(f"    {r.external_id} → {t.function_name} → {m.status.value} "
               f"(risk={m.risk_score:.3f})")
 

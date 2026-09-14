@@ -46,7 +46,7 @@ class _Repository(BaseModel):
     owner: _RepoOwner = Field(default_factory=_RepoOwner)
 
     @model_validator(mode="after")
-    def _infer_owner_from_full_name(self) -> "_Repository":
+    def _infer_owner_from_full_name(self) -> _Repository:
         """If owner.login is empty, derive it from full_name (e.g. 'org/repo')."""
         if not self.owner.login and "/" in self.full_name:
             self.owner.login = self.full_name.split("/")[0]

@@ -5,7 +5,7 @@ Revises: 001_pgvector
 Create Date: 2025-01-01 00:00:01.000000
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import pgvector.sqlalchemy
 import sqlalchemy as sa
@@ -14,9 +14,9 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "002_core_tables"
-down_revision: Union[str, None] = "001_pgvector"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "001_pgvector"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

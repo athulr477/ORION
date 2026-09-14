@@ -50,8 +50,11 @@ def adf_to_text(node: dict | str | None) -> str:
 # Internal recursive renderer
 # ---------------------------------------------------------------------------
 
-def _render_node(node: dict) -> str:
+def _render_node(node: dict, depth: int = 0, max_depth: int = 50) -> str:
     """Recursively render a single ADF node to text."""
+    if depth > max_depth:
+        return ""
+        
     node_type = node.get("type", "")
     content = node.get("content", [])
     text = node.get("text", "")
@@ -96,7 +99,7 @@ def _render_node(node: dict) -> str:
     # Block: paragraph
     # -----------------------------------------------------------------------
     if node_type == "paragraph":
-        inner = _render_children(content)
+        inner = _render_children(content, depth=depth + 1, max_depth=max_depth)
         return inner + "\n" if inner else "\n"
 
     # -----------------------------------------------------------------------
@@ -105,7 +108,7 @@ def _render_node(node: dict) -> str:
     if node_type == "heading":
         level = attrs.get("level", 1)
         prefix = "#" * level
-        inner = _render_children(content)
+        inner = _render_children(content, depth=depth + 1, max_depth=max_depth)
         return f"{prefix} {inner}\n"
 
     # -----------------------------------------------------------------------
@@ -115,7 +118,7 @@ def _render_node(node: dict) -> str:
         items = []
         for i, child in enumerate(content):
             marker = "-" if node_type == "bulletList" else f"{i + 1}."
-            item_text = _render_children(child.get("content", []))
+            item_text = _render_children(child.get("content", []), depth=depth + 1, max_depth=max_depth)
             items.append(f"{marker} {item_text.strip()}")
         return "\n".join(items) + "\n"
 
@@ -123,13 +126,13 @@ def _render_node(node: dict) -> str:
     # Block: listItem — just render children (parent handles markers)
     # -----------------------------------------------------------------------
     if node_type == "listItem":
-        return _render_children(content)
+        return _render_children(content, depth=depth + 1, max_depth=max_depth)
 
     # -----------------------------------------------------------------------
     # Block: blockquote
     # -----------------------------------------------------------------------
     if node_type == "blockquote":
-        inner = _render_children(content)
+        inner = _render_children(content, depth=depth + 1, max_depth=max_depth)
         quoted = "\n".join(f"> {line}" for line in inner.splitlines())
         return quoted + "\n"
 
@@ -138,7 +141,7 @@ def _render_node(node: dict) -> str:
     # -----------------------------------------------------------------------
     if node_type == "codeBlock":
         lang = attrs.get("language", "")
-        inner = _render_children(content)
+        inner = _render_children(content, depth=depth + 1, max_depth=max_depth)
         return f"```{lang}\n{inner}\n```\n"
 
     # -----------------------------------------------------------------------
@@ -152,7 +155,7 @@ def _render_node(node: dict) -> str:
     # -----------------------------------------------------------------------
     if node_type == "panel":
         panel_type = attrs.get("panelType", "info").upper()
-        inner = _render_children(content)
+        inner = _render_children(content, depth=depth + 1, max_depth=max_depth)
         lines = "\n".join(f"  {line}" for line in inner.strip().splitlines())
         return f"[{panel_type}]\n{lines}\n"
 
@@ -161,7 +164,7 @@ def _render_node(node: dict) -> str:
     # -----------------------------------------------------------------------
     if node_type in ("table", "tableRow", "tableCell", "tableHeader"):
         # Simplified: just render cell content separated by spaces
-        return _render_children(content) + " "
+        return _render_children(content, depth=depth + 1, max_depth=max_depth) + " "
 
     # -----------------------------------------------------------------------
     # Block: mediaSingle / media (images/attachments — skip or label)
@@ -173,14 +176,14 @@ def _render_node(node: dict) -> str:
     # -----------------------------------------------------------------------
     # Default: doc node and any unknown containers — recurse into children
     # -----------------------------------------------------------------------
-    return _render_children(content)
+    return _render_children(content, depth=depth + 1, max_depth=max_depth)
 
 
-def _render_children(content: list) -> str:
+def _render_children(content: list, depth: int = 0, max_depth: int = 50) -> str:
     """Render a list of child ADF nodes into a concatenated string."""
     if not content:
         return ""
-    parts = [_render_node(child) for child in content if isinstance(child, dict)]
+    parts = [_render_node(child, depth=depth, max_depth=max_depth) for child in content if isinstance(child, dict)]
     return "".join(parts)
 
 

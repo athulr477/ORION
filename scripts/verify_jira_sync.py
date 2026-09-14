@@ -21,9 +21,7 @@ Usage:
 from __future__ import annotations
 
 import io
-import json
 import sys
-import time
 
 # Windows-safe UTF-8 output
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
@@ -204,7 +202,7 @@ else:
             desc_preview = scrum1.description[:200].replace("\n", " ")
             print(f"  SCRUM-1 Desc     : {desc_preview}...")
         else:
-            print(f"  SCRUM-1 Desc     : (empty)")
+            print("  SCRUM-1 Desc     : (empty)")
     except Exception as exc:
         check("SCRUM-1 fetch", False, str(exc))
 
@@ -226,7 +224,7 @@ else:
             desc_preview = scrum2.description[:200].replace("\n", " ")
             print(f"  SCRUM-2 Desc     : {desc_preview}...")
         else:
-            print(f"  SCRUM-2 Desc     : (empty)")
+            print("  SCRUM-2 Desc     : (empty)")
     except Exception as exc:
         check("SCRUM-2 fetch", False, str(exc))
 
@@ -265,9 +263,9 @@ else:
 
     async def _test_db_upsert():
         from orion.database import get_session_context
+        from orion.ingestion.service import upsert_requirement
         from orion.jira.client import fetch_issue
         from orion.jira.routes import _enrich_requirement, _jira_issue_to_requirement_data
-        from orion.ingestion.service import upsert_requirement
 
         results = []
         try:

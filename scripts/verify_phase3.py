@@ -16,7 +16,6 @@ import textwrap
 from orion.extraction.code_extractor import extract_assertions, extract_assertions_from_file
 from orion.extraction.requirement_extractor import extract_constraints
 
-
 # ---------------------------------------------------------------------------
 # Sample test code (5 real-world-like test functions)
 # ---------------------------------------------------------------------------

@@ -18,7 +18,6 @@ import time
 from orion.embedding.engine import cosine_similarity, embed_text, embed_texts, get_embedding_dim
 from orion.embedding.text_builder import build_requirement_text, build_test_text
 
-
 # ---------------------------------------------------------------------------
 # Test data
 # ---------------------------------------------------------------------------

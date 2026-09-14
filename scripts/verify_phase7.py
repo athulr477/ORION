@@ -20,7 +20,6 @@ import sys
 from orion.verbalization.evidence import EvidenceTuple, build_evidence_tuple
 from orion.verbalization.llm_client import OllamaClient
 
-
 # ---------------------------------------------------------------------------
 # Test data — mock Partial/Drifted/Covered cases
 # ---------------------------------------------------------------------------
@@ -293,12 +292,12 @@ def main() -> None:
                     abs(evidence.risk_score - case["risk_score"]) < 0.001,
                 )
                 all_ok &= check(
-                    f"  Requirement summary non-empty",
+                    "  Requirement summary non-empty",
                     bool(evidence.requirement_summary),
                     f"'{evidence.requirement_summary[:60]}...'",
                 )
                 all_ok &= check(
-                    f"  Test summary non-empty",
+                    "  Test summary non-empty",
                     bool(evidence.test_summary),
                     f"'{evidence.test_summary[:60]}...'",
                 )
@@ -306,12 +305,12 @@ def main() -> None:
                 # Check delta for cases that have one
                 if case["requirement_delta"]:
                     all_ok &= check(
-                        f"  Delta summary non-empty",
+                        "  Delta summary non-empty",
                         bool(evidence.delta_summary),
                         f"'{evidence.delta_summary[:80]}...'",
                     )
                     all_ok &= check(
-                        f"  Delta change count > 0",
+                        "  Delta change count > 0",
                         evidence.delta_change_count > 0,
                         f"count={evidence.delta_change_count}",
                     )
@@ -326,15 +325,15 @@ def main() -> None:
             bool(prompt_context),
         )
         all_ok &= check(
-            f"  Prompt context contains status",
+            "  Prompt context contains status",
             evidence.status in prompt_context,
         )
         all_ok &= check(
-            f"  Prompt context contains risk_score",
+            "  Prompt context contains risk_score",
             str(round(evidence.risk_score, 4)) in prompt_context,
         )
         all_ok &= check(
-            f"  Prompt context contains requirement summary",
+            "  Prompt context contains requirement summary",
             evidence.requirement_title in prompt_context,
         )
         print(f"\n  Prompt context for {evidence.requirement_id}:")
@@ -353,7 +352,7 @@ def main() -> None:
         )
         # Verify it's a proper sentence (ends with period)
         all_ok &= check(
-            f"  Fallback ends with period",
+            "  Fallback ends with period",
             fallback.endswith("."),
         )
 
@@ -365,7 +364,7 @@ def main() -> None:
         try:
             json_str = json.dumps(evidence_dict, indent=2)
             all_ok &= check(
-                f"  Evidence serializes to valid JSON",
+                "  Evidence serializes to valid JSON",
                 True,
                 f"{len(json_str)} bytes",
             )
@@ -420,7 +419,7 @@ def main() -> None:
 
                 # Basic sanity checks on the generated sentence
                 all_ok &= check(
-                    f"  Sentence is non-empty and under 500 chars",
+                    "  Sentence is non-empty and under 500 chars",
                     0 < len(response.text) < 500,
                     f"len={len(response.text)}",
                 )
@@ -428,7 +427,7 @@ def main() -> None:
                 print(f"    Error: {response.error}")
     else:
         print("\n  ⚠ Ollama is not available — testing fallback path only")
-        print(f"    (Start Ollama and pull the model to test LLM generation)")
+        print("    (Start Ollama and pull the model to test LLM generation)")
         print(f"    (Run: ollama pull {client.model})\n")
 
         all_ok &= check(

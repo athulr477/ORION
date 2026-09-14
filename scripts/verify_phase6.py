@@ -19,7 +19,6 @@ import sys
 
 from orion.analysis.delta_parser import parse_changelog_to_delta
 
-
 # ---------------------------------------------------------------------------
 # Test scenarios
 # ---------------------------------------------------------------------------
@@ -219,7 +218,7 @@ def main() -> None:
         )
 
     # === Serialization check ===
-    print(f"\n--- Serialization Check ---")
+    print("\n--- Serialization Check ---")
     test_delta = parse_changelog_to_delta(
         changelog_items=[{
             "field": "description",
@@ -251,7 +250,7 @@ def main() -> None:
     )
 
     # === Timestamp check ===
-    print(f"\n--- Timestamp Check ---")
+    print("\n--- Timestamp Check ---")
     all_ok &= check(
         "changed_at is a non-empty ISO timestamp",
         bool(test_delta.changed_at) and "T" in test_delta.changed_at,

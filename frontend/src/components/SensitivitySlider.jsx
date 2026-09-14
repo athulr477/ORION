@@ -11,11 +11,16 @@ export default function SensitivitySlider({
   driftedDefault = 0.4,
   onReclassify,
   loading = false,
+  currentUser,
 }) {
   const [covered, setCovered] = useState(coveredDefault);
   const [drifted, setDrifted] = useState(driftedDefault);
   const [changedCount, setChangedCount] = useState(null);
   const debounceRef = useRef(null);
+
+  const isQALead =
+    currentUser?.role?.includes('QA Lead') ||
+    currentUser?.role?.includes('Administrator');
 
   const isDefault =
     Math.abs(covered - coveredDefault) < 0.001 &&
@@ -34,6 +39,7 @@ export default function SensitivitySlider({
   );
 
   const handleCoveredChange = (e) => {
+    if (!isQALead) return;
     const val = parseFloat(e.target.value);
     if (val <= drifted + 0.01) return;
     setCovered(val);
@@ -41,6 +47,7 @@ export default function SensitivitySlider({
   };
 
   const handleDriftedChange = (e) => {
+    if (!isQALead) return;
     const val = parseFloat(e.target.value);
     if (val >= covered - 0.01) return;
     setDrifted(val);
@@ -48,6 +55,7 @@ export default function SensitivitySlider({
   };
 
   const handleReset = () => {
+    if (!isQALead) return;
     setCovered(coveredDefault);
     setDrifted(driftedDefault);
     setChangedCount(null);
@@ -63,6 +71,22 @@ export default function SensitivitySlider({
         <div className="sensitivity-title">
           <span className="sensitivity-title__icon">⚙️</span>
           Sensitivity Thresholds
+          {!isQALead && (
+            <span
+              style={{
+                marginLeft: '12px',
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(210, 153, 34, 0.12)',
+                color: 'var(--status-partial, #d29922)',
+                border: '1px solid rgba(210, 153, 34, 0.3)',
+                fontWeight: 500,
+              }}
+            >
+              🔒 Locked to Developers
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
           {changedCount != null && changedCount > 0 && (
@@ -71,7 +95,7 @@ export default function SensitivitySlider({
               {changedCount} {changedCount === 1 ? 'entry' : 'entries'} would change
             </div>
           )}
-          {!isDefault && (
+          {!isDefault && isQALead && (
             <button
               className="sensitivity-reset-btn"
               onClick={handleReset}
@@ -99,14 +123,16 @@ export default function SensitivitySlider({
           </div>
           <input
             type="range"
-            className="sensitivity-slider sensitivity-slider--covered"
+            className={`sensitivity-slider sensitivity-slider--covered ${!isQALead ? 'opacity-50 cursor-not-allowed' : ''}`}
             id="sensitivity-slider-covered"
             min="0"
             max="1"
             step="0.01"
             value={covered}
             onChange={handleCoveredChange}
-            disabled={loading}
+            disabled={loading || !isQALead}
+            style={!isQALead ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+            title={!isQALead ? 'Requires QA Lead permissions to adjust policy thresholds' : 'Adjust covered threshold'}
           />
         </div>
 
@@ -125,14 +151,16 @@ export default function SensitivitySlider({
           </div>
           <input
             type="range"
-            className="sensitivity-slider sensitivity-slider--drifted"
+            className={`sensitivity-slider sensitivity-slider--drifted ${!isQALead ? 'opacity-50 cursor-not-allowed' : ''}`}
             id="sensitivity-slider-drifted"
             min="0"
             max="1"
             step="0.01"
             value={drifted}
             onChange={handleDriftedChange}
-            disabled={loading}
+            disabled={loading || !isQALead}
+            style={!isQALead ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+            title={!isQALead ? 'Requires QA Lead permissions to adjust policy thresholds' : 'Adjust drifted threshold'}
           />
         </div>
 

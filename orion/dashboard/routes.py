@@ -16,8 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from orion.analysis.risk_engine import (
-    THRESHOLD_COVERED,
-    THRESHOLD_DRIFTED,
     classify,
 )
 from orion.analysis.structural_matcher import compute_structural_score

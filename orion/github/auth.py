@@ -91,7 +91,7 @@ def _mint_jwt(app_id: int, private_key_pem: str) -> str:
 # Installation Access Token exchange
 # ---------------------------------------------------------------------------
 
-def _exchange_for_installation_token(app_jwt: str, installation_id: int) -> tuple[str, float]:
+async def _exchange_for_installation_token(app_jwt: str, installation_id: int) -> tuple[str, float]:
     """Exchange a GitHub App JWT for an Installation Access Token.
 
     Args:
@@ -110,8 +110,8 @@ def _exchange_for_installation_token(app_jwt: str, installation_id: int) -> tupl
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
-    with httpx.Client(timeout=15) as client:
-        response = client.post(url, headers=headers)
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.post(url, headers=headers)
         response.raise_for_status()
 
     data = response.json()
@@ -121,7 +121,7 @@ def _exchange_for_installation_token(app_jwt: str, installation_id: int) -> tupl
     # We subtract the buffer so we refresh before actual expiry.
     expires_at_str: str = data.get("expires_at", "")
     if expires_at_str:
-        from datetime import datetime, timezone
+        from datetime import datetime
         dt = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
         expires_at = dt.timestamp() - _TOKEN_REFRESH_BUFFER_SECONDS
     else:
@@ -174,7 +174,34 @@ def get_installation_token(installation_id: int | None = None) -> str:
     logger.info("GitHub installation token expired or missing — refreshing")
     private_key_pem = _load_private_key()
     app_jwt = _mint_jwt(settings.github_app_id, private_key_pem)
-    token, expires_at = _exchange_for_installation_token(app_jwt, inst_id)
+    
+    import asyncio
+    import threading
+    
+    def run_sync(coro):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+            
+        if loop and loop.is_running():
+            result = []
+            err = []
+            def runner():
+                try:
+                    result.append(asyncio.run(coro))
+                except Exception as e:
+                    err.append(e)
+            t = threading.Thread(target=runner)
+            t.start()
+            t.join()
+            if err:
+                raise err[0]
+            return result[0]
+        else:
+            return asyncio.run(coro)
+
+    token, expires_at = run_sync(_exchange_for_installation_token(app_jwt, inst_id))
 
     _cached_token = token
     _token_expires_at = expires_at

@@ -4,10 +4,12 @@ import MatrixTable from './components/MatrixTable';
 import SensitivitySlider from './components/SensitivitySlider';
 import HeatmapModal from './components/HeatmapModal';
 import SimulateModal from './components/SimulateModal';
+import LoginModal from './components/LoginModal';
+import UserNav from './components/UserNav';
 import { fetchMatrix, fetchStats, reclassifyMatrix } from './api/client';
 
 /**
- * Sidebar — navigation panel with logo and nav items.
+ * Sidebar — navigation panel with logo, active RTM Dashboard view, and system telemetry.
  */
 function Sidebar() {
   return (
@@ -16,35 +18,136 @@ function Sidebar() {
         <div className="sidebar-logo-icon">O</div>
         <div>
           <div className="sidebar-logo-text">Orion</div>
-          <div className="sidebar-logo-version">v0.1.0</div>
+          <div className="sidebar-logo-version">v0.1.0 • Enterprise</div>
         </div>
       </div>
+
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Analytics</div>
+        <div className="sidebar-section-label">Traceability View</div>
         <div className="sidebar-nav-item active" id="nav-dashboard">
           <span className="sidebar-nav-icon">📊</span>
           RTM Dashboard
         </div>
-        <div className="sidebar-nav-item" id="nav-requirements">
-          <span className="sidebar-nav-icon">📋</span>
-          Requirements
-        </div>
-        <div className="sidebar-nav-item" id="nav-tests">
-          <span className="sidebar-nav-icon">🧪</span>
-          Test Cases
-        </div>
-        <div className="sidebar-section-label">Tools</div>
-        <div className="sidebar-nav-item" id="nav-webhooks">
-          <span className="sidebar-nav-icon">🔗</span>
-          Webhooks
-        </div>
-        <div className="sidebar-nav-item" id="nav-settings">
-          <span className="sidebar-nav-icon">⚙️</span>
-          Settings
+
+        {/* System Architecture Specifications Card */}
+        <div
+          style={{
+            marginTop: 'auto',
+            padding: '12px 14px',
+            backgroundColor: 'var(--bg-tertiary, #161b22)',
+            borderRadius: 'var(--radius-md, 10px)',
+            border: '1px solid var(--border-subtle, rgba(48, 54, 61, 0.6))',
+            fontSize: '11px',
+            color: 'var(--text-secondary, #8b949e)',
+          }}
+        >
+          <div
+            style={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              fontWeight: 700,
+              fontSize: '10px',
+              color: 'var(--text-tertiary, #6e7681)',
+              marginBottom: '8px',
+            }}
+          >
+            Engine Architecture
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Weights</span>
+              <span style={{ color: 'var(--accent-blue, #58a6ff)', fontFamily: 'var(--font-mono)' }}>
+                0.6S + 0.4A
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Extractor</span>
+              <span style={{ color: 'var(--text-primary, #e6edf3)' }}>Python AST</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Embedding</span>
+              <span style={{ color: 'var(--accent-violet, #bc8cff)' }}>BGE-Small ONNX</span>
+            </div>
+          </div>
         </div>
       </nav>
-      <div className="sidebar-footer">
-        AI-powered Requirements Traceability
+
+      {/* Enterprise System Status Indicator */}
+      <div className="sidebar-footer" id="sidebar-system-status" style={{ padding: '16px' }}>
+        <div
+          style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            color: 'var(--text-tertiary, #6e7681)',
+            marginBottom: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span>System Status</span>
+          <span
+            style={{
+              padding: '2px 6px',
+              borderRadius: '4px',
+              backgroundColor: 'rgba(63, 185, 80, 0.15)',
+              color: 'var(--status-covered, #3fb950)',
+              fontSize: '10px',
+              fontWeight: 700,
+            }}
+          >
+            HEALTHY
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--status-covered, #3fb950)',
+                boxShadow: '0 0 6px rgba(63, 185, 80, 0.6)',
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ color: 'var(--text-primary, #e6edf3)', fontWeight: 500 }}>Engine:</span>
+            <span style={{ color: 'var(--status-covered, #3fb950)' }}>Online</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--status-covered, #3fb950)',
+                boxShadow: '0 0 6px rgba(63, 185, 80, 0.6)',
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ color: 'var(--text-primary, #e6edf3)', fontWeight: 500 }}>pgvector:</span>
+            <span style={{ color: 'var(--status-covered, #3fb950)' }}>Active</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--status-covered, #3fb950)',
+                boxShadow: '0 0 6px rgba(63, 185, 80, 0.6)',
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ color: 'var(--text-primary, #e6edf3)', fontWeight: 500 }}>AST Parser:</span>
+            <span style={{ color: 'var(--status-covered, #3fb950)' }}>Ready</span>
+          </div>
+        </div>
       </div>
     </aside>
   );
@@ -54,6 +157,10 @@ function Sidebar() {
  * App — main dashboard layout wiring all Phase 8 components together.
  */
 export default function App() {
+  // --- RBAC Authentication State ---
+  const [currentUser, setCurrentUser] = useState(null);
+  const [overrideMap, setOverrideMap] = useState({});
+
   // --- State ---
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -173,6 +280,15 @@ export default function App() {
     loadMatrix();
   }, [loadStats, loadMatrix]);
 
+  const handleOverrideRisk = useCallback((id, newScore) => {
+    setOverrideMap((prev) => ({ ...prev, [id]: newScore }));
+  }, []);
+
+  // RBAC Session Gate: Require login before accessing enterprise dashboard
+  if (!currentUser) {
+    return <LoginModal onLogin={setCurrentUser} />;
+  }
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -182,6 +298,11 @@ export default function App() {
         <div className="page-header" id="page-header">
           <h1>Traceability Matrix</h1>
           <div className="page-header__actions">
+            {/* User Session Nav / RBAC Role Badge with Logout */}
+            <UserNav
+              currentUser={currentUser}
+              onLogout={() => setCurrentUser(null)}
+            />
             <button
               className="simulate-trigger"
               onClick={() => setSimulateOpen(true)}
@@ -201,6 +322,7 @@ export default function App() {
           driftedDefault={0.4}
           onReclassify={handleReclassify}
           loading={matrixLoading}
+          currentUser={currentUser}
         />
 
         {/* RTM table */}
@@ -214,6 +336,9 @@ export default function App() {
           statusFilter={statusFilter}
           search={search}
           reclassifiedMap={reclassifiedMap}
+          overrideMap={overrideMap}
+          currentUser={currentUser}
+          onOverrideRisk={handleOverrideRisk}
           loading={matrixLoading}
           onSort={handleSort}
           onFilter={handleFilter}

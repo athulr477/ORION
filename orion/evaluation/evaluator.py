@@ -21,9 +21,8 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -110,9 +109,9 @@ def _semantic_score_from_texts(req_text: str, test_text: str) -> float:
 
 def _structural_score_from_pair(pair: dict) -> float:
     """Compute structural matcher score for a benchmark pair."""
+    from orion.analysis.structural_matcher import compute_structural_score
     from orion.extraction.code_extractor import extract_assertions
     from orion.extraction.requirement_extractor import extract_constraints
-    from orion.analysis.structural_matcher import compute_structural_score
 
     req = pair["requirement"]
     test = pair["test"]

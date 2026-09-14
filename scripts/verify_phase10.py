@@ -126,8 +126,8 @@ def _export_report(hybrid, cosine, output_path: Path) -> None:
         "# Orion RTM — Empirical Benchmark Evaluation Report",
         "",
         f"> Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        f"> Dataset: `benchmark_30.json` — 30 requirement-test pairs (10 Covered, 10 Partial, 10 Drifted)",
-        f"> Embedding model: `BAAI/bge-small-en-v1.5` (ONNX, CPU inference)",
+        "> Dataset: `benchmark_30.json` — 30 requirement-test pairs (10 Covered, 10 Partial, 10 Drifted)",
+        "> Embedding model: `BAAI/bge-small-en-v1.5` (ONNX, CPU inference)",
         "",
         "## Chapter V — Empirical Evaluation",
         "",
@@ -268,7 +268,7 @@ if benchmark_path.exists():
 # Test 2: Evaluator imports
 print("\n--- Test 2: Evaluator Imports ---")
 try:
-    from orion.evaluation.evaluator import run_evaluation, _LABELS
+    from orion.evaluation.evaluator import _LABELS, run_evaluation
     check("run_evaluation importable", True)
     check("Labels correct", _LABELS == ["Covered", "Partial", "Drifted"], f"labels={_LABELS}")
 except Exception as exc:
@@ -353,20 +353,20 @@ print(f"PHASE 10 VERIFICATION: {_passes}/{total} checks passed")
 
 if hybrid_report and cosine_report:
     print()
-    print(f"  FINAL SCORES:")
-    print(f"  ┌────────────────────────────────────────────────┐")
-    print(f"  │  Orion Hybrid Engine                          │")
+    print("  FINAL SCORES:")
+    print("  ┌────────────────────────────────────────────────┐")
+    print("  │  Orion Hybrid Engine                          │")
     print(f"  │    Macro Precision : {hybrid_report.macro_precision:.3f}                      │")
     print(f"  │    Macro Recall    : {hybrid_report.macro_recall:.3f}                      │")
     print(f"  │    Macro F1        : {hybrid_report.macro_f1:.3f}                      │")
     print(f"  │    Accuracy        : {hybrid_report.accuracy:.3f}                      │")
-    print(f"  ├────────────────────────────────────────────────┤")
-    print(f"  │  Cosine-only Baseline                         │")
+    print("  ├────────────────────────────────────────────────┤")
+    print("  │  Cosine-only Baseline                         │")
     print(f"  │    Macro Precision : {cosine_report.macro_precision:.3f}                      │")
     print(f"  │    Macro Recall    : {cosine_report.macro_recall:.3f}                      │")
     print(f"  │    Macro F1        : {cosine_report.macro_f1:.3f}                      │")
     print(f"  │    Accuracy        : {cosine_report.accuracy:.3f}                      │")
-    print(f"  └────────────────────────────────────────────────┘")
+    print("  └────────────────────────────────────────────────┘")
 
 if _failures == 0:
     print("ALL CHECKS PASSED [OK]")

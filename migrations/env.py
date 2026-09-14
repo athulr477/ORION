@@ -15,11 +15,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pgvector.sqlalchemy import Vector  # noqa: E402
 
-from orion.config import settings  # noqa: E402
-from orion.database import Base  # noqa: E402
-
 # Import all models so that Base.metadata is fully populated
 import orion.models  # noqa: E402, F401
+from orion.config import settings  # noqa: E402
+from orion.database import Base  # noqa: E402
 
 # Alembic Config object
 config = context.config

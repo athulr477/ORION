@@ -7,8 +7,7 @@ function AnimatedCounter({ value, duration = 600 }) {
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
-    if (value === 0 || value == null) { setDisplay(0); return; }
-    let start = 0;
+    if (value == null) return;
     const startTime = performance.now();
     const step = (now) => {
       const progress = Math.min((now - startTime) / duration, 1);

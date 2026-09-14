@@ -286,26 +286,27 @@ def _find_subject_before(text: str, pos: int) -> str | None:
     return before if before else None
 
 
+STOP_WORDS = frozenset({
+    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did", "will", "would", "could",
+    "should", "may", "might", "shall", "can", "must", "need", "to", "of",
+    "in", "for", "on", "with", "at", "by", "from", "as", "into", "through",
+    "during", "before", "after", "and", "but", "or", "nor", "not", "no",
+    "so", "if", "then", "than", "that", "this", "these", "those", "it",
+    "its", "they", "their", "them", "we", "our", "you", "your", "he", "she",
+    "him", "her", "his",
+})
+
 def _extract_keywords(text: str) -> list[str]:
     """Extract domain-relevant keywords from requirement text.
 
     These are used for keyword-overlap scoring and XAI heatmap display.
     """
     # Remove common stop words and extract meaningful terms
-    stop_words = {
-        "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-        "have", "has", "had", "do", "does", "did", "will", "would", "could",
-        "should", "may", "might", "shall", "can", "must", "need", "to", "of",
-        "in", "for", "on", "with", "at", "by", "from", "as", "into", "through",
-        "during", "before", "after", "and", "but", "or", "nor", "not", "no",
-        "so", "if", "then", "than", "that", "this", "these", "those", "it",
-        "its", "they", "their", "them", "we", "our", "you", "your", "he", "she",
-        "him", "her", "his",
-    }
 
     # Tokenize: keep alphanumeric words 2+ chars
     words = re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", text.lower())
-    keywords = [w for w in words if w not in stop_words and len(w) >= 2]
+    keywords = [w for w in words if w not in STOP_WORDS and len(w) >= 2]
 
     # Deduplicate while preserving order
     seen: set[str] = set()

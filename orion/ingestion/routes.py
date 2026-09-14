@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from orion.database import get_session
 from orion.ingestion.parsers import (
-    RequirementData,
     extract_test_functions,
     parse_jira_payload,
 )

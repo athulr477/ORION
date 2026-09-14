@@ -23,7 +23,6 @@ from orion.embedding.text_builder import build_requirement_text, build_test_text
 from orion.extraction.code_extractor import extract_assertions
 from orion.extraction.requirement_extractor import extract_constraints
 
-
 # ---------------------------------------------------------------------------
 # Labeled dataset: 15 pairs (5 Covered, 5 Partial, 5 Drifted)
 # ---------------------------------------------------------------------------
@@ -305,18 +304,18 @@ def main() -> None:
         )
 
     # === Step 5: Evaluate ===
-    print(f"\n--- Step 5: Evaluation ---")
+    print("\n--- Step 5: Evaluation ---")
     accuracy = correct / len(extracted_data)
     print(f"  Accuracy: {correct}/{len(extracted_data)} = {accuracy:.1%}")
 
-    print(f"\n  Confusion matrix:")
+    print("\n  Confusion matrix:")
     print(f"  {'':>12} {'Pred Cov':>10} {'Pred Par':>10} {'Pred Dri':>10}")
     for true_label in ["Covered", "Partial", "Drifted"]:
         row = confusion[true_label]
         print(f"  {true_label:>12} {row['Covered']:>10} {row['Partial']:>10} {row['Drifted']:>10}")
 
     # Per-class precision/recall
-    print(f"\n  Per-class metrics:")
+    print("\n  Per-class metrics:")
     for cls in ["Covered", "Partial", "Drifted"]:
         tp = confusion[cls][cls]
         predicted_total = sum(confusion[lbl][cls] for lbl in confusion)
@@ -326,7 +325,7 @@ def main() -> None:
         print(f"    {cls}: precision={precision:.2f}, recall={recall:.2f} (TP={tp}, pred={predicted_total}, actual={actual_total})")
 
     # === Sanity checks ===
-    print(f"\n--- Sanity Checks ---")
+    print("\n--- Sanity Checks ---")
 
     # Average risk score by label should be ordered: Covered > Partial > Drifted
     avg_by_label = {}

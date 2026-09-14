@@ -10,7 +10,6 @@ loaded on first use.
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 
 import numpy as np

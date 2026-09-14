@@ -18,7 +18,7 @@ import difflib
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from orion.extraction.requirement_extractor import extract_constraints
@@ -312,7 +312,7 @@ def parse_changelog_to_delta(
         RequirementDelta with all structured changes.
     """
     delta = RequirementDelta(
-        changed_at=datetime.now(timezone.utc).isoformat(),
+        changed_at=datetime.now(UTC).isoformat(),
         changelog_raw=changelog_items,
     )
 

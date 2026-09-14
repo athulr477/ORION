@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import logging
-import textwrap
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
@@ -157,9 +156,7 @@ class _TracesVisitor(ast.NodeVisitor):
 
         # Check the function being called is named "traces"
         func = decorator.func
-        if isinstance(func, ast.Name) and func.id == "traces":
-            pass
-        elif isinstance(func, ast.Attribute) and func.attr == "traces":
+        if isinstance(func, ast.Name) and func.id == "traces" or isinstance(func, ast.Attribute) and func.attr == "traces":
             pass
         else:
             return None
