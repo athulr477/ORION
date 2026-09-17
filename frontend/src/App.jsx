@@ -261,8 +261,8 @@ export default function App() {
 
           {/* Sensitivity */}
           <SensitivitySlider
-            coveredDefault={0.75}
-            driftedDefault={0.4}
+            coveredDefault={0.25}
+            driftedDefault={0.6}
             onReclassify={handleReclassify}
             loading={matrixLoading}
             currentUser={currentUser}

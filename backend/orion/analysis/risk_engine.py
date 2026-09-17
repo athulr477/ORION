@@ -1,12 +1,13 @@
 """Hybrid risk engine — combine semantic + structural scores into classification.
 
-Pre-Phase 0 fixed formula (DO NOT CHANGE without explicit approval):
-    risk_score = 0.6 x semantic_score + 0.4 x structural_score
+Risk Formula (Updated per user spec):
+    alignment = 0.6 x semantic_score + 0.4 x structural_score
+    risk_score = 1.0 - alignment
 
 Thresholds:
-    risk_score > 0.75  -> Covered
-    0.4 <= risk_score <= 0.75 -> Partial
-    risk_score < 0.4   -> Drifted
+    risk_score < 0.25  -> Covered
+    0.25 <= risk_score <= 0.60 -> Partial
+    risk_score > 0.60   -> Drifted
 """
 
 from __future__ import annotations
@@ -23,8 +24,8 @@ logger = logging.getLogger(__name__)
 SEMANTIC_WEIGHT = 0.6
 STRUCTURAL_WEIGHT = 0.4
 
-THRESHOLD_COVERED = 0.75
-THRESHOLD_DRIFTED = 0.4
+THRESHOLD_COVERED = 0.25
+THRESHOLD_DRIFTED = 0.60
 
 # These are the only valid statuses
 STATUS_COVERED = "Covered"
@@ -59,13 +60,14 @@ def classify(
 ) -> RiskResult:
     """Compute risk_score, confidence, and classify a requirement-test pair.
 
-    Uses the Pre-Phase 0 fixed formula:
-        risk_score = 0.6 x semantic_score + 0.4 x structural_score
+    uses the True Risk formula:
+        alignment = 0.6 x semantic_score + 0.4 x structural_score
+        risk_score = 1.0 - alignment
 
     Thresholds:
-        risk_score > 0.75  -> Covered
-        0.4 <= risk_score <= 0.75 -> Partial
-        risk_score < 0.4   -> Drifted
+        risk_score < 0.25  -> Covered
+        0.25 <= risk_score <= 0.60 -> Partial
+        risk_score > 0.60   -> Drifted
 
     Confidence is computed as distance from the nearest threshold boundary,
     normalized to [0, 1]. Higher confidence = farther from a decision boundary.
@@ -81,13 +83,14 @@ def classify(
     semantic_score = max(0.0, min(1.0, semantic_score))
     structural_score = max(0.0, min(1.0, structural_score))
 
-    # Compute risk score using the fixed formula
-    risk_score = SEMANTIC_WEIGHT * semantic_score + STRUCTURAL_WEIGHT * structural_score
+    # Compute risk score using the true risk formula
+    alignment = SEMANTIC_WEIGHT * semantic_score + STRUCTURAL_WEIGHT * structural_score
+    risk_score = 1.0 - alignment
 
     # Classify
-    if risk_score > THRESHOLD_COVERED:
+    if risk_score < THRESHOLD_COVERED:
         status = STATUS_COVERED
-    elif risk_score < THRESHOLD_DRIFTED:
+    elif risk_score > THRESHOLD_DRIFTED:
         status = STATUS_DRIFTED
     else:
         status = STATUS_PARTIAL
@@ -96,21 +99,21 @@ def classify(
     # normalized per-band so each status can reach confidence=1.0.
     #
     # Band definitions:
-    #   Drifted:  [0.0, 0.40)   max depth = 0.40  (at score=0.0)
-    #   Partial:  [0.40, 0.75]  max depth = 0.175 (midpoint=0.575)
-    #   Covered:  (0.75, 1.0]  max depth = 0.25  (at score=1.0)
+    #   Covered:  [0.0, 0.25)   max depth = 0.25  (at score=0.0)
+    #   Partial:  [0.25, 0.60]  max depth = 0.175 (midpoint=0.425)
+    #   Drifted:  (0.60, 1.0]   max depth = 0.40  (at score=1.0)
     if status == STATUS_COVERED:
-        # Distance from the Covered boundary (0.75), normalized by the band width (0.25)
-        band_width = 1.0 - THRESHOLD_COVERED  # 0.25
-        confidence = min(1.0, (risk_score - THRESHOLD_COVERED) / band_width)
+        # Distance from the Covered boundary (0.25), normalized by the band width (0.25)
+        band_width = THRESHOLD_COVERED  # 0.25
+        confidence = min(1.0, (THRESHOLD_COVERED - risk_score) / band_width)
     elif status == STATUS_DRIFTED:
-        # Distance from the Drifted boundary (0.40), normalized by the band width (0.40)
-        band_width = THRESHOLD_DRIFTED  # 0.40
-        confidence = min(1.0, (THRESHOLD_DRIFTED - risk_score) / band_width)
+        # Distance from the Drifted boundary (0.60), normalized by the band width (0.40)
+        band_width = 1.0 - THRESHOLD_DRIFTED  # 0.40
+        confidence = min(1.0, (risk_score - THRESHOLD_DRIFTED) / band_width)
     else:  # Partial — distance from the nearest boundary, normalized by half-band width
-        dist_covered = THRESHOLD_COVERED - risk_score
-        dist_drifted = risk_score - THRESHOLD_DRIFTED
-        half_band = (THRESHOLD_COVERED - THRESHOLD_DRIFTED) / 2.0  # 0.175
+        dist_covered = risk_score - THRESHOLD_COVERED
+        dist_drifted = THRESHOLD_DRIFTED - risk_score
+        half_band = (THRESHOLD_DRIFTED - THRESHOLD_COVERED) / 2.0  # 0.175
         confidence = min(1.0, min(dist_covered, dist_drifted) / half_band)
 
     return RiskResult(

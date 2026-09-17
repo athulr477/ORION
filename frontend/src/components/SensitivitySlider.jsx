@@ -4,10 +4,14 @@ import { SlidersHorizontal, Sparkles, Lock, ChevronDown } from 'lucide-react';
 /**
  * SensitivitySlider — collapsible dual-slider panel for live threshold reclassification.
  * Collapsed by default for Developers, expanded by default for QA Leads.
+ *
+ * Polarity (risk_score = 1 - alignment):
+ *   risk < coveredDefault  → Covered  (low risk)
+ *   risk > driftedDefault  → Drifted  (high risk)
  */
 export default function SensitivitySlider({
-  coveredDefault = 0.75,
-  driftedDefault = 0.4,
+  coveredDefault = 0.25,
+  driftedDefault = 0.6,
   onReclassify,
   loading = false,
   currentUser,
@@ -41,7 +45,8 @@ export default function SensitivitySlider({
   const handleCoveredChange = (e) => {
     if (!isQALead) return;
     const val = parseFloat(e.target.value);
-    if (val <= drifted + 0.01) return;
+    // covered must stay below drifted
+    if (val >= drifted - 0.01) return;
     setCovered(val);
     triggerReclassify(val, drifted);
   };
@@ -49,7 +54,8 @@ export default function SensitivitySlider({
   const handleDriftedChange = (e) => {
     if (!isQALead) return;
     const val = parseFloat(e.target.value);
-    if (val >= covered - 0.01) return;
+    // drifted must stay above covered
+    if (val <= covered + 0.01) return;
     setDrifted(val);
     triggerReclassify(covered, val);
   };
@@ -113,7 +119,7 @@ export default function SensitivitySlider({
             {/* Covered threshold */}
             <div className="sensitivity-slider-group">
               <div className="sensitivity-slider-label">
-                <span>Covered threshold <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>(risk &gt; this → Covered)</span></span>
+                <span>Covered threshold <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>(risk &lt; this → Covered)</span></span>
                 <strong style={{ color: 'var(--covered)' }}>{(covered * 100).toFixed(0)}%</strong>
               </div>
               <input
@@ -133,7 +139,7 @@ export default function SensitivitySlider({
             {/* Drifted threshold */}
             <div className="sensitivity-slider-group">
               <div className="sensitivity-slider-label">
-                <span>Drifted threshold <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>(risk &lt; this → Drifted)</span></span>
+                <span>Drifted threshold <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>(risk &gt; this → Drifted)</span></span>
                 <strong style={{ color: 'var(--drifted)' }}>{(drifted * 100).toFixed(0)}%</strong>
               </div>
               <input
@@ -150,7 +156,7 @@ export default function SensitivitySlider({
               />
             </div>
 
-            {/* Threshold preview bar */}
+            {/* Threshold preview bar — left-to-right: Covered → Partial → Drifted */}
             <div>
               <div className="sensitivity-slider-label">
                 <span>Zone preview</span>
@@ -158,13 +164,13 @@ export default function SensitivitySlider({
               <div className="sensitivity-preview-bar">
                 <div
                   style={{
-                    width: `${drifted * 100}%`,
-                    background: 'var(--drifted-bg)',
-                    color: 'var(--drifted)',
-                    borderRight: '2px solid var(--drifted)',
+                    width: `${covered * 100}%`,
+                    background: 'var(--covered-bg)',
+                    color: 'var(--covered)',
+                    borderRight: '2px solid var(--covered)',
                   }}
                 >
-                  D
+                  C
                 </div>
                 <div
                   style={{
@@ -177,13 +183,13 @@ export default function SensitivitySlider({
                 </div>
                 <div
                   style={{
-                    width: `${(1 - covered) * 100}%`,
-                    background: 'var(--covered-bg)',
-                    color: 'var(--covered)',
-                    borderLeft: '2px solid var(--covered)',
+                    width: `${(1 - drifted) * 100}%`,
+                    background: 'var(--drifted-bg)',
+                    color: 'var(--drifted)',
+                    borderLeft: '2px solid var(--drifted)',
                   }}
                 >
-                  C
+                  D
                 </div>
               </div>
             </div>

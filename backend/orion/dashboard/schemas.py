@@ -46,19 +46,25 @@ class MatrixResponse(BaseModel):
 
 
 class ReclassifyRequest(BaseModel):
-    """Custom thresholds for live reclassification preview."""
+    """Custom thresholds for live reclassification preview.
+
+    With risk_score = 1.0 - alignment:
+      - risk_score < covered_threshold  → Covered  (low risk)
+      - risk_score > drifted_threshold  → Drifted  (high risk)
+      - otherwise                       → Partial
+    """
 
     covered_threshold: float = Field(
-        0.75,
+        0.25,
         ge=0.0,
         le=1.0,
-        description="risk_score above this → Covered",
+        description="risk_score below this → Covered (low risk = well-covered)",
     )
     drifted_threshold: float = Field(
-        0.4,
+        0.60,
         ge=0.0,
         le=1.0,
-        description="risk_score below this → Drifted",
+        description="risk_score above this → Drifted (high risk = drifted)",
     )
 
 

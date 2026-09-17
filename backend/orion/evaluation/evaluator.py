@@ -1,8 +1,8 @@
 """Evaluation harness for empirical benchmark comparison — Phase 10.
 
 Compares two engines over the 30-pair benchmark dataset:
-    1. Orion Hybrid Engine:  risk = 0.6 * semantic + 0.4 * structural
-    2. Cosine-only Baseline: risk = semantic_score (structural ignored)
+    1. Orion Hybrid Engine:  risk = 1.0 - (0.6 * semantic + 0.4 * structural)
+    2. Cosine-only Baseline: risk = 1.0 - semantic_score
 
 Metrics computed per-class and macro-averaged:
     - Precision, Recall, F1-score
@@ -10,6 +10,9 @@ Metrics computed per-class and macro-averaged:
 
 Produces a structured EvaluationReport dataclass for the verify script
 and for rendering into evaluation_report.md.
+
+NOTE: This module imports classify() from risk_engine.py to guarantee
+      threshold and formula consistency with the live engine.
 
 Usage (standalone, no DB required — all inputs come from benchmark JSON):
     from orion.evaluation.evaluator import run_evaluation
@@ -24,6 +27,12 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+from orion.analysis.risk_engine import (
+    classify,
+    SEMANTIC_WEIGHT,
+    STRUCTURAL_WEIGHT,
+)
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -33,14 +42,6 @@ logger = logging.getLogger(__name__)
 _BENCHMARK_PATH = Path(__file__).parent / "data" / "benchmark_30.json"
 _LABELS = ["Covered", "Partial", "Drifted"]
 _LABEL_IDX = {label: i for i, label in enumerate(_LABELS)}
-
-# Orion Hybrid Engine weights
-_SEMANTIC_WEIGHT = 0.6
-_STRUCTURAL_WEIGHT = 0.4
-
-# Classification thresholds (mirroring risk_engine.py — DO NOT change)
-_THRESHOLD_COVERED = 0.75
-_THRESHOLD_DRIFTED = 0.40
 
 
 # ---------------------------------------------------------------------------
@@ -64,12 +65,27 @@ class PairResult:
 
 @dataclass
 class ClassMetrics:
-    """Per-class precision, recall, F1."""
+    """Per-class precision, recall, F1.
+
+    Full-precision values are stored internally. Rounding is applied
+    only in to_dict() for display — macro averages are computed from
+    these full-precision values to prevent accumulated rounding error.
+    """
     label: str
     precision: float
     recall: float
     f1: float
     support: int  # ground-truth count
+
+    def to_dict(self) -> dict:
+        """Serialize with display rounding (4 decimal places)."""
+        return {
+            "label": self.label,
+            "precision": round(self.precision, 4),
+            "recall": round(self.recall, 4),
+            "f1": round(self.f1, 4),
+            "support": self.support,
+        }
 
 
 @dataclass
@@ -86,25 +102,20 @@ class EvaluationReport:
 
 
 # ---------------------------------------------------------------------------
-# Scoring functions (standalone, no DB or import of engine modules)
+# Scoring functions — delegate to risk_engine for consistency
 # ---------------------------------------------------------------------------
-
-def _classify(risk_score: float) -> str:
-    """Apply the Orion threshold classification to a raw risk score."""
-    if risk_score > _THRESHOLD_COVERED:
-        return "Covered"
-    if risk_score < _THRESHOLD_DRIFTED:
-        return "Drifted"
-    return "Partial"
 
 
 def _semantic_score_from_texts(req_text: str, test_text: str) -> float:
-    """Compute BGE-small cosine similarity between requirement and test texts."""
-    from orion.embedding.engine import cosine_similarity, embed_text
+    """Compute BGE-small cosine similarity between requirement and test texts.
+
+    Uses semantic_similarity() which floors at 0.0 for a clean [0, 1] range.
+    """
+    from orion.embedding.engine import semantic_similarity, embed_text
 
     req_emb = embed_text(req_text)
     test_emb = embed_text(test_text)
-    return float(cosine_similarity(req_emb, test_emb))
+    return float(semantic_similarity(req_emb, test_emb))
 
 
 def _structural_score_from_pair(pair: dict) -> float:
@@ -158,6 +169,11 @@ def _compute_metrics(
 ) -> tuple[list[list[int]], list[ClassMetrics], float, float, float, float]:
     """Compute confusion matrix, per-class metrics, and macro averages.
 
+    Full-precision values are used for macro averaging — rounding is only
+    applied at the final display layer (ClassMetrics.to_dict() and the
+    returned macro values). This prevents accumulated rounding error when
+    averaging across classes.
+
     Returns:
         (confusion_matrix, per_class_metrics, macro_precision, macro_recall, macro_f1, accuracy)
     """
@@ -179,14 +195,16 @@ def _compute_metrics(
         recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
+        # Store full-precision values — rounding only in to_dict()
         per_class.append(ClassMetrics(
             label=label,
-            precision=round(precision, 4),
-            recall=round(recall, 4),
-            f1=round(f1, 4),
+            precision=precision,
+            recall=recall,
+            f1=f1,
             support=support,
         ))
 
+    # Macro averages computed from full-precision per-class values
     macro_p = sum(m.precision for m in per_class) / n
     macro_r = sum(m.recall for m in per_class) / n
     macro_f1 = sum(m.f1 for m in per_class) / n
@@ -213,6 +231,9 @@ def run_evaluation(
     verbose: bool = True,
 ) -> tuple[EvaluationReport, EvaluationReport]:
     """Run the full benchmark evaluation and return two EvaluationReports.
+
+    Both engines use classify() from risk_engine.py to ensure threshold
+    and formula consistency with the live system.
 
     Args:
         benchmark_path: Override path to the benchmark JSON (default: benchmark_30.json).
@@ -244,23 +265,22 @@ def run_evaluation(
         sem_score = _semantic_score_from_texts(req_text, test_text)
         struct_score = _structural_score_from_pair(pair)
 
-        # Hybrid engine
-        hybrid_risk = _SEMANTIC_WEIGHT * sem_score + _STRUCTURAL_WEIGHT * struct_score
-        hybrid_pred = _classify(hybrid_risk)
+        # Hybrid engine — use classify() for correct risk formula
+        hybrid_result = classify(sem_score, struct_score)
 
-        # Cosine-only baseline (structural ignored → risk = semantic)
-        cosine_risk = sem_score
-        cosine_pred = _classify(cosine_risk)
+        # Cosine-only baseline — structural ignored (set to 0.0 so
+        # risk = 1.0 - (0.6 * sem + 0.4 * 0.0) = 1.0 - 0.6 * sem)
+        cosine_result = classify(sem_score, 0.0)
 
         pair_results.append(PairResult(
             pair_id=pair_id,
             ground_truth=ground_truth,
             semantic_score=round(sem_score, 4),
             structural_score=round(struct_score, 4),
-            hybrid_risk=round(hybrid_risk, 4),
-            hybrid_pred=hybrid_pred,
-            cosine_risk=round(cosine_risk, 4),
-            cosine_pred=cosine_pred,
+            hybrid_risk=round(hybrid_result.risk_score, 4),
+            hybrid_pred=hybrid_result.status,
+            cosine_risk=round(cosine_result.risk_score, 4),
+            cosine_pred=cosine_result.status,
         ))
 
     # Build reports
@@ -272,7 +292,7 @@ def run_evaluation(
     c_cm, c_pc, c_mp, c_mr, c_mf1, c_acc = _compute_metrics(gts, cosine_preds)
 
     hybrid_report = EvaluationReport(
-        engine_name="Orion Hybrid (0.6·sem + 0.4·struct)",
+        engine_name=f"Orion Hybrid ({SEMANTIC_WEIGHT}·sem + {STRUCTURAL_WEIGHT}·struct)",
         pairs=pair_results,
         confusion_matrix=h_cm,
         per_class=h_pc,

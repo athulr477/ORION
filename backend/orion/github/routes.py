@@ -42,7 +42,7 @@ from orion.analysis.risk_engine import classify
 from orion.analysis.structural_matcher import compute_structural_score
 from orion.config import settings
 from orion.database import get_session, get_session_context
-from orion.embedding.engine import cosine_similarity, embed_text
+from orion.embedding.engine import semantic_similarity, embed_text
 from orion.embedding.text_builder import build_test_text
 from orion.extraction.code_extractor import extract_assertions
 from orion.ingestion.service import enrich_requirement
@@ -252,12 +252,13 @@ async def _classify_pair(
     )
     test_embedding = embed_text(test_text)
 
-    semantic_score = cosine_similarity(req_embedding, test_embedding)
+    semantic_score = semantic_similarity(req_embedding, test_embedding)
 
     # -----------------------------------------------------------------------
     # Phase 5: Structural matching + hybrid classification
     # -----------------------------------------------------------------------
-    structural_score = compute_structural_score(req_constraints, code_assertions)
+    match_result = compute_structural_score(req_constraints, code_assertions)
+    structural_score = match_result.structural_score
     risk_result = classify(semantic_score, structural_score)
 
     # -----------------------------------------------------------------------

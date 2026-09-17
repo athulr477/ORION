@@ -114,7 +114,7 @@ async def simulate_webhook_logic(
     # --- Step 4: Phase 4 — Semantic embedding ---
     semantic_score = 0.0
     try:
-        from orion.embedding.engine import cosine_similarity, embed_text
+        from orion.embedding.engine import semantic_similarity, embed_text
         from orion.embedding.text_builder import build_requirement_text, build_test_text
 
         req_text = build_requirement_text(
@@ -133,7 +133,7 @@ async def simulate_webhook_logic(
         requirement.embedding = req_embedding
         test_case.embedding = test_embedding
 
-        semantic_score = max(0.0, cosine_similarity(req_embedding, test_embedding))
+        semantic_score = semantic_similarity(req_embedding, test_embedding)
         await report_progress(0.6, f"Computed semantic_score = {semantic_score:.4f}")
     except Exception as e:
         logger.warning("Embedding failed: %s", e)

@@ -175,6 +175,24 @@ def cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
     return max(-1.0, min(1.0, dot))
 
 
+def semantic_similarity(vec_a: list[float], vec_b: list[float]) -> float:
+    """Compute semantic similarity between two embedding vectors.
+
+    Wraps cosine_similarity with a floor at 0.0, providing an explicit
+    [0, 1] contract for requirement-traceability scoring. Negative cosine
+    values (semantically opposed texts) are mapped to 0.0 rather than
+    being silently lost via ad-hoc clamping scattered across callers.
+
+    Args:
+        vec_a: First embedding vector.
+        vec_b: Second embedding vector.
+
+    Returns:
+        Semantic similarity score in [0, 1]. Higher = more similar.
+    """
+    return max(0.0, cosine_similarity(vec_a, vec_b))
+
+
 def get_embedding_dim() -> int:
     """Return the embedding dimensionality (384 for BGE-small-en-v1.5)."""
     return _EMBEDDING_DIM

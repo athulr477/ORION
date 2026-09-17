@@ -11,7 +11,34 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
+from orion.analysis.risk_engine import (
+    THRESHOLD_COVERED,
+    THRESHOLD_DRIFTED,
+    SEMANTIC_WEIGHT,
+    STRUCTURAL_WEIGHT,
+)
+
 logger = logging.getLogger(__name__)
+
+# Derived thresholds for fallback sentence generation.
+# These define when a component score is "low" enough to be called out
+# as the primary reason for a non-Covered classification.
+#
+# Structural is "low" if, assuming average semantic similarity (0.5),
+# the structural score alone pushes the risk past the Partial midpoint:
+#   risk = 1 - (SEMANTIC_WEIGHT * 0.5 + STRUCTURAL_WEIGHT * struct)
+#   risk > midpoint  ↔  struct < (1 - midpoint - SEMANTIC_WEIGHT * 0.5) / STRUCTURAL_WEIGHT
+_PARTIAL_MIDPOINT = (THRESHOLD_COVERED + THRESHOLD_DRIFTED) / 2.0
+_STRUCTURAL_LOW = max(0.0, min(1.0,
+    (1.0 - _PARTIAL_MIDPOINT - SEMANTIC_WEIGHT * 0.5) / STRUCTURAL_WEIGHT
+))
+# Semantic is "low" if, even with perfect structural (1.0), the entry
+# can't reach Covered:
+#   risk = 1 - (SEMANTIC_WEIGHT * sem + STRUCTURAL_WEIGHT * 1.0) < THRESHOLD_COVERED
+#   sem > (1 - THRESHOLD_COVERED - STRUCTURAL_WEIGHT) / SEMANTIC_WEIGHT
+_SEMANTIC_LOW = max(0.0, min(1.0,
+    (1.0 - THRESHOLD_COVERED - STRUCTURAL_WEIGHT) / SEMANTIC_WEIGHT
+))
 
 
 # ---------------------------------------------------------------------------
@@ -82,12 +109,12 @@ class EvidenceTuple:
 
         if self.delta_summary:
             parts.append(f"because {self.delta_summary.lower()}")
-        elif self.structural_score < 0.4:
+        elif self.structural_score < _STRUCTURAL_LOW:
             parts.append(
                 f"due to low structural match "
                 f"({self.constraints_matched}/{self.constraints_total} constraints matched)"
             )
-        elif self.semantic_score < 0.5:
+        elif self.semantic_score < _SEMANTIC_LOW:
             parts.append("due to low semantic similarity between requirement and test")
         else:
             parts.append("based on combined semantic and structural analysis")

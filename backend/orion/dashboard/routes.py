@@ -181,10 +181,11 @@ async def reclassify_matrix(
 
     Used by the sensitivity slider in the frontend.
     """
-    if body.drifted_threshold >= body.covered_threshold:
+    if body.covered_threshold >= body.drifted_threshold:
         raise HTTPException(
             400,
-            "drifted_threshold must be less than covered_threshold",
+            "covered_threshold must be less than drifted_threshold"
+            " (low risk = Covered, high risk = Drifted)",
         )
 
     stmt = select(TraceabilityMatrix).where(
@@ -202,10 +203,11 @@ async def reclassify_matrix(
         if rs is None:
             continue
 
-        # Classify with custom thresholds
-        if rs > body.covered_threshold:
+        # Classify with custom thresholds (risk_score = 1 - alignment)
+        # Low risk → Covered, High risk → Drifted
+        if rs < body.covered_threshold:
             new_status = "Covered"
-        elif rs < body.drifted_threshold:
+        elif rs > body.drifted_threshold:
             new_status = "Drifted"
         else:
             new_status = "Partial"
