@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 680" width="100%" height="100%" style="background-color: #ffffff; font-family: 'Times New Roman', Times, serif;">
+  <defs>
+    <marker id="arrow-black" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#000000" />
+    </marker>
+  </defs>
+
+  <!-- Title & Figure Header -->
+  <g id="figure-header">
+    <text x="575" y="38" text-anchor="middle" fill="#000000" font-size="18" font-weight="bold" letter-spacing="0.5">Figure 3.3: Level 2 DFD — Subsystem 1.0 (Requirements Ingestion)</text>
+    <text x="575" y="58" text-anchor="middle" fill="#333333" font-size="13" font-style="italic">Decomposition of Ingestion Subsystem: ADF Parsing, Constraint Extraction &amp; BGE-Small Vector Encoding</text>
+    <line x1="80" y1="72" x2="1070" y2="72" stroke="#000000" stroke-width="1.2" />
+  </g>
+
+  <!-- ==================== FLOW ARROWS ==================== -->
+
+  <!-- Jira -> 1.1 -->
+  <path d="M 210 230 L 295 230" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+  
+  <!-- 1.1 -> 1.2 -->
+  <path d="M 445 230 L 525 230" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 1.2 -> 1.3 -->
+  <path d="M 675 230 L 755 230" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 1.3 -> D1 (Top curve into D1) -->
+  <path d="M 905 230 C 950 230, 960 380, 875 440" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 1.2 -> D1 (Direct down into D1) -->
+  <path d="M 600 285 L 600 440" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D1 -> 1.1 (Verification / Duplicate check) -->
+  <path d="M 500 460 C 370 460, 370 330, 370 290" fill="none" stroke="#000000" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-black)" />
+
+
+  <!-- ==================== FLOW LABELS ==================== -->
+  <text x="250" y="220" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">Webhook ADF</text>
+  <text x="485" y="220" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">Parsed Text</text>
+  <text x="715" y="220" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">Clean Tokens</text>
+  <text x="965" y="320" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">Write 384-d Vectors</text>
+  <text x="610" y="360" fill="#000000" font-size="11" font-style="italic">Store Key &amp; Metadata</text>
+  <text x="360" y="390" fill="#000000" font-size="11" font-style="italic">Check Duplicate Keys</text>
+
+
+  <!-- ==================== EXTERNAL ENTITY ==================== -->
+  <!-- Jira Cloud -->
+  <g id="ent-jira">
+    <rect x="50" y="200" width="160" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="130" y="235" text-anchor="middle" fill="#000000" font-size="15" font-weight="bold">Jira Cloud</text>
+  </g>
+
+
+  <!-- ==================== PROCESSES (ELLIPSES) ==================== -->
+
+  <!-- Process 1.1 -->
+  <g id="proc-1-1">
+    <ellipse cx="370" cy="230" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="370" y="212" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">1.1</text>
+    <text x="370" y="232" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">ADF</text>
+    <text x="370" y="252" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Parser</text>
+  </g>
+
+  <!-- Process 1.2 -->
+  <g id="proc-1-2">
+    <ellipse cx="600" cy="230" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="600" y="212" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">1.2</text>
+    <text x="600" y="232" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Constraint</text>
+    <text x="600" y="252" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Extractor</text>
+  </g>
+
+  <!-- Process 1.3 -->
+  <g id="proc-1-3">
+    <ellipse cx="830" cy="230" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="830" y="206" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">1.3</text>
+    <text x="830" y="226" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">BGE-Small</text>
+    <text x="830" y="244" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Vector Encoder</text>
+  </g>
+
+
+  <!-- ==================== DATA STORE ==================== -->
+  <!-- D1: requirements -->
+  <g id="store-d1" transform="translate(500, 440)">
+    <path d="M 200 0 L 0 0 L 0 45 L 200 45" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="45" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="28" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D1</text>
+    <text x="120" y="28" text-anchor="middle" fill="#000000" font-size="14">requirements</text>
+  </g>
+
+  <!-- Footer -->
+  <g id="footer">
+    <line x1="80" y1="630" x2="1070" y2="630" stroke="#888888" stroke-width="0.8" />
+    <text x="575" y="652" text-anchor="middle" fill="#555555" font-size="11.5">Department of Computer Applications • MCA Project Report • Calicut University Guidelines</text>
+  </g>
+</svg>

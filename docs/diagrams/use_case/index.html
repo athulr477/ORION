@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orion Use Case Specification — Calicut University MCA Project Report</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-surface: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 1350px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-info h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .header-info p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      background: #334155;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: #475569;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      color: #ffffff;
+    }
+
+    .diagram-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 40px;
+      overflow: hidden;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .card-title h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .card-title p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .card-tools {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-tool:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+
+    .svg-viewport {
+      background: #ffffff;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .svg-viewport img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .card-details {
+      padding: 24px;
+      background: #0f172a;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .card-details h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 12px;
+    }
+
+    .role-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .role-card h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .role-card ul {
+      padding-left: 20px;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+
+    .role-card li {
+      margin-bottom: 5px;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+      header, .card-tools, .header-actions {
+        display: none !important;
+      }
+      .diagram-card {
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+      }
+      .card-header {
+        border-bottom: 1px solid #000000 !important;
+      }
+      .card-title h2, .card-title p {
+        color: #000000 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+      }
+      .card-details {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .card-details h3, .role-card h4, .role-card li {
+        color: #000000 !important;
+      }
+      .role-card {
+        background: #ffffff !important;
+        border: 1px solid #cccccc !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="header-info">
+        <h1>
+          ORION USE CASE SPECIFICATION
+          <span class="badge">Calicut University MCA Report</span>
+        </h1>
+        <p>Project Chapter 3: System Design — Role-Based Actor Interactions (QA Lead &amp; Software Developer)</p>
+      </div>
+      <div class="header-actions">
+        <a href="../dfd/index.html" class="btn">📊 View DFD Diagrams</a>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save to PDF</button>
+      </div>
+    </header>
+
+    <!-- Project-Accurate Use Case Diagram -->
+    <section class="diagram-card">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.7: Use Case Diagram — Orion System Architecture</h2>
+          <p>High-contrast, role-based interaction model matching Orion's active RBAC configuration</p>
+        </div>
+        <div class="card-tools">
+          <a href="use_case_diagram.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="use_case_diagram.svg" download class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="use_case_diagram.svg" alt="Orion Use Case Diagram" />
+      </div>
+      <div class="card-details">
+        <h3>Role Breakdown for Report Chapter 3</h3>
+        <p>The Use Case model reflects the strict Role-Based Access Control (RBAC) boundaries implemented across Orion's backend API and React dashboard:</p>
+        
+        <div class="role-grid">
+          <!-- QA Lead Card -->
+          <div class="role-card" style="border-left: 4px solid #16a34a;">
+            <h4 style="color: #4ade80;">🛡️ QA Lead / System Administrator</h4>
+            <ul>
+              <li><strong>Sync Project Data:</strong> Triggers Jira issue webhook ingestion and pull request AST extractions.</li>
+              <li><strong>Configure Sensitivity Thresholds:</strong> Controls &tau;<sub>sem</sub> (semantic similarity) and &tau;<sub>struct</sub> (AST structural overlap) range sliders.</li>
+              <li><strong>Override Trace Risk Verdict:</strong> Performs authoritative manual acceptance or rejection on ambiguous links with justification.</li>
+              <li><strong>Simulate Reclassification:</strong> Executes matrix simulations and inspects similarity distribution heatmaps.</li>
+              <li><strong>View RTM Dashboard:</strong> Monitors real-time coverage statistics and matrix verification progress.</li>
+              <li><strong>Authenticate Session:</strong> Switches roles via the RBAC authentication gate.</li>
+            </ul>
+          </div>
+
+          <!-- Software Developer Card -->
+          <div class="role-card" style="border-left: 4px solid #3b82f6;">
+            <h4 style="color: #60a5fa;">💻 Software Developer</h4>
+            <ul>
+              <li><strong>View RTM Dashboard:</strong> Inspects requirements mapped to test cases and reviews coverage status.</li>
+              <li><strong>Inspect AST Evidence:</strong> Examines extracted test function signatures, docstrings, and assertion operands.</li>
+              <li><strong>Review XAI Explanations:</strong> Reads natural language gap rationales verbalized by the local Ollama Llama 3.1:8b engine.</li>
+              <li><strong>Trigger PR Verification Gating:</strong> Pushes commits and receives automated GitHub Check Run status feedback.</li>
+              <li><strong>Authenticate Session:</strong> Logs in under developer boundaries (policy sliders &amp; override buttons are locked).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</body>
+</html>

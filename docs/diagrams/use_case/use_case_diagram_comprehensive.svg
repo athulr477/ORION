@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" width="100%" height="100%" style="background-color: #ffffff;">
+  
+  <!-- Title -->
+  <text x="50" y="65" fill="#000000" font-family="'Times New Roman', Times, serif" font-size="38" font-weight="bold" letter-spacing="-0.5">Figure 3.7: Use Case Diagram — Orion Governance Engine</text>
+  <text x="50" y="88" fill="#555555" font-family="'Times New Roman', Times, serif" font-size="14" font-style="italic">Functional Actor-System Interactions adhering to Calicut University MCA Guidelines</text>
+  <line x1="50" y1="102" x2="1150" y2="102" stroke="#cccccc" stroke-width="1" />
+
+  <!-- System Boundary (Light cyan background box) -->
+  <g id="system-boundary">
+    <rect x="420" y="125" width="360" height="630" fill="#e0f7fa" stroke="#00acc1" stroke-width="1.2" rx="4" />
+    <text x="600" y="150" text-anchor="middle" fill="#006064" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" letter-spacing="1">ORION TRACEABILITY SYSTEM BOUNDARY</text>
+  </g>
+
+  <!-- Association Lines -->
+  <g id="association-lines" stroke="#444444" stroke-width="1.5">
+    <!-- QA Engineer to Use Cases -->
+    <line x1="225" y1="280" x2="460" y2="195" />
+    <line x1="225" y1="280" x2="460" y2="270" />
+    <line x1="225" y1="280" x2="460" y2="345" />
+    <line x1="225" y1="280" x2="460" y2="420" />
+
+    <!-- Developer to Use Cases -->
+    <line x1="225" y1="580" x2="460" y2="195" />
+    <line x1="225" y1="580" x2="460" y2="495" />
+    <line x1="225" y1="580" x2="460" y2="570" />
+
+    <!-- Engineering Manager to Use Cases -->
+    <line x1="975" y1="310" x2="740" y2="420" />
+    <line x1="975" y1="310" x2="740" y2="645" />
+
+    <!-- Admin to Use Case -->
+    <line x1="975" y1="610" x2="740" y2="720" />
+  </g>
+
+  <!-- Use Case Ovals -->
+  <g id="use-cases" fill="#ffffff" stroke="#b2ebf2" stroke-width="1.2">
+    
+    <!-- 1. Sync Project Data -->
+    <ellipse cx="600" cy="195" rx="140" ry="24" />
+    <text x="600" y="200" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="500">Sync Project Data (Jira &amp; Git)</text>
+
+    <!-- 2. View Risk-Scored Recommendations -->
+    <ellipse cx="600" cy="270" rx="140" ry="24" />
+    <text x="600" y="275" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="500">View Risk-Scored Recommendations</text>
+
+    <!-- 3. Review / Accept / Reject Recommendation -->
+    <ellipse cx="600" cy="345" rx="140" ry="24" />
+    <text x="600" y="342" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="500">Review / Accept / Reject</text>
+    <text x="600" y="356" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="500">Trace Recommendation (Override)</text>
+
+    <!-- 4. Configure Risk Weights -->
+    <ellipse cx="600" cy="420" rx="140" ry="24" />
+    <text x="600" y="416" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="500">Configure Risk Weights</text>
+    <text x="600" y="431" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="500">&amp; Thresholds (τ_sem, τ_struct)</text>
+
+    <!-- 5. Inspect XAI Explanation Gaps -->
+    <ellipse cx="600" cy="495" rx="140" ry="24" />
+    <text x="600" y="492" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="500">Inspect XAI Explanations</text>
+    <text x="600" y="506" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="500">&amp; Uncovered Requirements Gaps</text>
+
+    <!-- 6. Trigger CI/CD Verification Check Runs -->
+    <ellipse cx="600" cy="570" rx="140" ry="24" />
+    <text x="600" y="566" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="500">Trigger PR Verification Gating</text>
+    <text x="600" y="580" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="500">&amp; GitHub Check Run Evaluation</text>
+
+    <!-- 7. View Release Readiness Dashboard -->
+    <ellipse cx="600" cy="645" rx="140" ry="24" />
+    <text x="600" y="650" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="500">View Release Readiness Dashboard</text>
+
+    <!-- 8. Manage User Access Roles -->
+    <ellipse cx="600" cy="720" rx="140" ry="24" />
+    <text x="600" y="725" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="500">Manage User Access Roles (RBAC)</text>
+  </g>
+
+  <!-- Actors (Stick Figures) -->
+  
+  <!-- Actor 1: QA Engineer / Test Lead (Top Left) -->
+  <g id="actor-qa" transform="translate(190, 240)">
+    <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="10" x2="0" y2="40" stroke="#000000" stroke-width="1.8" />
+    <line x1="-15" y1="22" x2="0" y2="16" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="16" x2="15" y2="22" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="-14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <text x="0" y="82" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">QA Engineer /</text>
+    <text x="0" y="98" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">Test Lead</text>
+  </g>
+
+  <!-- Actor 2: Software Developer (Bottom Left) -->
+  <g id="actor-dev" transform="translate(190, 540)">
+    <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="10" x2="0" y2="40" stroke="#000000" stroke-width="1.8" />
+    <line x1="-15" y1="22" x2="0" y2="16" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="16" x2="15" y2="22" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="-14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <text x="0" y="82" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">Software</text>
+    <text x="0" y="98" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">Developer</text>
+  </g>
+
+  <!-- Actor 3: Engineering Manager (Top Right) -->
+  <g id="actor-manager" transform="translate(1000, 270)">
+    <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="10" x2="0" y2="40" stroke="#000000" stroke-width="1.8" />
+    <line x1="-15" y1="22" x2="0" y2="16" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="16" x2="15" y2="22" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="-14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <text x="0" y="82" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">Engineering</text>
+    <text x="0" y="98" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">Manager</text>
+  </g>
+
+  <!-- Actor 4: System Administrator (Bottom Right) -->
+  <g id="actor-admin" transform="translate(1000, 570)">
+    <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="10" x2="0" y2="40" stroke="#000000" stroke-width="1.8" />
+    <line x1="-15" y1="22" x2="0" y2="16" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="16" x2="15" y2="22" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="-14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <line x1="0" y1="40" x2="14" y2="65" stroke="#000000" stroke-width="1.8" />
+    <text x="0" y="82" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">System</text>
+    <text x="0" y="98" text-anchor="middle" fill="#000000" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="bold">Administrator</text>
+  </g>
+
+  <!-- Footer -->
+  <g id="footer">
+    <line x1="50" y1="785" x2="1150" y2="785" stroke="#888888" stroke-width="0.8" />
+    <text x="600" y="805" text-anchor="middle" fill="#555555" font-size="11.5">Department of Computer Applications • MCA Project Report • Calicut University Guidelines</text>
+  </g>
+</svg>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orion DFD Specification — Calicut University MCA Project Report</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-surface: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --card-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-info h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-info h1 span.badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .header-info p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #0b1120;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: #ffffff;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    /* Quick Nav */
+    .quick-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+      background: rgba(30, 41, 59, 0.6);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .quick-nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .quick-nav a:hover {
+      color: #ffffff;
+      background: var(--bg-surface);
+    }
+
+    /* Diagram Card */
+    .diagram-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 40px;
+      overflow: hidden;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .card-title h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .card-title p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .card-tools {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-tool:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+
+    /* SVG Canvas Frame */
+    .svg-viewport {
+      background: #ffffff;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: auto;
+    }
+
+    .svg-viewport img,
+    .svg-viewport object {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Academic Report Section */
+    .card-details {
+      padding: 20px 24px;
+      background: #0f172a;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .card-details h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .card-details p, .card-details ul {
+      font-size: 13.5px;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+
+    .card-details ul {
+      padding-left: 20px;
+    }
+
+    .card-details li {
+      margin-bottom: 4px;
+    }
+
+    /* Print / Dissertation Styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+
+      header, .quick-nav, .header-actions, .card-tools {
+        display: none !important;
+      }
+
+      .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+      }
+
+      .diagram-card {
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        page-break-after: always;
+        margin-bottom: 20px;
+      }
+
+      .card-header {
+        border-bottom: 1px solid #000000 !important;
+        padding: 10px 0 !important;
+      }
+
+      .card-title h2 {
+        color: #000000 !important;
+        font-size: 16pt !important;
+        font-family: 'Times New Roman', Times, serif !important;
+      }
+
+      .card-title p {
+        color: #333333 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+      }
+
+      .svg-viewport {
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+
+      .svg-viewport img {
+        width: 100% !important;
+      }
+
+      .card-details {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-top: 1px solid #cccccc !important;
+        padding: 12px 0 !important;
+      }
+
+      .card-details h3 {
+        color: #000000 !important;
+      }
+
+      .card-details p, .card-details li {
+        color: #222222 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-info">
+        <h1>
+          ORION DFD ARCHITECTURAL SPECIFICATION
+          <span class="badge">Calicut University MCA Guidelines</span>
+        </h1>
+        <p>Project Chapter 3: System Design — Complete Data Flow Diagrams (Context Level 0, Level 1 &amp; Level 2 Decompositions)</p>
+      </div>
+      <div class="header-actions">
+        <a href="../use_case/index.html" class="btn btn-secondary">📐 View Use Case Diagram</a>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print / Save to PDF</button>
+      </div>
+    </header>
+
+    <!-- Quick Navigation -->
+    <nav class="quick-nav">
+      <a href="#fig31">Figure 3.1: Level 0 Context DFD</a>
+      <a href="#fig32">Figure 3.2: Level 1 System DFD</a>
+      <a href="#fig33">Figure 3.3: Level 2 Ingestion (1.0)</a>
+      <a href="#fig34">Figure 3.4: Level 2 AST Extraction (2.0)</a>
+      <a href="#fig35">Figure 3.5: Level 2 Hybrid Risk (3.0)</a>
+      <a href="#fig36">Figure 3.6: Level 2 Governance (4.0 &amp; 5.0)</a>
+    </nav>
+
+    <!-- FIGURE 3.1 -->
+    <section class="diagram-card" id="fig31">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.1: Context Level Data Flow Diagram (Level 0 DFD)</h2>
+          <p>Process 0.0: Orion Governance Engine — External System Boundary Interactions</p>
+        </div>
+        <div class="card-tools">
+          <a href="fig_3_1_dfd_level_0.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="fig_3_1_dfd_level_0.svg" download class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="fig_3_1_dfd_level_0.svg" alt="Figure 3.1 Context Level DFD" />
+      </div>
+      <div class="card-details">
+        <h3>Description for Report Chapter 3</h3>
+        <p>Figure 3.1 illustrates the Context Level (Level 0) DFD for the Orion Automated Traceability Engine. The central process <strong>0.0 Orion Governance Engine</strong> interfaces with four primary external entities (Jira Cloud, GitHub CI/CD, Developer, and QA Lead / Auditor) as well as the central PostgreSQL (pgvector) database store.</p>
+        <ul>
+          <li><strong>Jira Cloud:</strong> Transmits issue webhooks with ADF descriptions; receives automated traceability status comments and sync badges.</li>
+          <li><strong>GitHub CI/CD:</strong> Delivers pull request commit diffs and test files; receives pass/fail verification check run statuses that gate pull request merges.</li>
+          <li><strong>Developer:</strong> Authors test cases and code commits; receives XAI diagnostic feedback and gap explanations for unresolved requirements.</li>
+          <li><strong>QA Lead / Auditor:</strong> Defines sensitivity thresholds (&tau;<sub>sem</sub>, &tau;<sub>struct</sub>), performs manual overrides, and audits compliance via the real-time RTM dashboard.</li>
+          <li><strong>PostgreSQL Database (orion_db):</strong> Stores high-dimensional 384-d requirement and test embeddings, the dynamic traceability matrix, and append-only audit trail logs.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FIGURE 3.2 -->
+    <section class="diagram-card" id="fig32">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.2: Level 1 System Data Flow Diagram (Functional Decomposition)</h2>
+          <p>Decomposition of Orion into 5 Core Subsystems and 4 Data Stores</p>
+        </div>
+        <div class="card-tools">
+          <a href="fig_3_2_dfd_level_1.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="fig_3_2_dfd_level_1.svg" download class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="fig_3_2_dfd_level_1.svg" alt="Figure 3.2 Level 1 System DFD" />
+      </div>
+      <div class="card-details">
+        <h3>Description for Report Chapter 3</h3>
+        <p>Figure 3.2 decomposes Process 0.0 into five modular subsystems (1.0 through 5.0) and four persistent data stores (D1 through D4):</p>
+        <ul>
+          <li><strong>1.0 Requirements Ingestion:</strong> Ingests Jira ADF payloads, parses descriptions into clean text, generates 384-dimensional embeddings, and writes to <em>D1: requirements</em>.</li>
+          <li><strong>2.0 AST Test Extraction:</strong> Filters pull request diffs for Python test files, parses function nodes and assert statements, generates embeddings, and writes to <em>D2: test_cases</em>.</li>
+          <li><strong>3.0 Hybrid Risk Engine:</strong> Evaluates requirement-test pairs using a convex combination of cosine semantic similarity and AST structural overlap, storing verdicts in <em>D3: trace_links</em>.</li>
+          <li><strong>4.0 XAI Verbalization:</strong> Extracts gap evidence from unlinked or borderline requirements and invokes a local Ollama Llama 3.1:8b model to produce natural language audit rationales stored in <em>D4: audit_logs</em>.</li>
+          <li><strong>5.0 Gating &amp; Visualization:</strong> Emits GitHub Check Run conclusions, posts Jira comments, and provides a real-time React RTM matrix with RBAC-controlled override controls.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FIGURE 3.3 -->
+    <section class="diagram-card" id="fig33">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.3: Level 2 DFD — Subsystem 1.0 (Requirements Ingestion)</h2>
+          <p>Detailed Data Flow: ADF Parsing, Constraint Extraction &amp; Dense Vector Encoding</p>
+        </div>
+        <div class="card-tools">
+          <a href="fig_3_3_dfd_level_2_ingestion.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="fig_3_3_dfd_level_2_ingestion.svg" download class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="fig_3_3_dfd_level_2_ingestion.svg" alt="Figure 3.3 Level 2 Ingestion DFD" />
+      </div>
+      <div class="card-details">
+        <h3>Description for Report Chapter 3</h3>
+        <p>Figure 3.3 details the internal processes of Subsystem 1.0. Process 1.1 (ADF Parser) extracts text from Jira's JSON tree with recursion depth guards. Process 1.2 (Constraint Extractor) isolates modal requirements ('MUST', 'SHALL') and domain keywords. Process 1.3 (BGE-Small Vector Encoder) generates a normalized 384-dimensional dense vector representation written directly to table <em>D1: requirements</em>.</p>
+      </div>
+    </section>
+
+    <!-- FIGURE 3.4 -->
+    <section class="diagram-card" id="fig34">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.4: Level 2 DFD — Subsystem 2.0 (AST Test Extraction)</h2>
+          <p>Detailed Data Flow: Git Diff Filter, AST Visitor, Assertion Comparator Parser &amp; Vector Encoding</p>
+        </div>
+        <div class="card-tools">
+          <a href="fig_3_4_dfd_level_2_ast.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="fig_3_4_dfd_level_2_ast.svg" download class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="fig_3_4_dfd_level_2_ast.svg" alt="Figure 3.4 Level 2 AST DFD" />
+      </div>
+      <div class="card-details">
+        <h3>Description for Report Chapter 3</h3>
+        <p>Figure 3.4 decomposes Subsystem 2.0. Process 2.1 (Git Diff Filter) isolates test files modified in the pull request. Process 2.2 (AST Node Visitor) navigates Python AST function nodes to extract names, docstrings, and execution scope. Process 2.3 (Assertion Parser) breaks down assert statements into comparators, left operands, and right comparands. Process 2.4 (Vector Encoder) encodes test semantics and writes test metadata into <em>D2: test_cases</em>.</p>
+      </div>
+    </section>
+
+    <!-- FIGURE 3.5 -->
+    <section class="diagram-card" id="fig35">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.5: Level 2 DFD — Subsystem 3.0 (Hybrid Risk Engine)</h2>
+          <p>Detailed Data Flow: Cosine Distance Matcher, AST Structural Overlap, Convex Fusion &amp; Classification</p>
+        </div>
+        <div class="card-tools">
+          <a href="fig_3_5_dfd_level_2_hybrid.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="fig_3_5_dfd_level_2_hybrid.svg" download class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="fig_3_5_dfd_level_2_hybrid.svg" alt="Figure 3.5 Level 2 Hybrid DFD" />
+      </div>
+      <div class="card-details">
+        <h3>Description for Report Chapter 3</h3>
+        <p>Figure 3.5 demonstrates the dual-scoring traceability computation of Subsystem 3.0:</p>
+        <ul>
+          <li><strong>3.1 Cosine Distance Matcher:</strong> Computes the semantic similarity score <em>S<sub>sem</sub> = cos(&theta;)</em> between requirement and test embedding vectors via pgvector.</li>
+          <li><strong>3.2 AST Structural Matcher:</strong> Calculates keyword token and entity overlap <em>S<sub>struct</sub></em> between requirement constraints and extracted test assertion operands.</li>
+          <li><strong>3.3 Convex Combination:</strong> Synthesizes the hybrid confidence metric: <em>S<sub>hybrid</sub> = 0.6 &middot; S<sub>sem</sub> + 0.4 &middot; S<sub>struct</sub></em>.</li>
+          <li><strong>3.4 Threshold Classifier:</strong> Classifies the link as <strong>PASS</strong> (if both thresholds &tau;<sub>sem</sub> and &tau;<sub>struct</sub> are satisfied), <strong>REVIEW</strong>, or <strong>FAIL</strong>, and updates <em>D3: trace_links</em>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FIGURE 3.6 -->
+    <section class="diagram-card" id="fig36">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.6: Level 2 DFD — Subsystems 4.0 &amp; 5.0 (XAI Verbalization &amp; CI/CD Governance)</h2>
+          <p>Detailed Data Flow: Evidence Packaging, Local LLM Rationale Generation, GitHub Check Runs &amp; Jira Comments</p>
+        </div>
+        <div class="card-tools">
+          <a href="fig_3_6_dfd_level_2_governance.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="fig_3_6_dfd_level_2_governance.svg" download class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="fig_3_6_dfd_level_2_governance.svg" alt="Figure 3.6 Level 2 Governance DFD" />
+      </div>
+      <div class="card-details">
+        <h3>Description for Report Chapter 3</h3>
+        <p>Figure 3.6 illustrates the verification closure loop. Process 4.1 (Evidence Diff Packager) gathers requirement text, matched AST nodes, and similarity differentials. Process 4.2 (Ollama Llama 3.1 Verbalizer) runs a zero-shot prompt on the local 8B LLM to generate an explanatory rationale for any unverified acceptance criteria. Process 5.1 (Check Run Poster) communicates the gating verdict to GitHub CI/CD, while Process 5.2 (Jira Comment Syncer) logs the trace matrix verdict back to Jira Cloud.</p>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

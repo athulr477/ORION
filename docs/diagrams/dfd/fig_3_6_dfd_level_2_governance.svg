@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" width="100%" height="100%" style="background-color: #ffffff; font-family: 'Times New Roman', Times, serif;">
+  <defs>
+    <marker id="arrow-black" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#000000" />
+    </marker>
+  </defs>
+
+  <!-- Title & Figure Header -->
+  <g id="figure-header">
+    <text x="600" y="38" text-anchor="middle" fill="#000000" font-size="18" font-weight="bold" letter-spacing="0.5">Figure 3.6: Level 2 DFD — Subsystems 4.0 &amp; 5.0 (XAI Verbalization &amp; Governance)</text>
+    <text x="600" y="58" text-anchor="middle" fill="#333333" font-size="13" font-style="italic">Decomposition of Evidence Packager, Local LLM Verbalizer, GitHub Check Run Gater &amp; Jira Sync Engine</text>
+    <line x1="80" y1="72" x2="1120" y2="72" stroke="#000000" stroke-width="1.2" />
+  </g>
+
+  <!-- ==================== INPUT DATA STORE (LEFT) ==================== -->
+  
+  <!-- D3: trace_links -->
+  <g id="store-d3" transform="translate(60, 240)">
+    <path d="M 180 0 L 0 0 L 0 45 L 180 45" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="45" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="28" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D3</text>
+    <text x="110" y="28" text-anchor="middle" fill="#000000" font-size="14">trace_links</text>
+  </g>
+
+
+  <!-- ==================== FLOW ARROWS ==================== -->
+
+  <!-- D3 -> 4.1 -->
+  <path d="M 240 250 L 335 250" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 4.1 -> 4.2 -->
+  <path d="M 485 250 L 565 250" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 4.2 -> D4: audit_logs (Down) -->
+  <path d="M 640 305 L 640 435" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 4.2 -> 5.1 (Up & Right) -->
+  <path d="M 705 220 C 740 200, 770 190, 805 190" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 4.2 -> 5.2 (Down & Right) -->
+  <path d="M 705 275 C 740 290, 770 300, 805 310" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D3 -> 5.1 (Direct bypass across top) -->
+  <path d="M 150 240 C 150 140, 800 140, 805 160" fill="none" stroke="#000000" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-black)" />
+
+  <!-- 5.1 -> GitHub CI/CD -->
+  <path d="M 955 180 L 1025 180" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 5.2 -> Jira Cloud -->
+  <path d="M 955 330 L 1025 330" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 5.1 -> Developer / UI -->
+  <path d="M 880 235 L 880 570 C 880 620, 240 620, 240 570" fill="none" stroke="#000000" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-black)" />
+
+  <!-- 5.1 -> D4 (Log Gating Decision) -->
+  <path d="M 850 235 C 850 380, 780 445, 740 455" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+
+  <!-- ==================== FLOW LABELS ==================== -->
+  <text x="290" y="240" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Gaps / Review</text>
+  <text x="525" y="240" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Context Prompt</text>
+  
+  <text x="650" y="380" fill="#000000" font-size="10.5" font-style="italic">Store XAI Explanations</text>
+  <text x="745" y="180" fill="#000000" font-size="10.5" font-style="italic">Markdown Rationale</text>
+  <text x="735" y="325" fill="#000000" font-size="10.5" font-style="italic">Comment Body</text>
+
+  <text x="470" y="130" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Pass/Fail Status Bypass</text>
+
+  <text x="990" y="170" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Check Run API</text>
+  <text x="990" y="320" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Sync Issue Comment</text>
+
+  <text x="550" y="610" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Check Run Annotations &amp; Real-time Gating Status</text>
+  <text x="800" y="440" fill="#000000" font-size="10" font-style="italic">Gate Decision Log</text>
+
+
+  <!-- ==================== PROCESSES (ELLIPSES) ==================== -->
+
+  <!-- Process 4.1 -->
+  <g id="proc-4-1">
+    <ellipse cx="410" cy="250" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="410" y="228" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">4.1</text>
+    <text x="410" y="248" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Evidence Diff</text>
+    <text x="410" y="266" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Packager</text>
+  </g>
+
+  <!-- Process 4.2 -->
+  <g id="proc-4-2">
+    <ellipse cx="640" cy="250" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="2" />
+    <text x="640" y="228" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">4.2</text>
+    <text x="640" y="248" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Ollama Llama 3.1</text>
+    <text x="640" y="266" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Verbalizer</text>
+  </g>
+
+  <!-- Process 5.1 -->
+  <g id="proc-5-1">
+    <ellipse cx="880" cy="180" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="880" y="160" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">5.1</text>
+    <text x="880" y="180" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Check Run</text>
+    <text x="880" y="198" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Poster</text>
+  </g>
+
+  <!-- Process 5.2 -->
+  <g id="proc-5-2">
+    <ellipse cx="880" cy="330" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="880" y="310" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">5.2</text>
+    <text x="880" y="330" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Jira Comment</text>
+    <text x="880" y="348" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Syncer</text>
+  </g>
+
+
+  <!-- ==================== OUTPUT DATA STORE & EXTERNAL ENTITIES ==================== -->
+
+  <!-- D4: audit_logs -->
+  <g id="store-d4" transform="translate(540, 440)">
+    <path d="M 200 0 L 0 0 L 0 45 L 200 45" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="45" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="28" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D4</text>
+    <text x="120" y="28" text-anchor="middle" fill="#000000" font-size="14">audit_logs</text>
+  </g>
+
+  <!-- GitHub CI/CD -->
+  <g id="ent-github">
+    <rect x="1030" y="150" width="130" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="1095" y="185" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">GitHub CI/CD</text>
+  </g>
+
+  <!-- Jira Cloud -->
+  <g id="ent-jira">
+    <rect x="1030" y="300" width="130" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="1095" y="335" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">Jira Cloud</text>
+  </g>
+
+  <!-- Developer / Dashboard -->
+  <g id="ent-dev">
+    <rect x="100" y="520" width="180" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="190" y="545" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">Developer</text>
+    <text x="190" y="565" text-anchor="middle" fill="#333333" font-size="12" font-style="italic">(PR Author / UI)</text>
+  </g>
+
+  <!-- Footer -->
+  <g id="footer">
+    <line x1="80" y1="740" x2="1120" y2="740" stroke="#888888" stroke-width="0.8" />
+    <text x="600" y="762" text-anchor="middle" fill="#555555" font-size="11.5">Department of Computer Applications • MCA Project Report • Calicut University Guidelines</text>
+  </g>
+</svg>

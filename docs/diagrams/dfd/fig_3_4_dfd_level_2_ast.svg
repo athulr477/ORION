@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 720" width="100%" height="100%" style="background-color: #ffffff; font-family: 'Times New Roman', Times, serif;">
+  <defs>
+    <marker id="arrow-black" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#000000" />
+    </marker>
+  </defs>
+
+  <!-- Title & Figure Header -->
+  <g id="figure-header">
+    <text x="590" y="38" text-anchor="middle" fill="#000000" font-size="18" font-weight="bold" letter-spacing="0.5">Figure 3.4: Level 2 DFD — Subsystem 2.0 (AST Test Extraction)</text>
+    <text x="590" y="58" text-anchor="middle" fill="#333333" font-size="13" font-style="italic">Decomposition of Test Extraction Subsystem: Git Diff Filter, AST Visitor, Assertion Parser &amp; Dense Encoder</text>
+    <line x1="80" y1="72" x2="1100" y2="72" stroke="#000000" stroke-width="1.2" />
+  </g>
+
+  <!-- ==================== FLOW ARROWS ==================== -->
+
+  <!-- GitHub -> 2.1 -->
+  <path d="M 190 230 L 255 230" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 2.1 -> 2.2 -->
+  <path d="M 405 230 L 475 230" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 2.2 -> 2.3 -->
+  <path d="M 625 230 L 695 230" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 2.3 -> 2.4 -->
+  <path d="M 845 230 L 915 230" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 2.2 -> 2.4 (Upper arc for docstrings) -->
+  <path d="M 550 175 C 550 120, 990 120, 990 175" fill="none" stroke="#000000" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-black)" />
+
+  <!-- 2.4 -> D2 (Down into D2) -->
+  <path d="M 990 285 C 990 420, 830 470, 715 470" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 2.3 -> D2 (Down into D2) -->
+  <path d="M 770 285 L 770 420 C 770 440, 730 450, 715 450" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+
+  <!-- ==================== FLOW LABELS ==================== -->
+  <text x="220" y="220" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">PR Diffs</text>
+  <text x="440" y="220" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">Test Files</text>
+  <text x="660" y="220" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">AST Nodes</text>
+  <text x="880" y="220" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">Parsed Assertions</text>
+  
+  <text x="770" y="115" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">Docstrings &amp; Function Signatures</text>
+
+  <text x="965" y="380" fill="#000000" font-size="11" font-style="italic">Store 384-d Vectors</text>
+  <text x="780" y="360" fill="#000000" font-size="11" font-style="italic">Store Assertions</text>
+
+
+  <!-- ==================== EXTERNAL ENTITY ==================== -->
+  <!-- GitHub CI/CD -->
+  <g id="ent-github">
+    <rect x="50" y="200" width="140" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="120" y="235" text-anchor="middle" fill="#000000" font-size="15" font-weight="bold">GitHub CI/CD</text>
+  </g>
+
+
+  <!-- ==================== PROCESSES (ELLIPSES) ==================== -->
+
+  <!-- Process 2.1 -->
+  <g id="proc-2-1">
+    <ellipse cx="330" cy="230" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="330" y="212" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">2.1</text>
+    <text x="330" y="232" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Git Diff</text>
+    <text x="330" y="252" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Filter</text>
+  </g>
+
+  <!-- Process 2.2 -->
+  <g id="proc-2-2">
+    <ellipse cx="550" cy="230" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="550" y="212" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">2.2</text>
+    <text x="550" y="232" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">AST Node</text>
+    <text x="550" y="252" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Visitor</text>
+  </g>
+
+  <!-- Process 2.3 -->
+  <g id="proc-2-3">
+    <ellipse cx="770" cy="230" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="770" y="208" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">2.3</text>
+    <text x="770" y="226" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Assertion</text>
+    <text x="770" y="244" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Parser</text>
+  </g>
+
+  <!-- Process 2.4 -->
+  <g id="proc-2-4">
+    <ellipse cx="990" cy="230" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="990" y="208" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">2.4</text>
+    <text x="990" y="226" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Vector</text>
+    <text x="990" y="244" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Encoder</text>
+  </g>
+
+
+  <!-- ==================== DATA STORE ==================== -->
+  <!-- D2: test_cases -->
+  <g id="store-d2" transform="translate(515, 440)">
+    <path d="M 200 0 L 0 0 L 0 45 L 200 45" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="45" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="28" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D2</text>
+    <text x="120" y="28" text-anchor="middle" fill="#000000" font-size="14">test_cases</text>
+  </g>
+
+  <!-- Footer -->
+  <g id="footer">
+    <line x1="80" y1="670" x2="1100" y2="670" stroke="#888888" stroke-width="0.8" />
+    <text x="590" y="692" text-anchor="middle" fill="#555555" font-size="11.5">Department of Computer Applications • MCA Project Report • Calicut University Guidelines</text>
+  </g>
+</svg>

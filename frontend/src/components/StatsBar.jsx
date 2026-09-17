@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Database, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 
 /**
  * AnimatedCounter — counts up from 0 to `value` on mount/change.
@@ -11,7 +12,7 @@ function AnimatedCounter({ value, duration = 600 }) {
     const startTime = performance.now();
     const step = (now) => {
       const progress = Math.min((now - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
       setDisplay(Math.round(eased * value));
       if (progress < 1) requestAnimationFrame(step);
     };
@@ -21,17 +22,26 @@ function AnimatedCounter({ value, duration = 600 }) {
   return <span className="animate-in">{display}</span>;
 }
 
+const ICONS = {
+  total:   <Database size={16} />,
+  covered: <CheckCircle size={16} />,
+  partial: <Clock size={16} />,
+  drifted: <AlertTriangle size={16} />,
+};
+
 /**
  * StatsBar — four summary stat cards at the top of the dashboard.
+ * Clicking a card filters the matrix table by status.
  */
-export default function StatsBar({ stats, loading }) {
+export default function StatsBar({ stats, loading, statusFilter, onFilter }) {
   if (loading) {
     return (
       <div className="stats-bar" id="stats-bar">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="glass-card stat-card">
-            <div className="skeleton" style={{ width: 80, height: 12, marginBottom: 8 }} />
-            <div className="skeleton" style={{ width: 60, height: 32 }} />
+          <div key={i} className="stat-card">
+            <div className="skeleton" style={{ width: 80, height: 11, marginBottom: 10 }} />
+            <div className="skeleton" style={{ width: 56, height: 32 }} />
+            <div className="skeleton" style={{ width: 100, height: 10, marginTop: 8 }} />
           </div>
         ))}
       </div>
@@ -44,38 +54,66 @@ export default function StatsBar({ stats, loading }) {
       value: stats?.total_entries ?? 0,
       detail: `${stats?.total_requirements ?? 0} reqs · ${stats?.total_test_cases ?? 0} tests`,
       variant: 'total',
+      filterKey: null,
     },
     {
       label: 'Covered',
       value: stats?.covered_count ?? 0,
-      detail: stats?.avg_risk_score != null ? `avg risk ${(stats.avg_risk_score * 100).toFixed(1)}%` : '—',
+      detail: stats?.avg_risk_score != null
+        ? `avg risk ${(stats.avg_risk_score * 100).toFixed(1)}%`
+        : '—',
       variant: 'covered',
+      filterKey: 'Covered',
     },
     {
       label: 'Partial',
       value: stats?.partial_count ?? 0,
-      detail: stats?.avg_semantic_score != null ? `avg semantic ${(stats.avg_semantic_score * 100).toFixed(1)}%` : '—',
+      detail: stats?.avg_semantic_score != null
+        ? `avg semantic ${(stats.avg_semantic_score * 100).toFixed(1)}%`
+        : '—',
       variant: 'partial',
+      filterKey: 'Partial',
     },
     {
       label: 'Drifted',
       value: stats?.drifted_count ?? 0,
-      detail: stats?.avg_structural_score != null ? `avg structural ${(stats.avg_structural_score * 100).toFixed(1)}%` : '—',
+      detail: stats?.avg_structural_score != null
+        ? `avg structural ${(stats.avg_structural_score * 100).toFixed(1)}%`
+        : '—',
       variant: 'drifted',
+      filterKey: 'Drifted',
     },
   ];
 
   return (
     <div className="stats-bar" id="stats-bar">
-      {cards.map((c) => (
-        <div key={c.variant} className={`glass-card stat-card stat-card--${c.variant}`} id={`stat-${c.variant}`}>
-          <div className="stat-card__label">{c.label}</div>
-          <div className="stat-card__value">
-            <AnimatedCounter value={c.value} />
+      {cards.map((c) => {
+        const isActive = c.filterKey
+          ? statusFilter === c.filterKey
+          : statusFilter === null;
+        return (
+          <div
+            key={c.variant}
+            className={`stat-card stat-card--${c.variant}${isActive && c.filterKey ? ' active-filter' : ''}`}
+            id={`stat-${c.variant}`}
+            onClick={() => onFilter?.(c.filterKey)}
+            role={c.filterKey ? 'button' : undefined}
+            tabIndex={c.filterKey ? 0 : undefined}
+          >
+            <div className="stat-card__top">
+              <div className="stat-card__label">{c.label}</div>
+              <div className="stat-card__icon">{ICONS[c.variant]}</div>
+            </div>
+            <div className="stat-card__value">
+              <AnimatedCounter value={c.value} />
+            </div>
+            <div className="stat-card__detail">{c.detail}</div>
+            {c.filterKey && (
+              <div className="stat-card__hint">Click to filter ↑</div>
+            )}
           </div>
-          <div className="stat-card__detail">{c.detail}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

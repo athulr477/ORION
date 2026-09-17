@@ -1,0 +1,203 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" width="100%" height="100%" style="background-color: #ffffff; font-family: 'Times New Roman', Times, serif;">
+  <defs>
+    <!-- Sharp academic black arrowhead -->
+    <marker id="arrow-black" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#000000" />
+    </marker>
+  </defs>
+
+  <!-- Title & Figure Header -->
+  <g id="figure-header">
+    <text x="600" y="38" text-anchor="middle" fill="#000000" font-size="18" font-weight="bold" letter-spacing="0.5">Figure 3.2: Level 1 System Data Flow Diagram (DFD)</text>
+    <text x="600" y="58" text-anchor="middle" fill="#333333" font-size="13" font-style="italic">Functional Subsystem Decomposition — Ingestion, AST Extraction, Risk Evaluation, XAI &amp; Gating</text>
+    <line x1="80" y1="72" x2="1120" y2="72" stroke="#000000" stroke-width="1.2" />
+  </g>
+
+  <!-- ==================== FLOW ARROWS ==================== -->
+
+  <!-- Jira -> 1.0 -->
+  <path d="M 230 150 L 265 150" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+  
+  <!-- 1.0 -> D1 -->
+  <path d="M 340 205 L 340 265" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- GitHub -> 2.0 -->
+  <path d="M 970 150 L 935 150" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 2.0 -> D2 -->
+  <path d="M 860 205 L 860 265" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D1 -> 3.0 -->
+  <path d="M 430 307 C 480 325, 505 340, 520 350" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D2 -> 3.0 -->
+  <path d="M 770 307 C 720 325, 695 340, 680 350" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 3.0 -> D3 -->
+  <path d="M 600 420 L 600 465" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D3 -> 4.0 -->
+  <path d="M 510 490 C 440 505, 410 525, 385 545" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 4.0 -> D4 -->
+  <path d="M 390 630 C 425 660, 465 680, 505 690" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D3 -> 5.0 -->
+  <path d="M 690 490 C 745 505, 780 525, 805 545" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D4 -> 5.0 -->
+  <path d="M 690 690 C 730 680, 770 660, 800 630" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 5.0 -> GitHub CI/CD (Check Run) -->
+  <path d="M 915 560 C 970 530, 1040 380, 1055 185" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 5.0 -> Jira Cloud (Comments) -->
+  <path d="M 830 525 C 770 240, 410 190, 230 170" fill="none" stroke="#000000" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-black)" />
+
+  <!-- 5.0 -> QA Lead -->
+  <path d="M 920 590 L 970 590" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- QA Lead -> 5.0 -->
+  <path d="M 970 610 L 920 610" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 5.0 -> Developer -->
+  <path d="M 765 600 C 600 650, 420 630, 230 590" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+
+  <!-- ==================== FLOW LABELS ==================== -->
+  <text x="245" y="140" fill="#000000" font-size="10.5" font-style="italic">Webhook (ADF)</text>
+  <text x="345" y="245" fill="#000000" font-size="10.5" font-style="italic">Store Reqs &amp; Vectors</text>
+
+  <text x="945" y="140" fill="#000000" font-size="10.5" font-style="italic">Test Files / PR</text>
+  <text x="865" y="245" fill="#000000" font-size="10.5" font-style="italic">Store AST &amp; Vectors</text>
+
+  <text x="430" y="345" fill="#000000" font-size="10.5" font-style="italic">Req Vectors</text>
+  <text x="690" y="345" fill="#000000" font-size="10.5" font-style="italic">Test Vectors</text>
+
+  <text x="605" y="445" fill="#000000" font-size="10.5" font-style="italic">Write Trace Verdicts</text>
+
+  <text x="400" y="525" fill="#000000" font-size="10.5" font-style="italic">Trace Gaps &amp; Evidence</text>
+  <text x="415" y="675" fill="#000000" font-size="10.5" font-style="italic">Save XAI Reports</text>
+
+  <text x="735" y="525" fill="#000000" font-size="10.5" font-style="italic">Matrix State</text>
+  <text x="730" y="675" fill="#000000" font-size="10.5" font-style="italic">Audit Logs</text>
+
+  <text x="1055" y="360" fill="#000000" font-size="10.5" font-style="italic">Check Run Gating</text>
+  <text x="480" y="200" fill="#000000" font-size="10.5" font-style="italic">Sync Jira Trace Comments</text>
+
+  <text x="930" y="582" fill="#000000" font-size="10" font-style="italic">RTM UI</text>
+  <text x="930" y="626" fill="#000000" font-size="10" font-style="italic">Overrides</text>
+
+  <text x="350" y="615" fill="#000000" font-size="10.5" font-style="italic">PR Blocker Diagnostics</text>
+
+
+  <!-- ==================== EXTERNAL ENTITIES ==================== -->
+  <!-- Jira Cloud -->
+  <g id="ent-jira">
+    <rect x="50" y="120" width="180" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="140" y="155" text-anchor="middle" fill="#000000" font-size="15" font-weight="bold">Jira Cloud</text>
+  </g>
+
+  <!-- GitHub CI/CD -->
+  <g id="ent-github">
+    <rect x="970" y="120" width="180" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="1060" y="155" text-anchor="middle" fill="#000000" font-size="15" font-weight="bold">GitHub CI/CD</text>
+  </g>
+
+  <!-- Developer -->
+  <g id="ent-developer">
+    <rect x="50" y="550" width="180" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="140" y="585" text-anchor="middle" fill="#000000" font-size="15" font-weight="bold">Developer</text>
+  </g>
+
+  <!-- QA Lead / Auditor -->
+  <g id="ent-qalead">
+    <rect x="970" y="550" width="180" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="1060" y="585" text-anchor="middle" fill="#000000" font-size="15" font-weight="bold">QA Lead / Auditor</text>
+  </g>
+
+
+  <!-- ==================== PROCESSES (ELLIPSES) ==================== -->
+  
+  <!-- Process 1.0 -->
+  <g id="proc-1">
+    <ellipse cx="340" cy="150" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="340" y="132" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">1.0</text>
+    <text x="340" y="152" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Requirements</text>
+    <text x="340" y="172" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Ingestion</text>
+  </g>
+
+  <!-- Process 2.0 -->
+  <g id="proc-2">
+    <ellipse cx="860" cy="150" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="860" y="132" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">2.0</text>
+    <text x="860" y="152" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">AST Test</text>
+    <text x="860" y="172" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Extraction</text>
+  </g>
+
+  <!-- Process 3.0 -->
+  <g id="proc-3">
+    <ellipse cx="600" cy="360" rx="85" ry="60" fill="#ffffff" stroke="#000000" stroke-width="2" />
+    <text x="600" y="340" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">3.0</text>
+    <text x="600" y="360" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Hybrid Risk</text>
+    <text x="600" y="380" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Engine</text>
+  </g>
+
+  <!-- Process 4.0 -->
+  <g id="proc-4">
+    <ellipse cx="340" cy="580" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="340" y="562" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">4.0</text>
+    <text x="340" y="582" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">XAI</text>
+    <text x="340" y="602" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Verbalization</text>
+  </g>
+
+  <!-- Process 5.0 -->
+  <g id="proc-5">
+    <ellipse cx="860" cy="580" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="860" y="562" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">5.0</text>
+    <text x="860" y="582" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Gating &amp;</text>
+    <text x="860" y="602" text-anchor="middle" fill="#000000" font-size="15" font-style="italic" font-weight="bold">Visualization</text>
+  </g>
+
+
+  <!-- ==================== DATA STORES (OPEN PARALLEL BARS) ==================== -->
+
+  <!-- D1: requirements -->
+  <g id="store-d1" transform="translate(250, 265)">
+    <!-- Top & Bottom parallel bars, left closed, right open -->
+    <path d="M 180 0 L 0 0 L 0 42 L 180 42" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="42" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="26" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D1</text>
+    <text x="110" y="26" text-anchor="middle" fill="#000000" font-size="14">requirements</text>
+  </g>
+
+  <!-- D2: test_cases -->
+  <g id="store-d2" transform="translate(770, 265)">
+    <path d="M 180 0 L 0 0 L 0 42 L 180 42" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="42" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="26" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D2</text>
+    <text x="110" y="26" text-anchor="middle" fill="#000000" font-size="14">test_cases</text>
+  </g>
+
+  <!-- D3: trace_links -->
+  <g id="store-d3" transform="translate(510, 465)">
+    <path d="M 180 0 L 0 0 L 0 42 L 180 42" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="42" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="26" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D3</text>
+    <text x="110" y="26" text-anchor="middle" fill="#000000" font-size="14">trace_links</text>
+  </g>
+
+  <!-- D4: audit_logs -->
+  <g id="store-d4" transform="translate(510, 670)">
+    <path d="M 180 0 L 0 0 L 0 42 L 180 42" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="42" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="26" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D4</text>
+    <text x="110" y="26" text-anchor="middle" fill="#000000" font-size="14">audit_logs</text>
+  </g>
+
+  <!-- Footer -->
+  <g id="footer">
+    <line x1="80" y1="770" x2="1120" y2="770" stroke="#888888" stroke-width="0.8" />
+    <text x="600" y="792" text-anchor="middle" fill="#555555" font-size="11.5">Department of Computer Applications • MCA Project Report • Calicut University Guidelines</text>
+  </g>
+</svg>

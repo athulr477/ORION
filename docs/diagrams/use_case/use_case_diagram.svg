@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 870" width="100%" height="100%" style="background-color: #ffffff; font-family: 'Segoe UI', Arial, sans-serif;">
+  <defs>
+    <!-- Drop shadow for use case ovals for high visibility -->
+    <filter id="card-shadow" x="-5%" y="-10%" width="110%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <!-- Title Section -->
+  <g id="header">
+    <text x="50" y="55" fill="#0f172a" font-family="'Times New Roman', Times, serif" font-size="36" font-weight="bold" letter-spacing="-0.5">Use Case Diagram</text>
+    <text x="50" y="80" fill="#475569" font-size="13.5" font-weight="500">Project: ORION — Role-Based System Architecture (QA Lead / SysAdmin &amp; Software Developer)</text>
+    <line x1="50" y1="95" x2="1230" y2="95" stroke="#cbd5e1" stroke-width="1.5" />
+  </g>
+
+  <!-- System Boundary (Center high-contrast container) -->
+  <g id="system-boundary">
+    <rect x="360" y="130" width="560" height="690" rx="10" fill="#f8fafc" stroke="#0284c7" stroke-width="2.5" />
+    <!-- Boundary Label Header Pill -->
+    <rect x="430" y="115" width="420" height="30" rx="6" fill="#0284c7" />
+    <text x="640" y="135" text-anchor="middle" fill="#ffffff" font-size="12.5" font-weight="700" letter-spacing="0.8">ORION TRACEABILITY SYSTEM BOUNDARY</text>
+  </g>
+
+  <!-- ==================== ASSOCIATION LINES ==================== -->
+  
+  <!-- QA Lead Associations (Crisp Emerald Green lines) -->
+  <g id="qa-associations" stroke="#15803d" stroke-width="1.8" opacity="0.95">
+    <line x1="260" y1="440" x2="430" y2="185" />
+    <line x1="260" y1="440" x2="430" y2="255" />
+    <line x1="260" y1="440" x2="430" y2="325" />
+    <line x1="260" y1="440" x2="430" y2="395" />
+    <line x1="260" y1="440" x2="430" y2="465" />
+    <line x1="260" y1="440" x2="430" y2="745" />
+  </g>
+
+  <!-- Software Developer Associations (Crisp Royal Blue lines) -->
+  <g id="dev-associations" stroke="#1d4ed8" stroke-width="1.8" opacity="0.95">
+    <line x1="1020" y1="440" x2="850" y2="465" />
+    <line x1="1020" y1="440" x2="850" y2="535" />
+    <line x1="1020" y1="440" x2="850" y2="605" />
+    <line x1="1020" y1="440" x2="850" y2="675" />
+    <line x1="1020" y1="440" x2="850" y2="745" />
+  </g>
+
+
+  <!-- ==================== USE CASE OVALS ==================== -->
+  <g id="use-cases">
+    
+    <!-- 1. Sync Project Data -->
+    <g transform="translate(640, 185)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Sync Project Data (Jira ADF &amp; GitHub PRs)</text>
+    </g>
+
+    <!-- 2. Configure Sensitivity Thresholds -->
+    <g transform="translate(640, 255)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Configure Sensitivity Thresholds (τ_sem, τ_struct)</text>
+    </g>
+
+    <!-- 3. Override Trace Risk Verdict -->
+    <g transform="translate(640, 325)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Override Trace Risk Verdict (Accept / Reject Link)</text>
+    </g>
+
+    <!-- 4. Simulate Reclassification & Heatmap -->
+    <g transform="translate(640, 395)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Simulate Reclassification &amp; Heatmap Analysis</text>
+    </g>
+
+    <!-- 5. View RTM Dashboard & Coverage Matrix (Shared) -->
+    <g transform="translate(640, 465)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="205" ry="25" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0369a1" font-size="13" font-weight="700">View RTM Dashboard &amp; Traceability Matrix</text>
+    </g>
+
+    <!-- 6. Inspect AST Evidence & Assertions -->
+    <g transform="translate(640, 535)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Inspect AST Evidence &amp; Test Assertions</text>
+    </g>
+
+    <!-- 7. Review XAI Explanations & Gap Summaries -->
+    <g transform="translate(640, 605)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Review XAI Explanations &amp; Gap Summaries (LLM)</text>
+    </g>
+
+    <!-- 8. Trigger PR Verification Check Runs -->
+    <g transform="translate(640, 675)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#ffffff" stroke="#0284c7" stroke-width="2" />
+      <text x="0" y="5" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Trigger PR Verification &amp; GitHub Check Run Gating</text>
+    </g>
+
+    <!-- 9. Authenticate & Switch RBAC Session (Shared) -->
+    <g transform="translate(640, 745)" filter="url(#card-shadow)">
+      <ellipse cx="0" cy="0" rx="195" ry="24" fill="#f8fafc" stroke="#475569" stroke-width="2" stroke-dasharray="4,3" />
+      <text x="0" y="5" text-anchor="middle" fill="#334155" font-size="12.5" font-weight="600">Authenticate &amp; Switch RBAC Session</text>
+    </g>
+
+  </g>
+
+
+  <!-- ==================== ACTOR 1: QA LEAD / SYSTEM ADMINISTRATOR ==================== -->
+  <g id="actor-qa" transform="translate(190, 420)">
+    <!-- Head -->
+    <circle cx="0" cy="0" r="14" fill="#dcfce7" stroke="#15803d" stroke-width="2.5" />
+    <!-- Torso -->
+    <line x1="0" y1="14" x2="0" y2="55" stroke="#15803d" stroke-width="2.5" />
+    <!-- Arms -->
+    <line x1="-22" y1="32" x2="0" y2="24" stroke="#15803d" stroke-width="2.5" />
+    <line x1="0" y1="24" x2="22" y2="32" stroke="#15803d" stroke-width="2.5" />
+    <!-- Legs -->
+    <line x1="0" y1="55" x2="-20" y2="92" stroke="#15803d" stroke-width="2.5" />
+    <line x1="0" y1="55" x2="20" y2="92" stroke="#15803d" stroke-width="2.5" />
+    
+    <!-- Role Badge Box -->
+    <g transform="translate(0, 115)">
+      <rect x="-115" y="0" width="230" height="50" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8" />
+      <text x="0" y="21" text-anchor="middle" fill="#15803d" font-size="13.5" font-weight="700">QA Lead /</text>
+      <text x="0" y="39" text-anchor="middle" fill="#15803d" font-size="13.5" font-weight="700">System Administrator</text>
+    </g>
+    <!-- Scope Tag -->
+    <text x="0" y="180" text-anchor="middle" fill="#166534" font-size="11.5" font-weight="600">[ Full Policy &amp; Override Rights ]</text>
+  </g>
+
+
+  <!-- ==================== ACTOR 2: SOFTWARE DEVELOPER ==================== -->
+  <g id="actor-dev" transform="translate(1090, 420)">
+    <!-- Head -->
+    <circle cx="0" cy="0" r="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2.5" />
+    <!-- Torso -->
+    <line x1="0" y1="14" x2="0" y2="55" stroke="#1d4ed8" stroke-width="2.5" />
+    <!-- Arms -->
+    <line x1="-22" y1="32" x2="0" y2="24" stroke="#1d4ed8" stroke-width="2.5" />
+    <line x1="0" y1="24" x2="22" y2="32" stroke="#1d4ed8" stroke-width="2.5" />
+    <!-- Legs -->
+    <line x1="0" y1="55" x2="-20" y2="92" stroke="#1d4ed8" stroke-width="2.5" />
+    <line x1="0" y1="55" x2="20" y2="92" stroke="#1d4ed8" stroke-width="2.5" />
+    
+    <!-- Role Badge Box -->
+    <g transform="translate(0, 115)">
+      <rect x="-95" y="0" width="190" height="50" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8" />
+      <text x="0" y="30" text-anchor="middle" fill="#1d4ed8" font-size="14.5" font-weight="700">Software Developer</text>
+    </g>
+    <!-- Scope Tag -->
+    <text x="0" y="180" text-anchor="middle" fill="#1e40af" font-size="11.5" font-weight="600">[ Evidence Inspection &amp; PR Gating ]</text>
+  </g>
+
+
+  <!-- Footer -->
+  <g id="footer">
+    <line x1="50" y1="840" x2="1230" y2="840" stroke="#cbd5e1" stroke-width="1" />
+    <text x="640" y="858" text-anchor="middle" fill="#64748b" font-size="11.5">Department of Computer Applications • MCA Project Report • Calicut University Guidelines</text>
+  </g>
+</svg>

@@ -1,96 +1,71 @@
+import { useWorkspace } from '../contexts/WorkspaceContext';
+import { LogOut, Shield, Code2 } from 'lucide-react';
+
 /**
- * UserNav — Header/Navbar badge component displaying the authenticated RBAC user.
- *
- * Displays: "Logged in as: [Username] ([Role])" with a styled "Logout" button.
- *
- * @param {Object} props
- * @param {{ username: string, role: string }} props.currentUser - The active session user object
- * @param {Function} props.onLogout - Callback function that resets currentUser to null
+ * UserNav — compact header bar showing user identity, role badge,
+ * workspace switcher, and logout.
  */
 export default function UserNav({ currentUser, onLogout }) {
+  const { workspaces, currentWorkspace, switchWorkspace, loading } = useWorkspace() || {};
+
   if (!currentUser) return null;
 
   const isQALead = currentUser.role === 'QA Lead / System Administrator';
+  const initials = currentUser.username?.slice(0, 2).toUpperCase() || 'U';
 
   return (
-    <div
-      id="user-nav-container"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '6px 14px',
-        backgroundColor: 'var(--bg-tertiary, #161b22)',
-        border: '1px solid var(--border-subtle, rgba(48, 54, 61, 0.6))',
-        borderRadius: '8px',
-        fontSize: '13px',
-        color: 'var(--text-secondary, #8b949e)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span
-          style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: isQALead ? '#3fb950' : '#58a6ff',
-            boxShadow: `0 0 8px ${isQALead ? '#3fb950' : '#58a6ff'}`,
-          }}
-        />
-        <span>
-          Logged in as:{' '}
-          <strong style={{ color: 'var(--text-primary, #e6edf3)' }}>
-            {currentUser.username}
-          </strong>{' '}
-          <span
-            style={{
-              fontSize: '11px',
-              padding: '2px 8px',
-              borderRadius: '9999px',
-              backgroundColor: isQALead
-                ? 'rgba(63, 185, 80, 0.15)'
-                : 'rgba(88, 166, 255, 0.15)',
-              color: isQALead ? '#3fb950' : '#58a6ff',
-              border: `1px solid ${
-                isQALead
-                  ? 'rgba(63, 185, 80, 0.3)'
-                  : 'rgba(88, 166, 255, 0.3)'
-              }`,
-              fontWeight: 500,
-            }}
-          >
-            {currentUser.role}
+    <div className="user-nav" id="user-nav-container">
+      {/* Avatar */}
+      <div className="user-avatar" title={currentUser.username}>{initials}</div>
+
+      {/* Info */}
+      <div className="user-info">
+        <div className="user-name">{currentUser.username}</div>
+        <div className="user-role">
+          <span className={`role-badge ${isQALead ? 'role-badge--qa' : 'role-badge--dev'}`}>
+            {isQALead ? <Shield size={9} /> : <Code2 size={9} />}
+            {isQALead ? 'QA Lead' : 'Developer'}
           </span>
-        </span>
+        </div>
       </div>
 
+      <div className="user-divider" />
+
+      {/* Workspace switcher */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Workspace
+        </span>
+        <select
+          className="workspace-select"
+          value={currentWorkspace?.id || ''}
+          onChange={(e) => switchWorkspace(e.target.value)}
+          disabled={loading || !workspaces?.length}
+          id="workspace-select"
+          aria-label="Switch workspace"
+        >
+          {loading ? (
+            <option>Loading…</option>
+          ) : (
+            workspaces?.map((ws) => (
+              <option key={ws.id} value={ws.id}>{ws.name}</option>
+            ))
+          )}
+        </select>
+      </div>
+
+      <div className="user-divider" />
+
+      {/* Logout */}
       <button
-        type="button"
+        className="btn-logout"
         onClick={onLogout}
         id="user-logout-btn"
-        style={{
-          marginLeft: '4px',
-          padding: '4px 10px',
-          backgroundColor: 'transparent',
-          border: '1px solid var(--border-subtle, rgba(48, 54, 61, 0.6))',
-          borderRadius: '6px',
-          color: 'var(--text-secondary, #8b949e)',
-          fontSize: '12px',
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.color = '#f85149';
-          e.target.style.borderColor = 'rgba(248, 81, 73, 0.4)';
-          e.target.style.backgroundColor = 'rgba(248, 81, 73, 0.1)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.color = 'var(--text-secondary, #8b949e)';
-          e.target.style.borderColor = 'var(--border-subtle, rgba(48, 54, 61, 0.6))';
-          e.target.style.backgroundColor = 'transparent';
-        }}
+        title="Sign out"
+        aria-label="Sign out"
       >
-        Logout ⎋
+        <LogOut size={13} />
+        Logout
       </button>
     </div>
   );

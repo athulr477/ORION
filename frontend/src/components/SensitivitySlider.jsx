@@ -1,10 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { SlidersHorizontal, Sparkles, Lock, ChevronDown } from 'lucide-react';
 
 /**
- * SensitivitySlider — dual-slider panel for live threshold reclassification.
- *
- * Adjusts covered_threshold and drifted_threshold, calls the reclassify API,
- * and reports changed entries back to the parent via onReclassify.
+ * SensitivitySlider — collapsible dual-slider panel for live threshold reclassification.
+ * Collapsed by default for Developers, expanded by default for QA Leads.
  */
 export default function SensitivitySlider({
   coveredDefault = 0.75,
@@ -13,14 +12,15 @@ export default function SensitivitySlider({
   loading = false,
   currentUser,
 }) {
+  const isQALead =
+    currentUser?.role?.includes('QA Lead') ||
+    currentUser?.role?.includes('Administrator');
+
+  const [open, setOpen] = useState(false);
   const [covered, setCovered] = useState(coveredDefault);
   const [drifted, setDrifted] = useState(driftedDefault);
   const [changedCount, setChangedCount] = useState(null);
   const debounceRef = useRef(null);
-
-  const isQALead =
-    currentUser?.role?.includes('QA Lead') ||
-    currentUser?.role?.includes('Administrator');
 
   const isDefault =
     Math.abs(covered - coveredDefault) < 0.001 &&
@@ -62,168 +62,134 @@ export default function SensitivitySlider({
     onReclassify(coveredDefault, driftedDefault);
   };
 
-  // Cleanup debounce on unmount
   useEffect(() => () => clearTimeout(debounceRef.current), []);
 
   return (
-    <div className="glass-card sensitivity-panel" id="sensitivity-panel">
-      <div className="sensitivity-header">
-        <div className="sensitivity-title">
-          <span className="sensitivity-title__icon">⚙️</span>
-          Sensitivity Thresholds
+    <div className="sensitivity-panel" id="sensitivity-panel">
+      {/* Collapsible Header */}
+      <div
+        className="sensitivity-panel-header"
+        onClick={() => setOpen((v) => !v)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && setOpen((v) => !v)}
+        id="sensitivity-panel-toggle"
+      >
+        <div className="sensitivity-panel-header-left">
+          <SlidersHorizontal size={15} color="var(--brand)" />
+          <span className="sensitivity-panel-title">Sensitivity Thresholds</span>
           {!isQALead && (
-            <span
-              style={{
-                marginLeft: '12px',
-                fontSize: '11px',
-                padding: '2px 8px',
-                borderRadius: '4px',
-                backgroundColor: 'rgba(210, 153, 34, 0.12)',
-                color: 'var(--status-partial, #d29922)',
-                border: '1px solid rgba(210, 153, 34, 0.3)',
-                fontWeight: 500,
-              }}
-            >
-              🔒 Locked to Developers
+            <span className="sensitivity-lock-badge">
+              <Lock size={10} /> Locked
+            </span>
+          )}
+          {changedCount != null && changedCount > 0 && (
+            <span className="sensitivity-change-badge" id="reclassify-change-count">
+              <Sparkles size={12} />
+              {changedCount} {changedCount === 1 ? 'entry' : 'entries'} would change
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-          {changedCount != null && changedCount > 0 && (
-            <div className="sensitivity-change-count" id="reclassify-change-count">
-              <span>✦</span>
-              {changedCount} {changedCount === 1 ? 'entry' : 'entries'} would change
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
           {!isDefault && isQALead && (
             <button
-              className="sensitivity-reset-btn"
-              onClick={handleReset}
+              className="btn-ghost-sm"
+              onClick={(e) => { e.stopPropagation(); handleReset(); }}
               id="sensitivity-reset-btn"
             >
-              Reset to defaults
+              Reset
             </button>
           )}
+          <span className={`sensitivity-panel-chevron${open ? ' open' : ''}`}>
+            <ChevronDown size={15} />
+          </span>
         </div>
       </div>
 
-      <div className="sensitivity-sliders">
-        {/* Covered threshold */}
-        <div className="sensitivity-slider-group">
-          <div className="sensitivity-slider-label">
-            <span>
-              Covered threshold{' '}
-              <span style={{ color: 'var(--status-covered)', fontSize: 'var(--text-xs)' }}>
-                (risk &gt; this → Covered)
-              </span>
-            </span>
-            <span className="sensitivity-slider-value" style={{ color: 'var(--status-covered)' }}>
-              {(covered * 100).toFixed(0)}%
-            </span>
-          </div>
-          <input
-            type="range"
-            className={`sensitivity-slider sensitivity-slider--covered ${!isQALead ? 'opacity-50 cursor-not-allowed' : ''}`}
-            id="sensitivity-slider-covered"
-            min="0"
-            max="1"
-            step="0.01"
-            value={covered}
-            onChange={handleCoveredChange}
-            disabled={loading || !isQALead}
-            style={!isQALead ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
-            title={!isQALead ? 'Requires QA Lead permissions to adjust policy thresholds' : 'Adjust covered threshold'}
-          />
-        </div>
+      {/* Collapsible Body */}
+      {open && (
+        <div className="sensitivity-panel-body">
+          <div className="sensitivity-sliders">
+            {/* Covered threshold */}
+            <div className="sensitivity-slider-group">
+              <div className="sensitivity-slider-label">
+                <span>Covered threshold <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>(risk &gt; this → Covered)</span></span>
+                <strong style={{ color: 'var(--covered)' }}>{(covered * 100).toFixed(0)}%</strong>
+              </div>
+              <input
+                type="range"
+                className="sensitivity-slider sensitivity-slider--covered"
+                id="sensitivity-slider-covered"
+                min="0"
+                max="1"
+                step="0.01"
+                value={covered}
+                onChange={handleCoveredChange}
+                disabled={loading || !isQALead}
+                title={!isQALead ? 'Requires QA Lead permissions' : 'Adjust covered threshold'}
+              />
+            </div>
 
-        {/* Drifted threshold */}
-        <div className="sensitivity-slider-group">
-          <div className="sensitivity-slider-label">
-            <span>
-              Drifted threshold{' '}
-              <span style={{ color: 'var(--status-drifted)', fontSize: 'var(--text-xs)' }}>
-                (risk &lt; this → Drifted)
-              </span>
-            </span>
-            <span className="sensitivity-slider-value" style={{ color: 'var(--status-drifted)' }}>
-              {(drifted * 100).toFixed(0)}%
-            </span>
-          </div>
-          <input
-            type="range"
-            className={`sensitivity-slider sensitivity-slider--drifted ${!isQALead ? 'opacity-50 cursor-not-allowed' : ''}`}
-            id="sensitivity-slider-drifted"
-            min="0"
-            max="1"
-            step="0.01"
-            value={drifted}
-            onChange={handleDriftedChange}
-            disabled={loading || !isQALead}
-            style={!isQALead ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
-            title={!isQALead ? 'Requires QA Lead permissions to adjust policy thresholds' : 'Adjust drifted threshold'}
-          />
-        </div>
+            {/* Drifted threshold */}
+            <div className="sensitivity-slider-group">
+              <div className="sensitivity-slider-label">
+                <span>Drifted threshold <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>(risk &lt; this → Drifted)</span></span>
+                <strong style={{ color: 'var(--drifted)' }}>{(drifted * 100).toFixed(0)}%</strong>
+              </div>
+              <input
+                type="range"
+                className="sensitivity-slider sensitivity-slider--drifted"
+                id="sensitivity-slider-drifted"
+                min="0"
+                max="1"
+                step="0.01"
+                value={drifted}
+                onChange={handleDriftedChange}
+                disabled={loading || !isQALead}
+                title={!isQALead ? 'Requires QA Lead permissions' : 'Adjust drifted threshold'}
+              />
+            </div>
 
-        {/* Threshold visualization bar */}
-        <div style={{ flex: '0 0 auto', minWidth: 140, paddingTop: 8 }}>
-          <div className="sensitivity-slider-label">
-            <span>Preview</span>
-          </div>
-          <div
-            style={{
-              height: 28,
-              borderRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-              display: 'flex',
-              border: '1px solid var(--border-subtle)',
-              fontSize: 'var(--text-xs)',
-              fontWeight: 600,
-            }}
-          >
-            <div
-              style={{
-                width: `${drifted * 100}%`,
-                background: 'var(--status-drifted-bg)',
-                color: 'var(--status-drifted)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRight: '2px solid var(--status-drifted)',
-                transition: 'width var(--transition-base)',
-              }}
-            >
-              D
-            </div>
-            <div
-              style={{
-                flex: 1,
-                background: 'var(--status-partial-bg)',
-                color: 'var(--status-partial)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'width var(--transition-base)',
-              }}
-            >
-              P
-            </div>
-            <div
-              style={{
-                width: `${(1 - covered) * 100}%`,
-                background: 'var(--status-covered-bg)',
-                color: 'var(--status-covered)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderLeft: '2px solid var(--status-covered)',
-                transition: 'width var(--transition-base)',
-              }}
-            >
-              C
+            {/* Threshold preview bar */}
+            <div>
+              <div className="sensitivity-slider-label">
+                <span>Zone preview</span>
+              </div>
+              <div className="sensitivity-preview-bar">
+                <div
+                  style={{
+                    width: `${drifted * 100}%`,
+                    background: 'var(--drifted-bg)',
+                    color: 'var(--drifted)',
+                    borderRight: '2px solid var(--drifted)',
+                  }}
+                >
+                  D
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    background: 'var(--partial-bg)',
+                    color: 'var(--partial)',
+                  }}
+                >
+                  P
+                </div>
+                <div
+                  style={{
+                    width: `${(1 - covered) * 100}%`,
+                    background: 'var(--covered-bg)',
+                    color: 'var(--covered)',
+                    borderLeft: '2px solid var(--covered)',
+                  }}
+                >
+                  C
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

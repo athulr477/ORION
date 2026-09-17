@@ -4,9 +4,28 @@
 
 const BASE = '/api/v1/dashboard';
 
+let authToken = null;
+let currentWorkspaceId = null;
+
+export function setAuthToken(token) {
+  authToken = token;
+}
+
+export function setWorkspaceId(id) {
+  currentWorkspaceId = id;
+}
+
 async function request(url, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  if (currentWorkspaceId) {
+    headers['X-Workspace-ID'] = currentWorkspaceId;
+  }
+  
   const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers,
     ...options,
   });
   if (!res.ok) {
@@ -54,5 +73,54 @@ export async function simulateWebhook(payload) {
   return request(`${BASE}/simulate`, {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+/** Override a risk score manually (Requires QA_LEAD). */
+export async function overrideRiskScore(entryId, newStatus, rationale) {
+  return request(`${BASE}/matrix/${entryId}/override`, {
+    method: 'POST',
+    body: JSON.stringify({
+      new_status: newStatus,
+      rationale: rationale,
+    }),
+  });
+}
+/** Fetch user workspaces. */
+export async function fetchWorkspaces() {
+  // Not using BASE here since it's /api/v1/auth
+  return request('/api/v1/auth/workspaces');
+}
+
+/** Fetch background tasks. */
+export async function fetchTasks(limit = 10) {
+  return request(`/api/v1/tasks?limit=${limit}`);
+}
+
+/** Fetch all workspace integrations status (Jira, GitHub, Ollama). */
+export async function fetchIntegrationsStatus() {
+  return request('/api/v1/integrations/status');
+}
+
+/** Test Jira connection with current or custom credentials. */
+export async function testJiraConnection(payload = {}) {
+  return request('/api/v1/integrations/jira/test', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Test GitHub App PEM key & JWT minting. */
+export async function testGitHubConnection() {
+  return request('/api/v1/integrations/github/test', {
+    method: 'POST',
+  });
+}
+
+/** Trigger on-demand Jira sync for the workspace. */
+export async function syncJira(projectKey = null) {
+  const url = projectKey ? `/api/v1/jira/sync?project_key=${encodeURIComponent(projectKey)}` : '/api/v1/jira/sync';
+  return request(url, {
+    method: 'POST',
   });
 }

@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="100%" height="100%" style="background-color: #ffffff; font-family: 'Times New Roman', Times, serif;">
+  <defs>
+    <marker id="arrow-black" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#000000" />
+    </marker>
+  </defs>
+
+  <!-- Title & Figure Header -->
+  <g id="figure-header">
+    <text x="600" y="38" text-anchor="middle" fill="#000000" font-size="18" font-weight="bold" letter-spacing="0.5">Figure 3.5: Level 2 DFD — Subsystem 3.0 (Hybrid Risk Engine)</text>
+    <text x="600" y="58" text-anchor="middle" fill="#333333" font-size="13" font-style="italic">Decomposition of Dual-Scoring Matcher: Cosine Semantic Distance, AST Structural Overlap, Convex Fusion &amp; Classification</text>
+    <line x1="80" y1="72" x2="1120" y2="72" stroke="#000000" stroke-width="1.2" />
+  </g>
+
+  <!-- ==================== DATA STORES (LEFT) ==================== -->
+  
+  <!-- D1: requirements -->
+  <g id="store-d1" transform="translate(60, 180)">
+    <path d="M 180 0 L 0 0 L 0 45 L 180 45" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="45" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="28" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D1</text>
+    <text x="110" y="28" text-anchor="middle" fill="#000000" font-size="14">requirements</text>
+  </g>
+
+  <!-- D2: test_cases -->
+  <g id="store-d2" transform="translate(60, 360)">
+    <path d="M 180 0 L 0 0 L 0 45 L 180 45" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="45" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="28" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D2</text>
+    <text x="110" y="28" text-anchor="middle" fill="#000000" font-size="14">test_cases</text>
+  </g>
+
+
+  <!-- ==================== FLOW ARROWS ==================== -->
+
+  <!-- D1 -> 3.1 (Semantic Embeddings) -->
+  <path d="M 240 190 L 375 190" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D2 -> 3.1 (Test Embeddings) -->
+  <path d="M 240 370 C 310 370, 320 230, 375 220" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D1 -> 3.2 (Req Keywords/Constraints) -->
+  <path d="M 240 215 C 310 230, 310 350, 375 365" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- D2 -> 3.2 (Test Assertions/Tokens) -->
+  <path d="M 240 395 L 375 395" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 3.1 -> 3.3 (Semantic Score) -->
+  <path d="M 525 200 C 600 200, 630 270, 680 290" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 3.2 -> 3.3 (Structural Score) -->
+  <path d="M 525 380 C 600 380, 630 310, 680 300" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 3.3 -> 3.4 (Hybrid Score) -->
+  <path d="M 830 300 L 895 300" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- QA Lead / Config -> 3.4 (Thresholds) -->
+  <path d="M 970 180 L 970 240" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+  <!-- 3.4 -> D3: trace_links (Write Record) -->
+  <path d="M 970 360 L 970 480" fill="none" stroke="#000000" stroke-width="1.6" marker-end="url(#arrow-black)" />
+
+
+  <!-- ==================== FLOW LABELS ==================== -->
+  <text x="305" y="180" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Req Vectors</text>
+  <text x="320" y="270" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Test Vectors</text>
+
+  <text x="315" y="330" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">Req Terms</text>
+  <text x="305" y="415" text-anchor="middle" fill="#000000" font-size="10.5" font-style="italic">AST Assertions</text>
+
+  <text x="605" y="225" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">S_sem ∈ [0, 1]</text>
+  <text x="605" y="365" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">S_struct ∈ [0, 1]</text>
+
+  <text x="862" y="290" text-anchor="middle" fill="#000000" font-size="11" font-style="italic">S_hybrid</text>
+
+  <text x="980" y="210" fill="#000000" font-size="11" font-style="italic">Thresholds (τ_sem, τ_struct)</text>
+
+  <text x="980" y="420" fill="#000000" font-size="11" font-style="italic">Verdict &amp; Scores (Pass / Review / Fail)</text>
+
+
+  <!-- ==================== PROCESSES (ELLIPSES) ==================== -->
+
+  <!-- Process 3.1 -->
+  <g id="proc-3-1">
+    <ellipse cx="450" cy="200" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="450" y="180" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">3.1</text>
+    <text x="450" y="200" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Cosine Distance</text>
+    <text x="450" y="218" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Matcher</text>
+  </g>
+
+  <!-- Process 3.2 -->
+  <g id="proc-3-2">
+    <ellipse cx="450" cy="380" rx="75" ry="55" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="450" y="360" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">3.2</text>
+    <text x="450" y="380" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">AST Structural</text>
+    <text x="450" y="398" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Matcher</text>
+  </g>
+
+  <!-- Process 3.3 -->
+  <g id="proc-3-3">
+    <ellipse cx="755" cy="300" rx="75" ry="58" fill="#ffffff" stroke="#000000" stroke-width="2" />
+    <text x="755" y="278" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">3.3</text>
+    <text x="755" y="296" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Convex Fusion</text>
+    <text x="755" y="314" text-anchor="middle" fill="#000000" font-size="13" font-style="italic" font-weight="bold">0.6 Sem + 0.4 Struct</text>
+  </g>
+
+  <!-- Process 3.4 -->
+  <g id="proc-3-4">
+    <ellipse cx="970" cy="300" rx="75" ry="58" fill="#ffffff" stroke="#000000" stroke-width="2" />
+    <text x="970" y="280" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">3.4</text>
+    <text x="970" y="300" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Threshold</text>
+    <text x="970" y="318" text-anchor="middle" fill="#000000" font-size="14" font-style="italic" font-weight="bold">Classifier</text>
+  </g>
+
+
+  <!-- ==================== EXTERNAL ENTITY (CONFIG) ==================== -->
+  <!-- QA Lead / Config -->
+  <g id="ent-config">
+    <rect x="880" y="120" width="180" height="60" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <text x="970" y="145" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">QA Lead / Auditor</text>
+    <text x="970" y="165" text-anchor="middle" fill="#333333" font-size="12" font-style="italic">(Policy Configuration)</text>
+  </g>
+
+
+  <!-- ==================== OUTPUT DATA STORE ==================== -->
+  <!-- D3: trace_links -->
+  <g id="store-d3" transform="translate(870, 485)">
+    <path d="M 200 0 L 0 0 L 0 45 L 200 45" fill="#ffffff" stroke="#000000" stroke-width="1.8" />
+    <line x1="45" y1="0" x2="45" y2="45" stroke="#000000" stroke-width="1.5" />
+    <text x="22" y="28" text-anchor="middle" fill="#000000" font-size="14" font-weight="bold">D3</text>
+    <text x="120" y="28" text-anchor="middle" fill="#000000" font-size="14">trace_links</text>
+  </g>
+
+  <!-- Formula Callout Box -->
+  <g id="formula-box" transform="translate(350, 580)">
+    <rect x="0" y="0" width="500" height="70" fill="#fafafa" stroke="#000000" stroke-width="1" stroke-dasharray="3,3" />
+    <text x="250" y="24" text-anchor="middle" fill="#000000" font-size="12" font-weight="bold">Traceability Hybrid Score Mathematical Model:</text>
+    <text x="250" y="44" text-anchor="middle" fill="#000000" font-size="13" font-style="italic">S_hybrid = 0.6 · S_sem(Req, Test) + 0.4 · S_struct(Req, Test)</text>
+    <text x="250" y="60" text-anchor="middle" fill="#444444" font-size="11">Classification: PASS if S_sem ≥ τ_sem ∧ S_struct ≥ τ_struct, else REVIEW / FAIL</text>
+  </g>
+
+  <!-- Footer -->
+  <g id="footer">
+    <line x1="80" y1="720" x2="1120" y2="720" stroke="#888888" stroke-width="0.8" />
+    <text x="600" y="742" text-anchor="middle" fill="#555555" font-size="11.5">Department of Computer Applications • MCA Project Report • Calicut University Guidelines</text>
+  </g>
+</svg>
