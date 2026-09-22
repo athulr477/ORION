@@ -206,41 +206,138 @@ class _AssertionVisitor(ast.NodeVisitor):
             )
 
 
+def _extract_assertions_python_ast(source_code: str, function_name: str = "") -> CodeExtractionResult:
+    """Primary Python extraction path using the native ast.NodeVisitor.
+
+    Parses the given source code with Python's built-in ``ast`` module and
+    walks the function body with ``_AssertionVisitor``.  This is the canonical
+    v1.0.0 extraction strategy for Python test files — deterministic, no
+    external dependencies.
+
+    Args:
+        source_code: Source code of the test function (or full file slice).
+        function_name: Expected function name (used in the result).
+
+    Returns:
+        CodeExtractionResult populated by the AST walk.
+    """
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError as exc:
+        logger.warning(
+            "ast.parse failed for function %r (%s) — using fallback",
+            function_name, exc,
+        )
+        return CodeExtractionResult(function_name=function_name, fallback_used=True)
+
+    # Walk the parsed tree for function definitions
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if function_name and node.name != function_name:
+                continue
+            docstring = ast.get_docstring(node)
+            visitor = _AssertionVisitor()
+            visitor.visit(node)
+            return CodeExtractionResult(
+                function_name=node.name,
+                assertions=visitor.assertions,
+                docstring=docstring,
+                fallback_used=False,
+            )
+
+    # No matching function found — fall back gracefully
+    visitor = _AssertionVisitor()
+    visitor.visit(tree)
+    return CodeExtractionResult(
+        function_name=function_name,
+        assertions=visitor.assertions,
+        fallback_used=bool(not visitor.assertions),
+    )
+
+
 def extract_assertions(source_code: str, function_name: str = "", filename: str = "") -> CodeExtractionResult:
     """Parse a test function's source code and extract structural assertion data.
 
-    This is the main entry point for code-side extraction.
-    Uses the Tree-sitter PolyglotExtractor.
+    **Primary path (Python):** uses the native ``ast.NodeVisitor`` (``_AssertionVisitor``)
+    for deterministic, dependency-free extraction.  This is the v1.0.0 canonical mechanism.
+
+    **Polyglot fallback:** for non-Python files (JS/TS/Java/Go), delegates to
+    ``PolyglotExtractor`` (Tree-sitter) since the Python ``ast`` module cannot
+    parse those languages.
 
     Args:
         source_code: Source code of the test function.
         function_name: Name of the test function.
-        filename: Optional filename to detect language.
+        filename: Optional filename used to detect language for polyglot files.
 
     Returns:
         CodeExtractionResult with extracted assertions and metadata.
     """
+    import os
+    _, ext = os.path.splitext(filename or "")
+    ext = ext.lower()
+
+    # --- Primary path: native Python AST (v1.0.0 deterministic architecture) ---
+    if ext in ("", ".py"):
+        return _extract_assertions_python_ast(source_code, function_name=function_name)
+
+    # --- Polyglot path: Tree-sitter for non-Python languages ---
     from orion.extraction.tree_sitter_engine import PolyglotExtractor
-    
     results = PolyglotExtractor.extract(source_code, filename=filename, target_function=function_name)
-    
     if results:
-        # If we asked for a specific function, it should be the only one, or the first one.
         return results[0]
-        
-    # Fallback if parsing failed or no function found
+
     return CodeExtractionResult(function_name=function_name, fallback_used=True)
 
 
 def extract_assertions_from_file(source_code: str, filename: str = "") -> list[CodeExtractionResult]:
     """Parse an entire test file and extract assertions for each test function.
 
+    **Primary path (Python):** walks the AST with ``_AssertionVisitor`` per function.
+    **Polyglot path:** delegates to Tree-sitter for JS/TS/Java/Go files.
+
     Args:
         source_code: Full source code of a test file.
-        filename: Filename to detect language.
+        filename: Filename used to detect language.
 
     Returns:
         List of CodeExtractionResult, one per test function found.
     """
+    import os
+    _, ext = os.path.splitext(filename or "")
+    ext = ext.lower()
+
+    # --- Primary path: native Python AST ---
+    if ext in ("", ".py"):
+        try:
+            tree = ast.parse(source_code)
+        except SyntaxError as exc:
+            logger.warning("ast.parse failed for file %r: %s", filename, exc)
+            return []
+
+        results: list[CodeExtractionResult] = []
+        source_lines = source_code.splitlines()
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if not node.name.startswith("test_"):
+                    continue
+                docstring = ast.get_docstring(node)
+                # Slice source code for this function only
+                start = node.lineno - 1
+                end = node.end_lineno if node.end_lineno else start + 1
+                func_source = "\n".join(source_lines[start:end])
+                visitor = _AssertionVisitor()
+                visitor.visit(node)
+                results.append(
+                    CodeExtractionResult(
+                        function_name=node.name,
+                        assertions=visitor.assertions,
+                        docstring=docstring,
+                        fallback_used=False,
+                    )
+                )
+        return results
+
+    # --- Polyglot path ---
     from orion.extraction.tree_sitter_engine import PolyglotExtractor
     return PolyglotExtractor.extract(source_code, filename=filename)

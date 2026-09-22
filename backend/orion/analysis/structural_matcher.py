@@ -412,12 +412,11 @@ def compute_structural_score(
     result.test_assertion_count = len(comparison_assertions)
 
     if not threshold_constraints:
-        # No constraints to match — can't compute structural score
-        # Use a heuristic: if there are any assertions at all, give partial credit
-        if comparison_assertions:
-            result.structural_score = 1.0  # Some test structure exists
-        else:
-            result.structural_score = 1.0
+        # No threshold constraints to match — structural alignment is indeterminate.
+        # Use 0.5 as a neutral prior so the semantic score dominates classification.
+        # Returning 1.0 here would falsely collapse Drifted pairs (whose boolean-only
+        # requirements produce no threshold constraints) into the Partial band.
+        result.structural_score = 0.5
         return result
 
     if not comparison_assertions:

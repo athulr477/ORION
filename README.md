@@ -7,10 +7,22 @@
 [![GitHub App](https://img.shields.io/badge/GitHub-App%20Integration-181717.svg)](https://docs.github.com/en/apps)
 [![Atlassian Jira](https://img.shields.io/badge/Jira-Cloud%20REST%20API%20v3-0052CC.svg)](https://developer.atlassian.com/cloud/jira/platform/rest/v3/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Status: Production-Ready](https://img.shields.io/badge/Status-Production--Ready-success.svg)](#)
+[![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-blue.svg)](#)
 
 Orion is an automated, AI-augmented **Requirements Traceability Matrix (RTM) Engine** designed to eliminate **silent specification drift** between agile requirement specifications (Jira) and automated software test suites (pytest on GitHub).
 
 Unlike conventional semantic retrieval approaches that evaluate traceability solely via embedding proximity—and consequently overlook critical numerical boundary and assertion changes—Orion pairs a **Dual-Sided Structural Extractor** with a **Semantic Vector Engine**. Its deterministic hybrid risk engine blocks drifted Pull Requests in GitHub CI/CD, writes audit alerts back to Jira, and provides an interactive real-time dashboard with Role-Based Access Control (RBAC).
+
+---
+
+## 🚀 Current Project Status: Production-Ready (v1.0.0)
+
+All 11 development phases have been successfully completed, transforming Orion from a prototype into a 100% fully functional, production-ready system. Recent milestones include:
+* **Phase 9 (GitHub App):** Native integration for authenticating, intercepting pull requests, and posting real-time Check Runs with risk status and code annotations.
+* **Phase 10 (Evaluation):** Scientifically validated hybrid engine outperforming semantic-only baselines (0.750 F1-score on drifted requirements vs 0.000).
+* **Phase 11 (Jira Sync & Alerts):** Bi-directional synchronization mapping complex Jira ADF formats and writing automated drift warnings back to Jira issues.
+* **Background Task Queue & Interactive Dashboard:** Real-time background job polling and an advanced React dashboard with Role-Based Access Control (RBAC), overriding capabilities, and explainable AI heatmaps.
 
 ---
 
@@ -20,15 +32,20 @@ Unlike conventional semantic retrieval approaches that evaluate traceability sol
 * **Native GitHub App Check Runs:** Authenticates using RS256 JWTs and installation access tokens via an async-safe token negotiation pipeline. Intercepts Pull Request webhooks, evaluates traceability, and posts native GitHub Check Runs with pass/neutral/fail statuses and line annotations.
 * **Dual-Sided Structural Extraction:**
   * **Requirement Constraints:** Regex & NLP extract quantitative boundaries (`<= 100ms`, `== 200`, `timeout > 5s`, `not to exceed`, `shall not exceed`, `take no longer than`) with unit normalization.
-  * **Test Assertions:** Python AST (Abstract Syntax Tree) parses actual Python comparison operators, targets, and expected values from functions decorated with `@traces("REQ-xxx")`.
-* **Hybrid Risk Engine ($0.6 \cdot \text{sem} + 0.4 \cdot \text{struct}$):** Combines dense vector cosine similarity (local `bge-small-en-v1.5` ONNX embeddings) with discrete structural constraint matching to classify pairs into **Covered** ($\ge 0.70$), **Partial** ($0.45 - 0.70$), or **Drifted** ($< 0.45$).
+  * **Test Assertions:** Polyglot & Python AST (Abstract Syntax Tree) parses actual comparison operators, targets, and expected values from functions decorated with `@traces("REQ-xxx")`.
+* **Kuhn-Munkres Optimal Bipartite Matching:** Employs the Hungarian algorithm for global optimal assignment between requirement constraints and test assertions, powered by Dice coefficient keyword overlap ($2|R \cap T| / (|R| + |T|)$).
+* **Calibrated Hybrid Risk Engine ($\text{Risk} = 1.0 - (0.6 \cdot \text{sem} + 0.4 \cdot \text{struct})$):**
+  * Floored semantic similarity ($\max(0.0, \text{cosine})$) prevents negative vector penalties.
+  * Structural score computed as the $F_1$ harmonic mean between constraint match quality and test coverage.
+  * Deterministic risk classification: **Covered** ($\text{Risk} < 0.25$), **Partial** ($0.25 \le \text{Risk} \le 0.60$), and **Drifted** ($\text{Risk} > 0.60$).
 * **Evidence-Grounded LLM Verbalization:** Prompts a local LLM (Ollama Llama 3.1 8B) strictly with extracted AST evidence and constraint diffs to generate human-readable audit summaries without hallucinations (falling back to a deterministic template if offline).
+* **Asynchronous Background Task Queue:** Integrated background worker engine running async event processing, repository re-indexing, and webhook batch analysis.
 * **Interactive Dashboard with Role-Based Access Control (RBAC):**
-  * **Dual Personas:** Built-in RBAC session management distinguishing between **QA Lead / System Administrator** (full privileges: policy calibration, risk score overrides, simulation) and **Software Developer** (read-only audit, AST inspection).
-  * **Manual Risk Score Overrides:** Authorizes QA Leads to manually adjust risk scores with inline audit tagging for human-in-the-loop compliance sign-off.
-  * **Interactive Sensitivity Sliders:** Real-time reclassification preview for policy tuning with developer locked-state enforcement.
-  * **Explainable AI (XAI) Attribution Heatmap:** Visual modal attributing matched AST assertion tokens, requirement keywords, and structural constraints.
-  * **PR Webhook Simulator:** Built-in test sandbox to evaluate synthetic commits and requirement diffs before opening GitHub Pull Requests.
+  * **Role-Based Personas:** Built-in RBAC session management distinguishing between **QA Lead / Admin** (policy calibration, manual overrides, simulation, integrations) and **Developer / Reviewer** (read-only audit, AST inspection).
+  * **Manual Risk Score Overrides:** Authorizes QA Leads to manually adjust risk scores with inline audit reason logging for human-in-the-loop compliance sign-off.
+  * **Dynamic Sensitivity Sliders:** Calibrated dual-handle threshold slider with real-time zone preview (Covered / Partial / Drifted) for policy tuning.
+  * **Explainable AI (XAI) Attribution Heatmap:** Visual modal attributing matched AST assertion tokens, requirement keywords, and structural constraints across test suites.
+  * **Integrations Hub & PR Simulator:** In-app connection verification for GitHub, Jira, and Ollama, alongside a synthetic commit sandbox.
 
 ---
 
@@ -36,38 +53,39 @@ Unlike conventional semantic retrieval approaches that evaluate traceability sol
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion
+    subgraph Ingestion & Sync
         J[Jira Cloud v3 REST API] -->|ADF Parser & JQL Sync| DB[(PostgreSQL + pgvector)]
         GH[GitHub App Webhook] -->|PR Opened / Sync| WH[Orion Webhook Router]
+        Q[Async Task Queue Worker] -->|Background Tasks| DB
     end
 
     subgraph Processing Pipeline
-        WH --> BG[FastAPI BackgroundTasks]
+        WH --> BG[FastAPI BackgroundTasks / Queue]
         BG --> AST[AST Test Code Parser]
         DB --> REQ[Requirement Extractor]
         
-        AST --> EXT[Dual-Sided Structural Matcher]
+        AST --> EXT[Hungarian Bipartite Matcher\nDice Overlap + F1 Harmonic Score]
         REQ --> EXT
         
-        AST --> ONNX[BGE-Small ONNX Vectorizer]
-        REQ --> ONNX
+        AST --> VEC[FastEmbed / ONNX Vectorizer]
+        REQ --> VEC
         
-        EXT --> HRE[Hybrid Risk Engine\n0.6*Semantic + 0.4*Structural]
-        ONNX --> HRE
+        EXT --> HRE[Hybrid Risk Engine\nRisk = 1.0 - (0.6*Sem + 0.4*Struct)]
+        VEC --> HRE
     end
 
     subgraph Decision & Feedback Loop
-        HRE --> CLASSIFY{Classification}
-        CLASSIFY -->|>= 0.70| COV[Covered]
-        CLASSIFY -->|0.45 - 0.70| PAR[Partial]
-        CLASSIFY -->|< 0.45| DRIFT[Drifted]
+        HRE --> CLASSIFY{Risk Classification}
+        CLASSIFY -->|Risk < 0.25| COV[Covered]
+        CLASSIFY -->|0.25 <= Risk <= 0.60| PAR[Partial]
+        CLASSIFY -->|Risk > 0.60| DRIFT[Drifted]
         
         DRIFT --> LLM[Ollama Llama 3.1 Verbalizer]
         PAR --> LLM
         
-        LLM --> GHC[GitHub Check Run API\nNeutral / Failure + Annotations]
+        LLM --> GHC[GitHub Check Run API\nAnnotations & PR Blocking]
         LLM --> JIRAC[Jira Comment API\nAudit Drift Warning]
-        HRE --> DASH[React + Vite Dashboard\nRBAC + Overrides + Heatmaps]
+        HRE --> DASH[React + Vite Dashboard\nRBAC + Overrides + Heatmaps + Sliders]
     end
 ```
 
@@ -94,13 +112,14 @@ In a controlled benchmark on a 30-pair ground-truth dataset (10 Covered, 10 Part
 
 | Layer | Technologies |
 |---|---|
-| **Backend Core** | Python 3.11, FastAPI, Pydantic v2, Pydantic Settings, Uvicorn |
+| **Backend Core** | Python 3.11+, FastAPI, Pydantic v2, Pydantic Settings, Uvicorn |
 | **Database & Vector** | PostgreSQL 16, pgvector, SQLAlchemy 2.0 (Async / asyncpg), Alembic |
-| **Code Extraction** | Python `ast` module, extended rule-based quantitative constraint extractor |
-| **Embeddings** | HuggingFace BAAI/bge-small-en-v1.5 running locally via ONNX Runtime & NumPy |
+| **Code Extraction & Matching** | Python `ast`, Polyglot parser, Kuhn-Munkres (Hungarian) matching, Dice coefficient |
+| **Embeddings** | HuggingFace BAAI/bge-small-en-v1.5 & all-MiniLM-L6-v2 via ONNX Runtime & NumPy |
 | **LLM Verbalization** | Ollama (Llama 3.1 8B) with deterministic template fallback |
 | **Integrations** | GitHub Apps API (PyJWT, RS256, Check Runs), Atlassian Jira Cloud REST API v3 |
-| **Frontend** | React 18, Vite, Role-Based Access Control (RBAC), Lucide Icons, Vanilla CSS Design System |
+| **Task Queue** | Asynchronous task worker with polling & background task dispatch |
+| **Frontend** | React 18, Vite, Vanilla CSS Design System, Lucide Icons, Context API |
 
 ---
 
@@ -111,17 +130,26 @@ Orion provides a unified REST API mounted under `/api/v1`:
 | Module | Method | Endpoint | Description |
 |---|---|---|---|
 | **System** | `GET` | `/health` | Service health status check |
+| **Auth** | `POST` | `/api/v1/auth/token` | Obtain JWT access token via credentials (QA Lead / Dev) |
+| **Auth** | `GET` | `/api/v1/auth/workspaces` | Retrieve authorized workspaces for the current user |
 | **Webhooks** | `POST` | `/api/v1/webhooks/jira` | Ingest requirements from Jira issue webhooks (`issue_created`, `issue_updated`) |
 | **Webhooks** | `POST` | `/api/v1/webhooks/github` | Ingest test cases from simulated GitHub push payloads |
 | **Dashboard** | `GET` | `/api/v1/dashboard/matrix` | Paginated RTM table with search, sorting, and status filters |
 | **Dashboard** | `POST` | `/api/v1/dashboard/matrix/reclassify` | Dynamic sensitivity reclassification preview |
 | **Dashboard** | `GET` | `/api/v1/dashboard/matrix/{id}/heatmap` | Explainable AI (XAI) AST assertion and constraint token attribution |
+| **Dashboard** | `POST` | `/api/v1/dashboard/matrix/{id}/override` | Submit manual risk score override with audit justification |
 | **Dashboard** | `GET` | `/api/v1/dashboard/stats` | Global matrix coverage stats (Covered, Partial, Drifted counts) |
 | **Dashboard** | `POST` | `/api/v1/dashboard/simulate` | Interactive PR webhook simulator |
-| **GitHub** | `POST` | `/api/v1/github/events?workspace_id=<uuid>` | GitHub App webhook receiver for PR Check Runs. The webhook URL must include the workspace_id query parameter. |
+| **Dashboard** | `GET` | `/api/v1/dashboard/export` | Export RTM matrix as CSV or JSON |
+| **GitHub** | `POST` | `/api/v1/github/events?workspace_id=<uuid>` | GitHub App webhook receiver for PR Check Runs |
 | **Jira** | `POST` | `/api/v1/jira/sync` | Bulk JQL project synchronization and ADF ingestion |
 | **Jira** | `POST` | `/api/v1/jira/sync/{issue_key}` | On-demand single-issue refresh from Jira |
 | **Jira** | `POST` | `/api/v1/jira/report-drift` | Post drift alert comments to Jira with duplicate suppression |
+| **Integrations** | `GET` | `/api/v1/integrations/status` | Connection health check for GitHub, Jira, and Ollama |
+| **Integrations** | `POST` | `/api/v1/integrations/jira/test` | Test Jira Cloud API credentials and project reachability |
+| **Integrations** | `POST` | `/api/v1/integrations/github/test` | Test GitHub App private key & installation token exchange |
+| **Queue** | `GET` | `/api/v1/queue` | List running and completed background tasks |
+| **Queue** | `GET` | `/api/v1/queue/{task_id}` | Query execution status and results of a background task |
 
 ---
 
@@ -155,7 +183,7 @@ Copy the example environment configuration and fill in your credentials:
 cp .env.example .env
 ```
 
-Your `.env` should contain (see `.env.example` for a full template):
+Your `.env` should contain:
 ```env
 DATABASE_URL=postgresql+asyncpg://orion:your_password@localhost:5432/orion_db
 DATABASE_URL_SYNC=postgresql://orion:your_password@localhost:5432/orion_db
@@ -165,7 +193,6 @@ JIRA_WEBHOOK_SECRET=your-jira-webhook-secret
 GITHUB_WEBHOOK_SECRET=your-github-webhook-secret
 
 # GitHub App Integration
-# Create a GitHub App at github.com/settings/apps and install it on your repo.
 GITHUB_APP_ID=your_app_id
 GITHUB_APP_INSTALLATION_ID=your_installation_id
 GITHUB_APP_PRIVATE_KEY_PATH=./secrets/github-app.pem
@@ -196,7 +223,6 @@ alembic upgrade head
 Verify that all subsystems are operational:
 
 ```powershell
-# Run individual phase verification suites
 python scripts/verify_phase1.py     # Database schema, tables & pgvector initialization
 python scripts/verify_phase2.py     # Ingestion pipeline & webhook HMAC signatures
 python scripts/verify_phase3.py     # AST assertion & constraint extraction
@@ -232,26 +258,31 @@ Open `http://localhost:5173` to access the interactive RTM dashboard. Use the bu
 
 ```
 ORION/
-├── backend/                           # Backend Fast API application
-│   ├── orion/                         # Core application package
-│   │   ├── analysis/                  # Hybrid risk engine, structural matcher, & delta service
+├── backend/                           # Backend FastAPI application
+│   ├── orion/                         # Core application package (13 Subsystems)
+│   │   ├── analysis/                  # Kuhn-Munkres matching, risk engine, & delta service
 │   │   │   ├── delta_parser.py        # Jira changelog to requirement delta parser
 │   │   │   ├── delta_service.py       # Delta application & historical tracking
-│   │   │   ├── risk_engine.py         # 0.6*sem + 0.4*struct hybrid classification
-│   │   │   └── structural_matcher.py  # Discrete constraint vs AST assertion comparison
+│   │   │   ├── risk_engine.py         # 1.0 - (0.6*sem + 0.4*struct) risk classification
+│   │   │   └── structural_matcher.py  # Kuhn-Munkres (Hungarian) matcher & Dice coefficient
 │   │   ├── app.py                     # FastAPI application factory, CORS, & router mounting
+│   │   ├── auth/                      # JWT authentication & Role-Based Access Control (RBAC)
+│   │   │   ├── models.py              # User & Workspace schemas
+│   │   │   ├── routes.py              # /api/v1/auth (/token, /workspaces)
+│   │   │   └── security.py            # Password hashing & JWT token issuance
 │   │   ├── config.py                  # Pydantic BaseSettings environment configuration
 │   │   ├── dashboard/                 # Dashboard endpoints & response models
-│   │   │   ├── routes.py              # /api/v1/dashboard (matrix, reclassify, heatmap, stats, simulate)
-│   │   │   └── schemas.py             # Pydantic schemas for dashboard payloads
+│   │   │   ├── routes.py              # /api/v1/dashboard (matrix, reclassify, heatmap, stats, simulate, override)
+│   │   │   ├── schemas.py             # Pydantic schemas for dashboard payloads
+│   │   │   └── service.py             # Dashboard aggregations & floored similarity calculations
 │   │   ├── database.py                # Async engine, session context manager, & pgvector setup
 │   │   ├── embedding/                 # Dense vector embedding engine
-│   │   │   ├── engine.py              # BGE-small ONNX runtime inference & cosine similarity
+│   │   │   ├── engine.py              # FastEmbed/ONNX runtime inference & floored semantic similarity
 │   │   │   └── text_builder.py        # Canonical text representation builder for embeddings
 │   │   ├── evaluation/                # 30-pair benchmark dataset & evaluation harness
 │   │   │   ├── data/                  # benchmark_30.json ground truth dataset
-│   │   │   └── evaluator.py           # Metrics evaluator (F1, precision, recall, confusion matrix)
-│   │   ├── extraction/                # Dual-sided structural parsers
+│   │   │   └── evaluator.py           # Precision, Recall, Macro-F1 evaluation engine
+│   │   ├── extraction/                # Dual-sided structural & AST parsers
 │   │   │   ├── code_extractor.py      # Python AST parser for @traces assertions
 │   │   │   └── requirement_extractor.py # Regex/NLP boundary & constraint extractor
 │   │   ├── github/                    # GitHub App integration
@@ -259,12 +290,15 @@ ORION/
 │   │   │   ├── client.py              # GitHub REST API client (Check Runs, PR files, annotations)
 │   │   │   ├── routes.py              # Webhook event receiver for pull_request events
 │   │   │   └── schemas.py             # GitHub webhook payload models
-│   │   ├── ingestion/                 # Webhook ingestion pipeline
+│   │   ├── ingestion/                 # Webhook ingestion & git diff pipeline
 │   │   │   ├── parsers.py             # Payload & test function parsers
 │   │   │   ├── routes.py              # /api/v1/webhooks (Jira & GitHub)
 │   │   │   ├── schemas.py             # Webhook schemas & results
 │   │   │   ├── service.py             # Upsert requirement and test case records
 │   │   │   └── signatures.py          # HMAC-SHA256 signature verification
+│   │   ├── integrations/              # External service health & diagnostic management
+│   │   │   ├── routes.py              # /api/v1/integrations (/status, /jira/test, /github/test)
+│   │   │   └── service.py             # Integration status probes for Jira, GitHub, & Ollama
 │   │   ├── jira/                      # Jira Cloud REST v3 integration
 │   │   │   ├── adf.py                 # Recursive Atlassian Document Format (ADF) parser
 │   │   │   ├── client.py              # Jira REST client (JQL search, issue fetch, audit comments)
@@ -273,8 +307,12 @@ ORION/
 │   │   │   ├── requirement.py         # Requirement & RequirementConstraint entities
 │   │   │   ├── test_case.py           # TestCase & TestAssertion entities
 │   │   │   └── traceability_matrix.py # TraceabilityMatrix link & status enum
+│   │   ├── queue/                     # Asynchronous task queue & background processing
+│   │   │   ├── routes.py              # /api/v1/queue (/tasks)
+│   │   │   ├── tasks.py               # Asynchronous task worker definitions
+│   │   │   └── worker.py              # Background polling queue worker
 │   │   └── verbalization/             # Evidence-grounded LLM audit verbalizer
-│   │       ├── evidence.py            # Structured evidence tuple builder
+│   │       ├── evidence.py            # Structured evidence tuple builder (derived thresholds)
 │   │       ├── llm_client.py          # Ollama client with deterministic fallback
 │   │       └── service.py             # End-to-end verbalization pipeline
 │   ├── migrations/                    # Alembic database migrations
@@ -283,18 +321,25 @@ ORION/
 │   └── pyproject.toml                 # Build configuration & dependency definitions
 ├── frontend/                          # React 18 + Vite dashboard application
 │   ├── src/
-│   │   ├── api/client.js              # Fetch wrapper for Orion dashboard API
+│   │   ├── api/
+│   │   │   └── client.js              # Axios API client with 13 mapped REST endpoints
+│   │   ├── contexts/
+│   │   │   └── AuthContext.jsx        # JWT authentication & user session state
 │   │   ├── components/
 │   │   │   ├── HeatmapModal.jsx       # XAI AST constraint & token attribution heatmap
+│   │   │   ├── IntegrationsModal.jsx  # Connection health manager for GitHub, Jira, & Ollama
 │   │   │   ├── LoginModal.jsx         # RBAC login modal with QA Lead & Developer presets
-│   │   │   ├── MatrixTable.jsx        # Paginated RTM table with manual score overrides
-│   │   │   ├── SensitivitySlider.jsx  # Interactive policy threshold calibration (RBAC locked)
+│   │   │   ├── MatrixTable.jsx        # Paginated RTM table with search, filters, & sorting
+│   │   │   ├── OverrideModal.jsx      # Manual risk score override modal with audit rationale
+│   │   │   ├── SensitivitySlider.jsx  # Calibrated dual-handle threshold slider with zone preview
 │   │   │   ├── SimulateModal.jsx      # Synthetic PR webhook simulator
 │   │   │   ├── StatsBar.jsx           # Global coverage & health summary metrics
 │   │   │   ├── StatusBadge.jsx        # Status pill indicator (Covered, Partial, Drifted)
+│   │   │   ├── TaskQueueDrawer.jsx    # Real-time background task monitoring drawer
 │   │   │   └── UserNav.jsx            # Authenticated user pill, role badge, & logout
 │   │   ├── App.jsx                    # Application shell with RBAC session & modal controllers
 │   │   └── index.css                  # Vanilla CSS design system
+│   └── package.json
 ├── evaluation_report.md               # Comprehensive benchmark evaluation report
 └── docker-compose.yml                 # Container definitions (PostgreSQL 16 + pgvector)
 ```
@@ -304,10 +349,9 @@ ORION/
 ## 🔭 Limitations & Future Scope
 
 While Orion successfully proves the viability of hybrid structural-semantic drift detection, several architectural enhancements are planned:
-1. **Polyglot AST Support:** Universal parsing via Tree-sitter for TypeScript (Jest), Java (JUnit), and Go.
+1. **Extended Polyglot AST Support:** Universal parsing via Tree-sitter for TypeScript (Jest), Java (JUnit), and Go.
 2. **Multi-Tenant Enterprise Architecture:** Multi-workspace schema with OAuth 2.0 (3LO) authentication.
-3. **Distributed Task Queue:** Asynchronous event processing via Celery with Redis/RabbitMQ.
-4. **Automated Fix PRs:** AI coding agents that propose Pull Requests to auto-update drifted assertions.
+3. **Automated Fix PRs:** AI coding agents that propose Pull Requests to auto-update drifted assertions.
 
 ---
 
