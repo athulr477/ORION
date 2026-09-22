@@ -246,7 +246,9 @@ section("Phase 10 Verification — Empirical Benchmark Evaluation")
 # Test 1: Benchmark file exists
 print("\n--- Test 1: Benchmark File ---")
 
-benchmark_path = Path("orion/evaluation/data/benchmark_30.json")
+benchmark_path = (
+    Path(__file__).resolve().parent.parent / "orion" / "evaluation" / "data" / "benchmark_30.json"
+)
 check("benchmark_30.json exists", benchmark_path.exists(), str(benchmark_path.resolve()))
 
 if benchmark_path.exists():
@@ -335,8 +337,11 @@ if hybrid_report and cosine_report:
     # Test 8: Export report
     section("Test 8: Export evaluation_report.md")
     report_path = Path("evaluation_report.md")
+    root_report = Path(__file__).resolve().parent.parent.parent / "evaluation_report.md"
     try:
         _export_report(hybrid_report, cosine_report, report_path)
+        if root_report.parent.exists() and root_report != report_path.resolve():
+            _export_report(hybrid_report, cosine_report, root_report)
         check("evaluation_report.md written", report_path.exists(), str(report_path.resolve()))
         report_size = report_path.stat().st_size
         check("Report is non-trivial (> 2KB)", report_size > 2048, f"size={report_size} bytes")
