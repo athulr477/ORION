@@ -179,7 +179,6 @@ def _extract_threshold_constraints(text: str) -> list[ConstraintData]:
         )
 
         for match in re.finditer(full_pattern, text_lower, re.IGNORECASE):
-            op_text = match.group(1)
             number_str = match.group(2).replace(",", "")
             unit = match.group(3)
 

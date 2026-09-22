@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, X, Database, Edit2, Lock } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import OverrideModal from './OverrideModal';

@@ -316,16 +316,11 @@ def extract_assertions_from_file(source_code: str, filename: str = "") -> list[C
             return []
 
         results: list[CodeExtractionResult] = []
-        source_lines = source_code.splitlines()
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if not node.name.startswith("test_"):
                     continue
                 docstring = ast.get_docstring(node)
-                # Slice source code for this function only
-                start = node.lineno - 1
-                end = node.end_lineno if node.end_lineno else start + 1
-                func_source = "\n".join(source_lines[start:end])
                 visitor = _AssertionVisitor()
                 visitor.visit(node)
                 results.append(

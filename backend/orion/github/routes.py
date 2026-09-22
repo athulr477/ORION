@@ -33,7 +33,7 @@ import hashlib
 import hmac
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -46,8 +46,6 @@ from orion.embedding.engine import semantic_similarity, embed_text
 from orion.embedding.text_builder import build_test_text
 from orion.extraction.code_extractor import extract_assertions
 from orion.ingestion.service import enrich_requirement
-from orion.auth.dependencies import get_current_workspace
-from orion.models.workspace import Workspace
 from orion.github.auth import get_installation_token
 from orion.queue.broker import enqueue_task
 from orion.github.client import (

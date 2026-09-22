@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   X, CheckCircle2, AlertTriangle, RefreshCw, Server, GitBranch, 
-  Cpu, ExternalLink, ShieldCheck, Copy, Check, Eye, EyeOff 
+  Cpu, ExternalLink, ShieldCheck, Copy, Check 
 } from 'lucide-react';
 import { 
   fetchIntegrationsStatus, 

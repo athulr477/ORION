@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from orion.auth.dependencies import get_current_workspace
@@ -28,9 +28,6 @@ from orion.models.workspace import Workspace
 
 from orion.config import settings
 from orion.database import get_session
-from orion.embedding.engine import embed_text
-from orion.embedding.text_builder import build_requirement_text
-from orion.extraction.requirement_extractor import extract_constraints
 from orion.ingestion.parsers import RequirementData
 from orion.ingestion.service import enrich_requirement, upsert_requirement
 from orion.jira.client import (

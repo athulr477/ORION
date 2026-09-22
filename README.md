@@ -215,7 +215,7 @@ From the `backend/` directory:
 
 ```powershell
 # Start PostgreSQL with pgvector container
-docker-compose up -d
+docker compose up -d
 
 # Run database migrations
 alembic upgrade head
@@ -236,6 +236,10 @@ python scripts/verify_phase7.py     # LLM verbalization (Ollama + fallback)
 python scripts/verify_phase8.py     # Dashboard API, reclassification, stats & heatmap
 python scripts/verify_phase9.py     # GitHub App Check Runs & JWT token lifecycle
 python scripts/verify_phase10.py    # 30-Pair Ground-Truth Benchmark Evaluation
+python scripts/verify_phase12.py    # Backend Auth & JWT Role-Based Access Control
+python scripts/verify_phase13.py    # Asynchronous Task Queue & Background Worker
+python scripts/verify_phase15.py    # Workspaces & Multi-Tenancy Segregation
+python scripts/verify_phase16.py    # Tree-sitter Polyglot AST Extractor (JS, TS, Java, Go)
 python scripts/verify_jira_sync.py  # Jira Cloud REST v3 sync & recursive ADF parser
 ```
 
@@ -326,11 +330,12 @@ ORION/
 │   │       └── service.py             # End-to-end verbalization pipeline
 │   ├── migrations/                    # Alembic database migrations
 │   │   └── versions/                  # Migration scripts
-│   ├── scripts/                       # Phase 1-10 verification & Jira sync test scripts
+│   ├── scripts/                       # Phase 1-16 verification & Jira sync test scripts
 │   ├── docker-compose.yml             # Container definitions (PostgreSQL 16 + pgvector)
 │   ├── alembic.ini                    # Alembic configuration
 │   ├── .env.example                   # Environment variables template
 │   └── pyproject.toml                 # Build configuration & dependency definitions
+├── docs/                              # Project architecture diagrams & reports
 ├── frontend/                          # React 19 + Vite dashboard application
 │   ├── src/
 │   │   ├── api/

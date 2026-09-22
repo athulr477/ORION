@@ -351,7 +351,6 @@ def _match_constraint_to_assertion(
     test_value = assertion.get("value")
     test_unit = assertion.get("unit")
     test_left = assertion.get("left", "")
-    test_right = assertion.get("right", "")
 
     # Score components
     op_score = _operator_score(req_op, test_op)
@@ -425,7 +424,6 @@ def compute_structural_score(
 
     # Build the full score matrix: constraints × assertions
     n_constraints = len(threshold_constraints)
-    n_assertions = len(comparison_assertions)
     score_matrix: list[list[float]] = []
     match_cache: dict[tuple[int, int], MatchDetail] = {}
 

@@ -10,8 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from orion.auth.security import get_password_hash
 from orion.database import Base, engine
-from orion.models.audit_log import AuditLog
-from orion.models.traceability_matrix import TraceabilityMatrix
 from orion.models.user import User, UserRole
 
 

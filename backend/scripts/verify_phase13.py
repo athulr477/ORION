@@ -6,7 +6,6 @@ to ensure that the task reaches SUCCESS and records progress.
 
 import asyncio
 import logging
-from uuid import UUID
 
 from orion.database import get_session_context
 from orion.queue.broker import enqueue_task, get_task_status
@@ -31,7 +30,6 @@ async def main() -> None:
     
     # Start the worker loop in the background
     from orion.queue.worker import worker
-    import orion.queue.tasks  # register handlers
     
     worker_task = asyncio.create_task(worker.start(poll_interval=1.0))
     

@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from orion.auth.dependencies import get_current_workspace
 from orion.auth.security import get_current_user
 from orion.database import get_session
-from orion.models.task_job import TaskJob, TaskStatus
+from orion.models.task_job import TaskJob
 from orion.models.workspace import Workspace
 
 logger = logging.getLogger(__name__)

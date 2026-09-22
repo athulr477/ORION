@@ -4,7 +4,6 @@ import asyncio
 import logging
 
 from orion.database import engine, Base
-from orion.models.task_job import TaskJob
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

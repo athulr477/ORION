@@ -7,8 +7,6 @@ Extracts function names, docstrings/comments, and assertions.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from typing import Any
 
 import tree_sitter
 import tree_sitter_python

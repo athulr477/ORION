@@ -5,9 +5,7 @@ assertions and docstrings using the new PolyglotExtractor.
 """
 
 import os
-import json
 import logging
-from pprint import pprint
 
 from orion.extraction.code_extractor import extract_assertions_from_file
 

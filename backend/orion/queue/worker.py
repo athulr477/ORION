@@ -5,7 +5,6 @@ import datetime
 import logging
 import traceback
 from collections.abc import Callable
-from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

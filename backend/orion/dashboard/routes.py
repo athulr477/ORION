@@ -15,11 +15,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from orion.analysis.risk_engine import (
-    classify,
-)
 from orion.analysis.structural_matcher import compute_structural_score
-from orion.auth.security import get_current_user, require_qa_lead
+from orion.auth.security import require_qa_lead
 from orion.auth.dependencies import get_current_workspace
 from orion.models.user import User
 from orion.models.workspace import Workspace
@@ -34,13 +31,10 @@ from orion.dashboard.schemas import (
     ReclassifyRequest,
     ReclassifyResponse,
     SimulateRequest,
-    SimulateResponse,
     StatsResponse,
     OverrideRequest,
 )
 from orion.database import get_session
-from orion.extraction.code_extractor import extract_assertions
-from orion.extraction.requirement_extractor import extract_constraints
 from orion.models.requirement import Requirement
 from orion.models.test_case import TestCase
 from orion.models.traceability_matrix import TraceabilityMatrix, TraceabilityStatus

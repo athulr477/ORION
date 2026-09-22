@@ -29,7 +29,6 @@ import asyncio
 async def lifespan(app: FastAPI):
     # Start the embedded worker in the background for local development
     from orion.queue.worker import worker
-    import orion.queue.tasks  # Register handlers
     
     # Run the worker engine as an asyncio background task
     asyncio.create_task(worker.start(poll_interval=2.0))
