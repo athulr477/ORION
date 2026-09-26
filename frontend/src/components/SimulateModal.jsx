@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Zap, Check, CheckCircle, AlertTriangle, Play, X } from 'lucide-react';
-import { simulateWebhook } from '../api/client';
+import { useState, useRef, useEffect } from 'react';
+import { Zap, Check, CheckCircle, AlertTriangle, Play, X, Loader2 } from 'lucide-react';
+import { simulateWebhook, fetchTask } from '../api/client';
 
 const DEFAULT_PAYLOAD = {
   requirement_external_id: 'REQ-DEMO-001',
@@ -29,28 +29,91 @@ export default function SimulateModal({ open, onClose, onComplete }) {
   const [steps, setSteps]     = useState([]);
   const [error, setError]     = useState(null);
   const [result, setResult]   = useState(null);
+  const pollTimerRef          = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
+  }, []);
 
   const handleChange = (field) => (e) => {
     setPayload((p) => ({ ...p, [field]: e.target.value }));
   };
 
   const handleSubmit = async () => {
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     setLoading(true);
-    setSteps([]);
+    setSteps(['Enqueuing task in background queue…']);
     setError(null);
     setResult(null);
+
     try {
       const res = await simulateWebhook(payload);
-      setSteps(res.pipeline_steps || []);
-      setResult(res);
+
+      if (res.task_id) {
+        setSteps(['Task enqueued in background. Waiting for worker…']);
+        const pollInterval = 1000;
+        const maxAttempts = 45;
+        let attempts = 0;
+
+        const poll = async () => {
+          attempts++;
+          try {
+            const task = await fetchTask(res.task_id);
+            if (task.current_step) {
+              setSteps((prev) => {
+                if (!prev.includes(task.current_step)) {
+                  return [...prev, task.current_step];
+                }
+                return prev;
+              });
+            }
+
+            if (task.status === 'SUCCESS') {
+              setLoading(false);
+              const resultData = task.result || {};
+              if (resultData.pipeline_steps && resultData.pipeline_steps.length > 0) {
+                setSteps(resultData.pipeline_steps);
+              }
+              setResult(resultData);
+              if (onComplete && resultData) {
+                onComplete(resultData);
+              }
+            } else if (task.status === 'FAILURE') {
+              setLoading(false);
+              setError(task.error_message || 'Background task failed');
+            } else if (attempts < maxAttempts) {
+              pollTimerRef.current = setTimeout(poll, pollInterval);
+            } else {
+              setLoading(false);
+              setError('Simulation timed out waiting for background worker.');
+            }
+          } catch (pollErr) {
+            if (attempts < maxAttempts) {
+              pollTimerRef.current = setTimeout(poll, pollInterval);
+            } else {
+              setLoading(false);
+              setError(pollErr.message || 'Error tracking background task');
+            }
+          }
+        };
+
+        pollTimerRef.current = setTimeout(poll, pollInterval);
+      } else {
+        setSteps(res.pipeline_steps || []);
+        setResult(res);
+        setLoading(false);
+        if (onComplete) onComplete(res);
+      }
     } catch (e) {
       setError(e.message || 'Simulation failed');
-    } finally {
       setLoading(false);
     }
   };
 
   const handleDone = () => {
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     if (result) onComplete?.(result);
     setSteps([]);
     setResult(null);
@@ -157,12 +220,21 @@ export default function SimulateModal({ open, onClose, onComplete }) {
           {steps.length > 0 && (
             <div className="simulate-steps" id="simulate-steps">
               <div className="simulate-steps__title">Pipeline Steps</div>
-              {steps.map((step, i) => (
-                <div className="simulate-step" key={i}>
-                  <span className="simulate-step__icon"><Check size={13} /></span>
-                  <span>{step}</span>
-                </div>
-              ))}
+              {steps.map((step, i) => {
+                const isLast = i === steps.length - 1 && loading;
+                return (
+                  <div className="simulate-step" key={i}>
+                    <span className="simulate-step__icon">
+                      {isLast ? (
+                        <Loader2 size={13} style={{ animation: 'spin 1s linear infinite', color: 'var(--brand)' }} />
+                      ) : (
+                        <Check size={13} />
+                      )}
+                    </span>
+                    <span>{step}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
 

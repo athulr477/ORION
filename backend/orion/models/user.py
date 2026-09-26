@@ -11,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from orion.database import Base
 
 
-class UserRole(str, enum.Enum):
+class UserRole(enum.StrEnum):
     """User roles determining access level in Orion."""
     QA_LEAD = "QA_LEAD"
     DEVELOPER = "DEVELOPER"
@@ -31,22 +31,18 @@ class User(Base):
         String,
         unique=True,
         index=True,
-        nullable=False,
     )
     hashed_password: Mapped[str] = mapped_column(
         String,
-        nullable=False,
     )
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role", values_callable=lambda e: [m.value for m in e]),
-        nullable=False,
         default=UserRole.DEVELOPER,
     )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False,
     )
 
     def __repr__(self) -> str:

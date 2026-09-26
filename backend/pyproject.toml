@@ -54,3 +54,21 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+norecursedirs = ["tests/polyglot/sample_tests"]
+
+
+[tool.pyrefly]
+project-includes = [
+    "orion/**/*.py",
+]
+project-excludes = [
+    "**/__pycache__/**",
+    "**/.venv/**",
+    "tests/**",
+    "scripts/**",
+    "scratch/**",
+]
+search-path = [
+    ".",
+]
+

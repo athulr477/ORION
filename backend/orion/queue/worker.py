@@ -4,9 +4,8 @@ import asyncio
 import datetime
 import logging
 import traceback
+import uuid
 from collections.abc import Callable
-
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from orion.database import get_session_context
 from orion.models.task_job import TaskJob, TaskStatus
@@ -33,6 +32,7 @@ class WorkerEngine:
 
     async def start(self, poll_interval: float = 2.0) -> None:
         """Start the worker polling loop."""
+        _ensure_tasks_registered()
         if self._running:
             return
         
@@ -78,52 +78,85 @@ class WorkerEngine:
             if not handler:
                 error_msg = f"No handler registered for task type '{active_job.task_type}'"
                 logger.error(error_msg)
-                await self._mark_failed(exec_session, active_job, error_msg)
+                await self._mark_failed(active_job.id, error_msg)
                 return
 
             try:
-                # Provide a callback for handlers to update progress in real time
+                # Provide a callback for handlers to update progress in real time.
+                # Uses its own short-lived session so it never interferes with the
+                # execution session's in-progress transaction.
                 async def update_progress(progress: float, step: str) -> None:
-                    active_job.progress = progress
-                    active_job.current_step = step
-                    await exec_session.commit()
+                    async with get_session_context() as progress_session:
+                        from sqlalchemy import update as sa_update
+                        await progress_session.execute(
+                            sa_update(TaskJob)
+                            .where(TaskJob.id == active_job.id)
+                            .values(progress=progress, current_step=step)
+                        )
+                        await progress_session.commit()
                 
                 # Execute the handler
                 result_data = await handler(active_job.payload, exec_session, update_progress)
                 
-                # Mark Success
-                active_job.status = TaskStatus.SUCCESS
-                active_job.progress = 1.0
-                active_job.current_step = "Completed"
-                active_job.result = result_data
-                active_job.completed_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+                # Mark Success — use a fresh update to avoid stale ORM state after
+                # the service may have already committed exec_session internally.
+                from sqlalchemy import update as sa_update
+                await exec_session.execute(
+                    sa_update(TaskJob)
+                    .where(TaskJob.id == active_job.id)
+                    .values(
+                        status=TaskStatus.SUCCESS,
+                        progress=1.0,
+                        current_step="Completed",
+                        result=result_data,
+                        completed_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+                    )
+                )
                 await exec_session.commit()
                 logger.info("Task %s completed successfully", active_job.id)
                 
             except Exception as e:
                 tb = traceback.format_exc()
                 logger.exception("Task %s failed: %s", active_job.id, e)
-                await self._mark_failed(exec_session, active_job, tb)
+                await self._mark_failed(active_job.id, tb)
 
-    async def _mark_failed(self, session: AsyncSession, job: TaskJob, error_message: str) -> None:
-        """Mark a job as failed and record the error."""
+    async def _mark_failed(self, job_id: uuid.UUID, error_message: str) -> None:
+        """Mark a job as failed using a dedicated session, so it always succeeds
+        even if the execution session is in a broken/rolled-back state."""
         try:
-            job.status = TaskStatus.FAILURE
-            job.error_message = error_message
-            job.completed_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
-            await session.commit()
+            from sqlalchemy import update as sa_update
+            async with get_session_context() as session:
+                await session.execute(
+                    sa_update(TaskJob)
+                    .where(TaskJob.id == job_id)
+                    .values(
+                        status=TaskStatus.FAILURE,
+                        error_message=error_message,
+                        completed_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+                    )
+                )
+                await session.commit()
         except Exception as e:
-            logger.error("Failed to mark task %s as failed: %s", job.id, e)
+            logger.error("Failed to mark task %s as failed: %s", job_id, e)
 
 
 # Global worker engine instance
 worker = WorkerEngine()
 
 
+def _ensure_tasks_registered() -> None:
+    try:
+        import orion.queue.tasks  # noqa: F401
+    except Exception as e:
+        logger.warning("Could not auto-register queue tasks: %s", e)
+
+
+_ensure_tasks_registered()
+
+
 async def main() -> None:
     """CLI entry point for running a standalone worker process."""
-    # Import tasks to register them
-    import orion.queue.tasks  # noqa: F401
+    _ensure_tasks_registered()
     
     try:
         await worker.start()

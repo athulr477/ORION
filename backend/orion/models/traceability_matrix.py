@@ -4,14 +4,24 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Index, Text, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from orion.database import Base
 
 
-class TraceabilityStatus(str, enum.Enum):
+class TraceabilityStatus(enum.StrEnum):
     """Risk classification status for a requirement↔test pair.
 
     Thresholds (from Pre-Phase 0):
@@ -46,65 +56,55 @@ class TraceabilityMatrix(Base):
         default=uuid.uuid4,
     )
     workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("workspaces.id", ondelete="CASCADE"),
-        nullable=False,
     )
     requirement_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("requirements.id", ondelete="CASCADE"),
-        nullable=False,
     )
     test_case_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("test_cases.id", ondelete="CASCADE"),
-        nullable=False,
     )
 
     # Scores (Phase 4 & 5)
     semantic_score: Mapped[float | None] = mapped_column(
         Float,
-        nullable=True,
         comment="Cosine similarity from Phase 4",
     )
     structural_score: Mapped[float | None] = mapped_column(
         Float,
-        nullable=True,
         comment="Structural match score from Phase 5",
     )
     risk_score: Mapped[float | None] = mapped_column(
         Float,
-        nullable=True,
         comment="Combined: 0.6 × semantic + 0.4 × structural",
     )
     confidence: Mapped[float | None] = mapped_column(
         Float,
-        nullable=True,
         comment="Classification confidence (0.0–1.0)",
     )
     status: Mapped[TraceabilityStatus | None] = mapped_column(
         Enum(TraceabilityStatus, name="traceability_status", values_callable=lambda e: [m.value for m in e]),
-        nullable=True,
         comment="Covered / Partial / Drifted",
     )
 
     # Phase 6 — Requirement delta tracking
     requirement_delta: Mapped[dict | None] = mapped_column(
         JSONB,
-        nullable=True,
         comment="Structured diff from Phase 6 requirement tracking",
     )
 
     # Phase 7 — LLM-generated audit summary
     audit_summary: Mapped[str | None] = mapped_column(
         Text,
-        nullable=True,
         comment="Evidence-grounded explanation from Phase 7",
     )
 
     # Phase 12 — Manual Override
     is_manually_overridden: Mapped[bool] = mapped_column(
         Boolean,
-        nullable=False,
         default=False,
         server_default="false",
         comment="True if a QA Lead manually overrode the risk score",
@@ -113,13 +113,11 @@ class TraceabilityMatrix(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False,
     )
 
     # Relationships

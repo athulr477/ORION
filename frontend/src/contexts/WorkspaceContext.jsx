@@ -46,6 +46,7 @@ export function WorkspaceProvider({ children, currentUser }) {
           setCurrentWorkspace(selected);
           setWorkspaceId(selected.id);
           localStorage.setItem('orion_workspace_id', selected.id);
+          window.dispatchEvent(new Event('workspaceChange'));
         }
       })
       .catch((err) => {

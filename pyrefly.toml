@@ -1,0 +1,20 @@
+# Pyrefly Configuration for Orion
+# https://pyrefly.org/en/docs/configuration/
+
+project-includes = [
+    "backend/orion/**/*.py",
+]
+
+project-excludes = [
+    "**/node_modules/**",
+    "**/__pycache__/**",
+    "**/.venv/**",
+    "**/tests/**",
+    "**/scripts/**",
+    "**/scratch/**",
+]
+
+search-path = [
+    "backend",
+    ".",
+]

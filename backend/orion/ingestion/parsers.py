@@ -35,6 +35,8 @@ class TestFunctionData:
     source_code: str
     docstring: str | None
     traced_requirements: list[str] = field(default_factory=list)
+    start_line: int = 1
+    end_line: int = 1
 
 
 @dataclass
@@ -136,6 +138,8 @@ class _TracesVisitor(ast.NodeVisitor):
                 source_code=source_code,
                 docstring=docstring,
                 traced_requirements=traced_reqs,
+                start_line=node.lineno,
+                end_line=node.end_lineno or node.lineno,
             )
         )
 

@@ -123,6 +123,9 @@ async def upsert_requirement(
         existing.title = title
         existing.description = desc
         existing.raw_payload = raw_payload
+        if old_description != desc or existing.constraints_extracted is None:
+            existing.constraints_extracted = None
+            existing.embedding = None
         logger.info("Updated requirement %s", ext_id)
         await session.flush()
 

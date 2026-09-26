@@ -145,8 +145,8 @@ a { color: var(--text-link); text-decoration: none; }
 }
 
 .sidebar-logo-mark {
-  width: 32px; height: 32px;
-  border-radius: var(--r-md);
+  width: 34px; height: 34px;
+  border-radius: 50%;
   background: var(--brand);
   display: flex;
   align-items: center;
@@ -155,7 +155,25 @@ a { color: var(--text-link); text-decoration: none; }
   font-weight: 800;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(79, 142, 247, 0.4);
+  box-shadow: 0 2px 10px rgba(79, 142, 247, 0.4);
+  overflow: hidden;
+}
+
+.sidebar-logo-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 14px rgba(79, 142, 247, 0.35);
+  border: 1.5px solid rgba(79, 142, 247, 0.3);
+  background: #000;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-logo-img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(79, 142, 247, 0.6);
 }
 
 .sidebar-logo-text {
@@ -1706,8 +1724,8 @@ a { color: var(--text-link); text-decoration: none; }
 }
 
 .login-logo-mark {
-  width: 44px; height: 44px;
-  border-radius: var(--r-lg);
+  width: 48px; height: 48px;
+  border-radius: 50%;
   background: var(--brand);
   display: flex;
   align-items: center;
@@ -1716,6 +1734,18 @@ a { color: var(--text-link); text-decoration: none; }
   font-weight: 800;
   color: #fff;
   box-shadow: 0 4px 16px rgba(79, 142, 247, 0.4);
+  overflow: hidden;
+}
+
+.login-logo-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 24px rgba(79, 142, 247, 0.45);
+  border: 2px solid rgba(79, 142, 247, 0.35);
+  background: #000;
+  margin-bottom: var(--sp-1);
 }
 
 .login-title {

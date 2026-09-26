@@ -8,11 +8,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from orion.auth.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, verify_password
+from orion.auth.security import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token,
+    get_current_user,
+    verify_password,
+)
 from orion.database import get_session
 from orion.models.user import User
 from orion.models.workspace import Workspace, WorkspaceMember
-from orion.auth.security import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

@@ -1,6 +1,6 @@
 # Orion RTM — Empirical Benchmark Evaluation Report
 
-> Generated: 2026-09-22 09:54:53
+> Generated: 2026-09-23 09:54:48
 > Dataset: `benchmark_30.json` — 30 requirement-test pairs (10 Covered, 10 Partial, 10 Drifted)
 > Embedding model: `BAAI/bge-small-en-v1.5` (ONNX, CPU inference)
 

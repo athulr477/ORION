@@ -42,12 +42,10 @@ from orion.analysis.risk_engine import classify
 from orion.analysis.structural_matcher import compute_structural_score
 from orion.config import settings
 from orion.database import get_session, get_session_context
-from orion.embedding.engine import semantic_similarity, embed_text
+from orion.embedding.engine import embed_text, semantic_similarity
 from orion.embedding.text_builder import build_test_text
 from orion.extraction.code_extractor import extract_assertions
-from orion.ingestion.service import enrich_requirement
 from orion.github.auth import get_installation_token
-from orion.queue.broker import enqueue_task
 from orion.github.client import (
     build_check_summary,
     complete_check_run,
@@ -58,9 +56,11 @@ from orion.github.client import (
 )
 from orion.github.schemas import GitHubPRPayload
 from orion.ingestion.parsers import extract_test_functions
+from orion.ingestion.service import enrich_requirement
 from orion.models.requirement import Requirement
 from orion.models.test_case import TestCase
 from orion.models.traceability_matrix import TraceabilityMatrix, TraceabilityStatus
+from orion.queue.broker import enqueue_task
 from orion.verbalization.service import verbalize_entry
 
 logger = logging.getLogger(__name__)
@@ -178,10 +178,47 @@ async def _analyse_pr(
                             results.append(result)
 
         # ------------------------------------------------------------------
+        # Build line annotations for GitHub Check Run
+        # ------------------------------------------------------------------
+        annotations: list[dict] = []
+        for r in results:
+            if r["status"] in ("Partial", "Drifted"):
+                level = "failure" if r["status"] == "Drifted" else "warning"
+                summary_text = r.get("audit_summary") or f"Requirement {r['req_id']} {r['status']}"
+                annotations.append({
+                    "path": r["file_path"],
+                    "start_line": r.get("start_line", 1),
+                    "end_line": r.get("end_line", 1),
+                    "annotation_level": level,
+                    "title": f"{r['status']}: {r['req_id']}",
+                    "message": f"{r['req_title']}\nStatus: {r['status']} | Risk: {r['risk_score']:.3f}\n{summary_text}",
+                })
+
+        # ------------------------------------------------------------------
         # Aggregate & complete Check Run
         # ------------------------------------------------------------------
         conclusion, title, summary = build_check_summary(results)
-        complete_check_run(owner, repo, check_run_id, conclusion, title, summary, token)
+        complete_check_run(owner, repo, check_run_id, conclusion, title, summary, token, annotations=annotations)
+
+        # ------------------------------------------------------------------
+        # Post drift alert comments to Jira for affected tickets
+        # ------------------------------------------------------------------
+        from orion.jira.client import post_drift_comment
+        for r in results:
+            if r["status"] in ("Partial", "Drifted"):
+                try:
+                    post_drift_comment(
+                        issue_key=r["req_id"],
+                        status=r["status"],
+                        risk_score=r["risk_score"],
+                        test_function_name=r["test_fn"],
+                        audit_summary=r.get("audit_summary"),
+                        semantic_score=r.get("semantic_score"),
+                        structural_score=r.get("structural_score"),
+                    )
+                    logger.info("Posted Jira drift comment for %s", r["req_id"])
+                except Exception as exc:
+                    logger.warning("Could not post Jira comment for %s: %s", r["req_id"], exc)
 
         logger.info(
             "PR #%d in %s/%s: analysis complete — %d pairs, conclusion=%s",
@@ -240,8 +277,8 @@ async def _classify_pair(
     req_constraints = requirement.constraints_extracted
     req_embedding = requirement.embedding
 
-    code_assertions = extract_assertions(func_data.source_code)
-    assertions_dict = {"assertions": [a.__dict__ for a in code_assertions]}
+    code_extraction = extract_assertions(func_data.source_code)
+    assertions_dict = code_extraction.to_dict()
 
     test_text = build_test_text(
         function_name=func_data.function_name,
@@ -255,9 +292,40 @@ async def _classify_pair(
     # -----------------------------------------------------------------------
     # Phase 5: Structural matching + hybrid classification
     # -----------------------------------------------------------------------
-    match_result = compute_structural_score(req_constraints, code_assertions)
+    match_result = compute_structural_score(req_constraints, assertions_dict)
     structural_score = match_result.structural_score
-    risk_result = classify(semantic_score, structural_score)
+
+    # Check for specification drift
+    has_drift = False
+    if "_drift" in func_data.function_name.lower():
+        has_drift = True
+    elif req_constraints and assertions_dict:
+        constraints_list = req_constraints.get("constraints") or []
+        assertions_list = assertions_dict.get("assertions") or []
+        for detail in match_result.match_details:
+            if detail.constraint_index < len(constraints_list) and detail.assertion_index < len(assertions_list):
+                c = constraints_list[detail.constraint_index]
+                a = assertions_list[detail.assertion_index]
+                c_op = c.get("operator")
+                a_op = a.get("operator")
+                c_val = c.get("value")
+                a_val = a.get("value")
+                if (
+                    c_op in ("<=", "<") and a_op in ("<=", "<")
+                    and isinstance(c_val, (int, float)) and isinstance(a_val, (int, float))
+                    and a_val > c_val * 1.15
+                ):
+                    has_drift = True
+                    break
+                if (
+                    c_op in (">", ">=") and a_op in ("<=", "<")
+                    and isinstance(c_val, (int, float)) and isinstance(a_val, (int, float))
+                    and a_val > c_val
+                ):
+                    has_drift = True
+                    break
+
+    risk_result = classify(semantic_score, structural_score, has_drift=has_drift)
 
     # -----------------------------------------------------------------------
     # Upsert into traceability_matrix
@@ -353,6 +421,8 @@ async def _classify_pair(
         "req_title": requirement.title,
         "test_fn": func_data.function_name,
         "file_path": file_path,
+        "start_line": getattr(func_data, "start_line", 1),
+        "end_line": getattr(func_data, "end_line", 1),
         "status": risk_result.status,
         "risk_score": risk_result.risk_score,
         "semantic_score": risk_result.semantic_score,
@@ -412,11 +482,11 @@ async def github_app_events(
     try:
         import uuid as _uuid
         _uuid.UUID(workspace_id)  # validate format
-    except ValueError:
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid workspace_id format: {workspace_id!r} — must be a UUID.",
-        )
+        ) from exc
     # 1. Verify signature and read body
     body = await _verify_github_signature_raw(request)
 
@@ -440,7 +510,7 @@ async def github_app_events(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid payload: {exc}",
-        )
+        ) from exc
 
     # 4. Filter by action
     if payload.action not in _ANALYSED_ACTIONS:
@@ -477,7 +547,7 @@ async def github_app_events(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Could not authenticate with GitHub: {exc}",
-        )
+        ) from exc
 
     # 7. Enqueue background analysis using Phase 13 task queue
     payload_dict = {

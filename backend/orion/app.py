@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from orion.auth.routes import router as auth_router
+from orion.config import settings
 from orion.dashboard.routes import router as dashboard_router
 from orion.github.routes import router as github_router
 from orion.ingestion.routes import router as ingestion_router
+from orion.integrations.routes import router as integrations_router
 from orion.jira.routes import router as jira_router
 from orion.queue.routes import router as queue_router
-from orion.integrations.routes import router as integrations_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,13 +25,11 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-from contextlib import asynccontextmanager
-import asyncio
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Start the embedded worker in the background for local development
     from orion.queue.worker import worker
+    import orion.queue.tasks  # noqa: F401
     
     # Run the worker engine as an asyncio background task
     asyncio.create_task(worker.start(poll_interval=2.0))
@@ -38,8 +39,6 @@ async def lifespan(app: FastAPI):
     
     logger.info("Shutting down embedded task worker...")
     await worker.stop()
-
-from orion.config import settings
 
 if settings.sentry_dsn:
     import sentry_sdk

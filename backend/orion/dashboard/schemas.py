@@ -200,6 +200,10 @@ class SimulateRequest(BaseModel):
         "tests/test_performance.py",
         description="Test file path",
     )
+    workspace_id: str | None = Field(
+        None,
+        description="Target workspace ID",
+    )
 
 
 class SimulateResponse(BaseModel):

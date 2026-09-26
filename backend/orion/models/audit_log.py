@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, Index, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,36 +23,30 @@ class AuditLog(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
     )
     workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("workspaces.id", ondelete="CASCADE"),
-        nullable=False,
     )
     traceability_matrix_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("traceability_matrix.id", ondelete="CASCADE"),
-        nullable=False,
     )
-    previous_status: Mapped[str] = mapped_column(
+    previous_status: Mapped[str | None] = mapped_column(
         String,
-        nullable=True,
         comment="The status before override (e.g., Drifted)",
     )
     new_status: Mapped[str] = mapped_column(
         String,
-        nullable=False,
         comment="The new status after override (e.g., Covered)",
     )
     rationale: Mapped[str] = mapped_column(
         Text,
-        nullable=False,
         comment="Mandatory reason provided by QA Lead",
     )
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False,
     )
 
     # Relationships
@@ -69,5 +63,5 @@ class AuditLog(Base):
         return f"<AuditLog(user_id={self.user_id!r}, matrix_id={self.traceability_matrix_id!r})>"
 
 # Resolve forward references
-from orion.models.user import User  # noqa: E402, F811
 from orion.models.traceability_matrix import TraceabilityMatrix  # noqa: E402, F811
+from orion.models.user import User  # noqa: E402, F811

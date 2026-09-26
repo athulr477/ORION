@@ -9,11 +9,11 @@ from __future__ import annotations
 import logging
 
 import tree_sitter
-import tree_sitter_python
-import tree_sitter_javascript
-import tree_sitter_typescript
-import tree_sitter_java
 import tree_sitter_go
+import tree_sitter_java
+import tree_sitter_javascript
+import tree_sitter_python
+import tree_sitter_typescript
 
 from orion.extraction.code_extractor import AssertionData, CodeExtractionResult
 

@@ -65,7 +65,7 @@ async def get_current_user(
         if username is None:
             raise credentials_exception
     except jwt.InvalidTokenError:
-        raise credentials_exception
+        raise credentials_exception from None
 
     stmt = select(User).where(User.username == username)
     result = await session.execute(stmt)

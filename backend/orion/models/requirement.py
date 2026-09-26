@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import DateTime, Index, String, Text, ForeignKey, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,38 +35,32 @@ class Requirement(Base):
         default=uuid.uuid4,
     )
     workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("workspaces.id", ondelete="CASCADE"),
-        nullable=False,
     )
     external_id: Mapped[str] = mapped_column(
         String(255),
         unique=True,
-        nullable=False,
         comment="Source-system requirement ID, e.g. REQ-123",
     )
     title: Mapped[str] = mapped_column(
         String(500),
-        nullable=False,
     )
     description: Mapped[str] = mapped_column(
         Text,
-        nullable=False,
         default="",
     )
     source: Mapped[str] = mapped_column(
         String(50),
-        nullable=False,
         default="jira",
         comment="Origin system: jira, manual, etc.",
     )
     raw_payload: Mapped[dict | None] = mapped_column(
         JSONB,
-        nullable=True,
         comment="Full original payload from the webhook",
     )
     constraints_extracted: Mapped[dict | None] = mapped_column(
         JSONB,
-        nullable=True,
         comment="Structured constraints extracted in Phase 3",
     )
     embedding = mapped_column(
@@ -78,13 +72,11 @@ class Requirement(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False,
     )
 
     # Relationships

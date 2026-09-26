@@ -88,12 +88,11 @@ def _extract_literal_value(node: ast.expr) -> Any:
     """Extract a literal value from an AST node, or None if not a literal."""
     if isinstance(node, ast.Constant):
         return node.value
-    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub) and isinstance(node.operand, ast.Constant) and isinstance(
+        node.operand.value, (int, float)
+    ):
         # Handle negative literals: -0.2, -100
-        if isinstance(node.operand, ast.Constant) and isinstance(
-            node.operand.value, (int, float)
-        ):
-            return -node.operand.value
+        return -node.operand.value
     return None
 
 

@@ -11,6 +11,7 @@ import UserNav from './components/UserNav';
 import TaskQueueDrawer from './components/TaskQueueDrawer';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { fetchMatrix, fetchStats, reclassifyMatrix, setAuthToken, overrideRiskScore } from './api/client';
+import orionLogo from './assets/orion.png';
 
 /* ── Toast system ─────────────────────────────────────────────── */
 let _addToast = null;
@@ -51,7 +52,7 @@ function Sidebar({ onOpenSimulate, onOpenIntegrations }) {
     <aside className="sidebar" id="sidebar">
       {/* Logo */}
       <div className="sidebar-logo" id="sidebar-logo">
-        <div className="sidebar-logo-mark">O</div>
+        <img src={orionLogo} alt="Orion" className="sidebar-logo-img" />
         <div>
           <div className="sidebar-logo-text">Orion</div>
           <div className="sidebar-logo-sub">v0.1 · Enterprise</div>

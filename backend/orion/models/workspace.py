@@ -4,14 +4,14 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, String, ForeignKey, func
+from sqlalchemy import DateTime, Enum, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from orion.database import Base
 
 
-class WorkspaceRole(str, enum.Enum):
+class WorkspaceRole(enum.StrEnum):
     """User roles within a specific workspace."""
     ADMIN = "ADMIN"
     MEMBER = "MEMBER"
@@ -29,13 +29,11 @@ class Workspace(Base):
     )
     name: Mapped[str] = mapped_column(
         String,
-        nullable=False,
     )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False,
     )
 
     # Relationships
@@ -57,23 +55,21 @@ class WorkspaceMember(Base):
         default=uuid.uuid4,
     )
     workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("workspaces.id", ondelete="CASCADE"),
-        nullable=False,
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
     )
     role: Mapped[WorkspaceRole] = mapped_column(
         Enum(WorkspaceRole, name="workspace_role", values_callable=lambda e: [m.value for m in e]),
-        nullable=False,
         default=WorkspaceRole.MEMBER,
     )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False,
     )
 
     # Relationships

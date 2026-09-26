@@ -23,9 +23,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from orion.auth.dependencies import get_current_workspace
-from orion.models.workspace import Workspace
 
+from orion.auth.dependencies import get_current_workspace
 from orion.config import settings
 from orion.database import get_session
 from orion.ingestion.parsers import RequirementData
@@ -36,6 +35,7 @@ from orion.jira.client import (
     has_recent_drift_comment,
     post_drift_comment,
 )
+from orion.models.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +155,7 @@ async def sync_jira_project(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Jira API error: {exc}",
-        )
+        ) from exc
 
     total_fetched = len(issues)
     created = 0
@@ -234,7 +234,7 @@ async def sync_single_issue(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Jira API error fetching {issue_key}: {exc}",
-        )
+        ) from exc
 
     try:
         req_data = _jira_issue_to_requirement_data(issue)
@@ -247,7 +247,7 @@ async def sync_single_issue(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error for {issue_key}: {exc}",
-        )
+        ) from exc
 
     action = "CREATED" if was_created else "UPDATED"
     return SyncResult(
@@ -325,7 +325,7 @@ async def report_drift_to_jira(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Jira comment API error: {exc}",
-        )
+        ) from exc
 
     return DriftReportResult(
         issue_key=body.issue_key,

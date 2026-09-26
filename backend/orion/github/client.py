@@ -20,6 +20,7 @@ from __future__ import annotations
 import base64
 import logging
 import re
+from typing import Any
 
 import httpx
 
@@ -217,8 +218,9 @@ def complete_check_run(
     title: str,
     summary: str,
     token: str,
+    annotations: list[dict] | None = None,
 ) -> None:
-    """Mark a Check Run as completed with a conclusion and markdown summary.
+    """Mark a Check Run as completed with a conclusion, markdown summary, and annotations.
 
     Args:
         owner: Repository owner login.
@@ -228,18 +230,24 @@ def complete_check_run(
         title: Short title shown in the GitHub Checks UI.
         summary: Markdown body shown when the check is expanded.
         token: GitHub Installation Access Token.
+        annotations: Optional list of GitHub Check Run line annotation dicts.
 
     Raises:
         httpx.HTTPStatusError: On non-2xx response.
     """
     url = f"{_GITHUB_API_BASE}/repos/{owner}/{repo}/check-runs/{check_run_id}"
+    output: dict[str, Any] = {
+        "title": title,
+        "summary": summary,
+    }
+    if annotations:
+        # GitHub Checks API allows up to 50 annotations per request
+        output["annotations"] = annotations[:50]
+
     payload = {
         "status": "completed",
         "conclusion": conclusion,
-        "output": {
-            "title": title,
-            "summary": summary,
-        },
+        "output": output,
     }
 
     with httpx.Client(timeout=20) as client:

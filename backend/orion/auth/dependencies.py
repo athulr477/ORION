@@ -26,11 +26,11 @@ async def get_current_workspace(
     if x_workspace_id:
         try:
             workspace_uuid = uuid.UUID(x_workspace_id)
-        except ValueError:
+        except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid workspace ID format",
-            )
+            ) from exc
             
         stmt = (
             select(Workspace)

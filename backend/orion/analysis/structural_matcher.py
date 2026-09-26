@@ -448,7 +448,7 @@ def compute_structural_score(
             matched_scores.append(score)
             result.matched_count += 1
 
-    # Compute structural score as F1 harmonic mean of quality and coverage
+    # Compute structural score from match quality and coverage
     if matched_scores:
         match_quality = sum(matched_scores) / len(matched_scores)
         match_coverage = len(matched_scores) / n_constraints
@@ -456,13 +456,9 @@ def compute_structural_score(
         result.match_quality = match_quality
         result.match_coverage = match_coverage
 
-        # F1 harmonic mean: 2 * quality * coverage / (quality + coverage)
-        if (match_quality + match_coverage) > 0:
-            result.structural_score = (
-                2.0 * match_quality * match_coverage / (match_quality + match_coverage)
-            )
-        else:
-            result.structural_score = 0.0
+        # Balanced structural alignment:
+        # Emphasizes quality of the verified constraint, with coverage weight
+        result.structural_score = 0.7 * match_quality + 0.3 * match_coverage
     else:
         result.structural_score = 0.0
 

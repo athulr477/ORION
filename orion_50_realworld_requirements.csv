@@ -1,0 +1,304 @@
+Issue Type,Summary,Description
+Story,Atlassian Document Format (ADF) Parser Recursion Guard,"h3. User Story
+As a backend ingestion pipeline, I want the ADF parser to enforce recursion limits when traversing nested panels and tables, so that deeply nested payloads do not cause stack overflow errors.
+
+h3. Acceptance Criteria
+* The recursive AST traversal depth must not exceed 50 levels.
+* Plaintext extraction timeout must be less than 500ms for payloads up to 2MB."
+Story,GitHub App JWT Authentication Expiration,"h3. User Story
+As a GitHub App gatekeeper, I want installation access tokens to have strict temporal validity, so that compromised credentials have minimal exposure windows.
+
+h3. Acceptance Criteria
+* Minted RS256 JWT assertion expiration time must not exceed 600 seconds.
+* Token negotiation retry attempts shall not exceed 3 attempts."
+Story,Kuhn-Munkres Bipartite Matcher Matrix Dimensions,"h3. User Story
+As an RTM alignment engine, I want to restrict bipartite cost matrix dimensions during Hungarian assignment, so that polynomial complexity does not block worker threads.
+
+h3. Acceptance Criteria
+* The bipartite assignment cost matrix dimension must not exceed 250 nodes per partition.
+* Keyword Dice similarity coefficient threshold must be at least 0.40 for candidate assertion edges."
+Story,Hybrid Risk Calculation Baseline SLA,"h3. User Story
+As a CI/CD gatekeeper, I want the hybrid risk engine to evaluate requirement-test pairs synchronously during PR webhooks, so that developer PR checks are not delayed.
+
+h3. Acceptance Criteria
+* Risk evaluation execution duration must be less than 200ms per test file.
+* Floored cosine semantic similarity weight must equal 0.60.
+* Structural constraint harmonic mean weight must equal 0.40."
+Story,Pull Request Check Run Blocker Threshold,"h3. User Story
+As a QA Lead, I want pull requests containing drifted specifications to be blocked automatically in GitHub, so that non-compliant code cannot be merged into main.
+
+h3. Acceptance Criteria
+* Pull Requests with evaluated risk score exceeding 0.60 must post Check Run with conclusion equal to failure.
+* Neutral status must be assigned when risk score is between 0.25 and 0.60."
+Story,Jira Drift Audit Comment Duplicate Suppression,"h3. User Story
+As an engineering team, I want automated Jira drift comments to suppress duplicate notifications on recurring CI runs, so that issue histories remain clean.
+
+h3. Acceptance Criteria
+* The drift reporter must check existing ticket comments and post at most 1 comment per unique commit SHA.
+* Jira REST API v3 comment delivery timeout must not exceed 3000ms."
+Story,Dense Vector Embedding Inference Speed,"h3. User Story
+As a semantic analysis engine, I want ONNX text embedding generation to execute locally within strict time bounds, so that external API network latency is eliminated.
+
+h3. Acceptance Criteria
+* ONNX embedding inference latency for BAAI/bge-small-en-v1.5 must be less than 100ms per requirement text.
+* Generated dense vector representation dimensionality must equal 384 dimensions."
+Story,Tree-sitter Polyglot Parser Assertion Extraction,"h3. User Story
+As an AST extractor, I want to parse assertion statements across multiple programming languages, so that polyglot test suites are supported.
+
+h3. Acceptance Criteria
+* Extracted comparison operators must match at least 1 of: ==, <=, >=, <, >, !=.
+* AST syntax tree parsing for test files up to 500 lines must complete in less than 50ms."
+Story,Task Queue Background Worker Concurrency,"h3. User Story
+As an asynchronous broker, I want to limit worker concurrency during repository re-indexing, so that PostgreSQL connection pools are not exhausted.
+
+h3. Acceptance Criteria
+* Asynchronous task queue worker pool must run with concurrency less than or equal to 4 concurrent workers.
+* Task execution timeout must not exceed 120 seconds."
+Story,Manual Risk Score Override Audit Trail,"h3. User Story
+As a QA Compliance Officer, I want manual risk overrides to mandate structured justification reasons, so that compliance audit trails satisfy regulatory standards.
+
+h3. Acceptance Criteria
+* Manual override justification comment length must be at least 10 characters.
+* Audit log event records must be retained in PostgreSQL for at least 90 days."
+Story,Explainable AI Token Attribution Heatmap Latency,"h3. User Story
+As a developer inspecting an RTM discrepancy, I want token attribution modal overlays to render promptly, so that root-cause debugging is immediate.
+
+h3. Acceptance Criteria
+* AST token attribution matching heatmap payload response time must be less than 250ms.
+* The system must return top k equal to 5 matched assertion tokens."
+Story,FastAPI Webhook HMAC Signature Validation,"h3. User Story
+As a webhook endpoint, I want to verify HMAC-SHA256 signatures on inbound payloads, so that spoofed events are rejected immediately.
+
+h3. Acceptance Criteria
+* Invalid or missing X-Hub-Signature-256 headers must return HTTP status code equal to 401.
+* Signature verification processing time must not exceed 10ms."
+Story,Dynamic Sensitivity Threshold Sliders Bounds,"h3. User Story
+As an administrator calibrating organizational risk policies, I want dual-handle slider adjustments to enforce valid range constraints, so that invalid classifications cannot be configured.
+
+h3. Acceptance Criteria
+* The lower Covered threshold must not exceed 0.40.
+* The upper Drifted threshold must be at least 0.50.
+* Delta between lower and upper threshold must be at least 0.10."
+Story,Ollama LLM Verbalizer Fallback Timeout,"h3. User Story
+As an audit verbalization service, I want LLM generation calls to fall back gracefully to deterministic templates if the local LLM daemon hangs, so that report generation is never blocked.
+
+h3. Acceptance Criteria
+* Ollama HTTP client request timeout must not exceed 5000ms.
+* When offline, the deterministic summary fallback must execute in less than 5ms."
+Story,Database Connection Pool Sizing,"h3. User Story
+As a database administrator, I want to configure the SQLAlchemy asyncpg connection pool conservatively, so that local system memory remains stable during peak test runs.
+
+h3. Acceptance Criteria
+* Maximum async connection pool size must not exceed 20 connections.
+* Idle connection timeout shall not exceed 300 seconds."
+Story,Multi-Tenant Workspace Data Isolation,"h3. User Story
+As a platform security architect, I want workspace tenancy segregation enforced at query time, so that organizations cannot view cross-tenant traceability records.
+
+h3. Acceptance Criteria
+* Workspace queries must filter by workspace_id UUID on every database transaction.
+* Cross-tenant read attempts must return HTTP status code equal to 403."
+Story,FastEmbed ONNX Model Warmup Latency,"h3. User Story
+As a backend startup lifecycle hook, I want to warm up the embedding model during application initialization, so that the first incoming webhook request does not suffer cold-start penalties.
+
+h3. Acceptance Criteria
+* Application startup model preloading duration must not exceed 3000ms.
+* Cold-start warmup dummy inference must execute in less than 150ms."
+Story,Traceability Matrix Paginated Query Performance,"h3. User Story
+As a frontend client, I want paginated RTM table endpoints to query efficiently, so that table re-renders remain smooth on large datasets.
+
+h3. Acceptance Criteria
+* Default pagination page size must equal 10 records.
+* Maximum allowable page size shall not exceed 100 records.
+* Database query latency for 1000 matrix links must be less than 80ms."
+Story,Jira REST API v3 JQL Batch Size Limit,"h3. User Story
+As an ingestion worker, I want to paginate JQL search requests during bulk project sync, so that Atlassian Cloud REST rate limits are respected.
+
+h3. Acceptance Criteria
+* Jira JQL search batch size must not exceed 50 issues per page.
+* Ingestion worker pause duration between consecutive page fetches must be at least 250ms."
+Story,GitHub App Webhook Ingestion Buffer,"h3. User Story
+As an event router, I want pull request event webhooks to buffer asynchronously in the background, so that GitHub does not drop delivery with HTTP 504 timeouts.
+
+h3. Acceptance Criteria
+* Inbound webhook HTTP 202 acknowledgment must return in less than 50ms.
+* Background queue task dispatch delay must not exceed 100ms."
+Story,Dice Overlap Assertion Extraction Minimum Length,"h3. User Story
+As a token analyzer, I want the assertion normalizer to ignore short generic tokens during Dice coefficient calculation, so that false-positive syntactic overlaps are reduced.
+
+h3. Acceptance Criteria
+* Extracted assertion token normalization must discard words with length less than 3 characters.
+* Dice coefficient calculations must preserve stop-word filters containing at least 25 standard keywords."
+Story,PostgreSQL pgvector Index IVFFlat Probes,"h3. User Story
+As a search indexing pipeline, I want pgvector index parameters tuned for low-latency similarity queries, so that test-to-requirement candidate selection is near-instantaneous.
+
+h3. Acceptance Criteria
+* IVFFlat vector index probe count must equal 10 probes during nearest-neighbor execution.
+* Cosine vector distance calculation execution duration must be less than 15ms."
+Story,Alembic Database Migration Verification,"h3. User Story
+As a DevOps engineer, I want database schema migrations to execute idempotently, so that container initialization routines complete reliably without schema drift.
+
+h3. Acceptance Criteria
+* Database schema migration execution duration must not exceed 15 seconds.
+* Failed migration rollbacks must revert all table modifications in a single atomic transaction."
+Story,Jira Issue Summary Normalization Length,"h3. User Story
+As a text preprocessing pipeline, I want requirement summaries sanitized and normalized before embedding generation, so that extraneous whitespace does not distort vector representations.
+
+h3. Acceptance Criteria
+* Summary strings must be trimmed to a maximum length of 255 characters.
+* Extraneous whitespace sequences must be collapsed to exactly 1 space character."
+Story,GitHub Check Run Line Annotation Limits,"h3. User Story
+As a code review collaborator, I want GitHub Check Runs to annotate specific drifted assertion lines in pull request diffs, so that developers see exact code violations inline.
+
+h3. Acceptance Criteria
+* A single check run must post at most 50 line annotations per evaluation.
+* Code line reference offsets must be bounded within the changed git diff range."
+Story,Developer Role RBAC Inspection Privileges,"h3. User Story
+As a system administrator, I want developer accounts restricted from modifying risk thresholds or triggering overrides, so that separation of duties is maintained.
+
+h3. Acceptance Criteria
+* Developer persona access tokens must be restricted to HTTP GET endpoints on matrix routes.
+* POST requests to /api/v1/dashboard/matrix/{id}/override by developer role must return HTTP status code equal to 403."
+Story,QA Lead Role RBAC Management Privileges,"h3. User Story
+As an administrator, I want QA Lead accounts authorized to calibrate policy sliders and trigger manual overrides, so that release gatekeepers retain administrative authority.
+
+h3. Acceptance Criteria
+* QA Lead role verification must validate user claims via RS256 JWT tokens.
+* Authorized override submissions must record user_id and timestamp in audit_logs."
+Story,Requirement Constraint Unit Normalization Engine,"h3. User Story
+As an AST normalizer, I want time and size units converted to standard base units (seconds and bytes), so that structural comparisons are mathematically identical.
+
+h3. Acceptance Criteria
+* Time units expressed in milliseconds (ms) must divide by 1000 to convert to seconds.
+* Capacity constraints expressed in megabytes (MB) must multiply by 1048576 to convert to bytes."
+Story,Synthetic Pull Request Simulator Response Latency,"h3. User Story
+As a developer testing local rules, I want the synthetic PR simulator to return mock check runs immediately, so that rapid feedback loops are supported in the frontend.
+
+h3. Acceptance Criteria
+* Synthetic PR simulation end-to-end execution must complete in less than 300ms.
+* Simulator responses must return complete AST matching breakdown payloads."
+Story,Ollama Llama 3.1 Prompt Context Boundary,"h3. User Story
+As a verbalizer service, I want LLM prompt contexts bounded strictly to extracted AST diff tuples, so that the model cannot hallucinate external facts.
+
+h3. Acceptance Criteria
+* LLM verbalizer prompt payload token count must not exceed 512 tokens.
+* Prompt template must reject non-whitelisted variable keys."
+Story,Audit Log Query Retention History,"h3. User Story
+As a security auditor, I want to retrieve historical audit trail records with date range filtering, so that compliance verification can be certified.
+
+h3. Acceptance Criteria
+* Audit trail pagination must return at most 50 log items per request.
+* Audit log timestamp indexing must ensure query resolution in less than 40ms."
+Story,Database Read-Write Transaction Isolation Level,"h3. User Story
+As a data engineer, I want matrix record upserts executed under Read Committed isolation, so that concurrent background workers do not experience dirty reads.
+
+h3. Acceptance Criteria
+* SQLAlchemy transaction isolation level must equal READ COMMITTED.
+* Deadlock retry handler must attempt at most 3 retries before aborting."
+Story,Polyglot Tree-sitter Grammar Cache Size,"h3. User Story
+As a multi-language parser, I want compiled Tree-sitter language grammars cached in memory, so that repeated file parsing does not incur compilation overhead.
+
+h3. Acceptance Criteria
+* Language parser cache must retain at least 4 compiled grammars (Python, JavaScript, TypeScript, Go).
+* Parser grammar initialization duration must not exceed 500ms."
+Story,Frontend RTM Matrix CSV Export SLA,"h3. User Story
+As an engineering manager, I want to export current traceability status to CSV format, so that offline governance reports can be archived.
+
+h3. Acceptance Criteria
+* CSV export generation for up to 500 records must complete in less than 1000ms.
+* Exported file header must contain exactly 8 standard traceability fields."
+Story,Jira Requirement Drift Flagging Threshold,"h3. User Story
+As an automated auditor, I want requirement modifications in Jira to mark downstream matrix links as potentially drifted, so that test suites are re-evaluated.
+
+h3. Acceptance Criteria
+* Jira issue_updated webhook processing must flag matching matrix records as Stale within 2000ms.
+* Re-indexing background task must be queued within 500ms of event receipt."
+Story,FastAPI Global CORS Security Configuration,"h3. User Story
+As a security engineer, I want the backend API CORS policies strictly defined, so that unauthorized origins cannot access internal API routes.
+
+h3. Acceptance Criteria
+* Allowed origins must match explicitly configured environment domain lists.
+* Preflight OPTIONS request resolution duration must be less than 5ms."
+Story,Task Queue Worker Heartbeat Monitoring,"h3. User Story
+As an operations engineer, I want background task workers to report periodic heartbeats, so that orphaned or frozen background tasks can be reclaimed.
+
+h3. Acceptance Criteria
+* Worker heartbeat ping must occur at least once every 30 seconds.
+* Tasks without heartbeat updates for exceeding 90 seconds must be marked as FAILED."
+Story,AST Node Visitor Max Expression Depth,"h3. User Story
+As a Python AST parser, I want expression visitor depth constrained, so that complex nested lambdas or compound expressions do not cause excessive memory usage.
+
+h3. Acceptance Criteria
+* AST expression traversal tree depth must not exceed 20 nested levels.
+* Non-comparison assertion statements must be bypassed within 1ms."
+Story,JWT Secret Key Minimum Bit Strength,"h3. User Story
+As a security auditor, I want system signing keys to satisfy standard entropy constraints, so that cryptographic signatures cannot be brute-forced.
+
+h3. Acceptance Criteria
+* Application secret signing keys must contain at least 256 bits of entropy.
+* Key initialization checks must abort startup if secret length is less than 32 characters."
+Story,Traceability Evidence Markdown Formatting,"h3. User Story
+As a developer reviewing GitHub PR Check Runs, I want evidence tables formatted in clean Markdown, so that pass/fail criteria are immediately readable.
+
+h3. Acceptance Criteria
+* Check run output body length must not exceed 65535 characters (GitHub API limit).
+* Markdown table rendering must contain requirement key, assertion code, and diff status."
+Story,Docker Compose PostgreSQL Container Health Check,"h3. User Story
+As a DevOps engineer, I want container health checks defined for PostgreSQL with pgvector, so that backend services wait until the database is healthy.
+
+h3. Acceptance Criteria
+* Container health check poll interval must not exceed 10 seconds.
+* Container restart threshold must be set to 3 consecutive failures."
+Story,FastAPI Uvicorn Worker Thread Pool Bounds,"h3. User Story
+As a backend engineer, I want Uvicorn server thread pools tuned for async I/O, so that synchronous database operations do not starve network event loops.
+
+h3. Acceptance Criteria
+* Uvicorn worker process count must equal at least 1 process per CPU core.
+* Any blocking file I/O operations must run in threadpools with at least 10 worker threads."
+Story,Jira Webhook HMAC Secret Validation,"h3. User Story
+As an ingestion router, I want Jira webhook requests validated against shared secret query tokens, so that unauthenticated triggers are ignored.
+
+h3. Acceptance Criteria
+* Webhook requests missing valid secret credentials must be rejected with HTTP 401.
+* Inbound request validation latency must be less than 5ms."
+Story,Frontend Vite Build Output Asset Size,"h3. User Story
+As a web client user, I want the production frontend bundle size optimized, so that dashboard loading time is instantaneous on modern browsers.
+
+h3. Acceptance Criteria
+* Total production Javascript bundle size (gzipped) must not exceed 250KB.
+* Dashboard DOM First Contentful Paint (FCP) must complete in less than 800ms."
+Story,Vector Cosine Similarity Floored Lower Bound,"h3. User Story
+As an algorithmic risk engine, I want negative cosine similarities floored at zero, so that orthogonal or opposing vectors do not produce negative mathematical artifacts.
+
+h3. Acceptance Criteria
+* Semantic similarity scores must be bounded strictly in the range [0.0, 1.0].
+* Negative raw cosine calculations must be floored to exactly 0.0."
+Story,Test Case Function Decorator Resolution,"h3. User Story
+As a test extractor, I want test functions decorated with multiple decorators to locate @traces reliably, so that pytest fixtures do not hide requirement keys.
+
+h3. Acceptance Criteria
+* Decorator parser must inspect up to 10 stacked decorators per test function.
+* Extraction must capture requirement IDs matching the pattern [A-Z]+-[0-9]+."
+Story,Database Connection Retry Backoff Policy,"h3. User Story
+As an application resilient client, I want database connection attempts during boot to retry with exponential backoff, so that temporary network lag does not terminate startup.
+
+h3. Acceptance Criteria
+* Boot connection retry attempts must equal at least 5 retries.
+* Maximum backoff delay interval must not exceed 10 seconds."
+Story,Frontend Real-Time Health Status Polling,"h3. User Story
+As a QA engineer, I want the dashboard to periodically poll integration health statuses, so that service outages in GitHub or Jira are noticed immediately.
+
+h3. Acceptance Criteria
+* Integration status endpoint polling interval must equal 30 seconds.
+* Health check status endpoint latency must be less than 100ms."
+Story,Jira API Rate Limit HTTP 429 Backoff Handling,"h3. User Story
+As an HTTP client, I want Jira API rate limits handled gracefully using Retry-After response headers, so that requests are paused without failing tasks.
+
+h3. Acceptance Criteria
+* Rate-limited HTTP 429 responses must pause requests for the duration indicated in Retry-After header.
+* Default fallback wait duration must equal 5 seconds if header is missing."
+Story,Release Gatekeeper Verification Audit Trail Closure,"h3. User Story
+As an executive release gatekeeper, I want all resolved drift issues signed off before production deployment tags can be minted, so that release audits are complete.
+
+h3. Acceptance Criteria
+* Production release verification gate must ensure 0 unresolved Drifted matrix records.
+* Overall matrix coverage percentage must be at least 90 percent."

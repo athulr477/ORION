@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import orionLogo from '../assets/orion.png';
 
 /**
  * LoginModal — enterprise session gate.
@@ -65,7 +66,7 @@ export default function LoginModal({ onLogin }) {
       <div className="login-card" id="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <div className="login-logo-mark">O</div>
+          <img src={orionLogo} alt="Orion" className="login-logo-img" />
           <div>
             <div className="login-title">Sign in to Orion</div>
             <div className="login-subtitle">Enterprise Traceability Platform</div>

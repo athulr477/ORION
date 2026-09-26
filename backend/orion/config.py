@@ -1,6 +1,8 @@
-"""Orion application settings loaded from environment variables."""
-
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_ENV = Path(__file__).resolve().parent.parent / ".env"
+_ROOT_ENV = Path(__file__).resolve().parent.parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -10,7 +12,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "backend/.env", str(_BACKEND_ENV), str(_ROOT_ENV)),
         env_file_encoding="utf-8",
         extra="ignore",
     )

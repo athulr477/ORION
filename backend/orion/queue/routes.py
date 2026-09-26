@@ -42,8 +42,8 @@ async def list_tasks(
         {
             "id": str(t.id),
             "task_type": t.task_type,
-            "status": t.status.value,
-            "progress": round(t.progress, 2),
+            "status": t.status.value if hasattr(t.status, "value") else str(t.status),
+            "progress": round(t.progress, 2) if t.progress is not None else 0.0,
             "current_step": t.current_step,
             "created_at": t.created_at.isoformat() if t.created_at else None,
             "completed_at": t.completed_at.isoformat() if t.completed_at else None,
@@ -63,8 +63,8 @@ async def get_task(
     """Retrieve detailed status for a specific task in the current workspace."""
     try:
         task_uuid = uuid.UUID(task_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid task ID")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid task ID") from exc
         
     stmt = select(TaskJob).where(
         TaskJob.id == task_uuid,
@@ -79,8 +79,8 @@ async def get_task(
     return {
         "id": str(t.id),
         "task_type": t.task_type,
-        "status": t.status.value,
-        "progress": round(t.progress, 2),
+        "status": t.status.value if hasattr(t.status, "value") else str(t.status),
+        "progress": round(t.progress, 2) if t.progress is not None else 0.0,
         "current_step": t.current_step,
         "payload": t.payload,
         "result": t.result,

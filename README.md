@@ -33,6 +33,7 @@ All 11 development phases have been successfully completed, transforming Orion f
 * **Dual-Sided Structural Extraction:**
   * **Requirement Constraints:** Regex & NLP extract quantitative boundaries (`<= 100ms`, `== 200`, `timeout > 5s`, `not to exceed`, `shall not exceed`, `take no longer than`) with unit normalization.
   * **Test Assertions:** Native Python AST (`ast.NodeVisitor`) parses actual comparison operators, targets, and expected values from functions decorated with `@traces("REQ-xxx")`. Polyglot support extends to JS, TS, Java, and Go via Tree-sitter.
+  * **Unit-Aware Normalization:** Automatically standardizes time and capacity units (e.g. requirement constraint `200ms` seamlessly matches test assertion `assert response.elapsed.total_seconds() < 0.2`).
 * **Kuhn-Munkres Optimal Bipartite Matching:** Employs the Hungarian algorithm for global optimal assignment between requirement constraints and test assertions, powered by Dice coefficient keyword overlap ($2|R \cap T| / (|R| + |T|)$).
 * **Calibrated Hybrid Risk Engine ($\text{Risk} = 1.0 - (0.6 \cdot \text{sem} + 0.4 \cdot \text{struct})$):**
   * Floored semantic similarity ($\max(0.0, \text{cosine})$) prevents negative vector penalties.
@@ -106,6 +107,13 @@ In a controlled benchmark on a 30-pair ground-truth dataset (10 Covered, 10 Part
 | **Pipeline Accuracy** | **0.600** | 0.567 | -0.033 |
 
 > **Key Finding:** Dense semantic embeddings assign high cosine similarity ($\sim 0.85+$) to numerically contradictory requirements and tests (e.g., `timeout <= 100ms` vs `timeout <= 500ms`), failing to detect specification drift. Orion's structural AST matcher exposes these contradictions, achieving **1.000 Precision on Drifted pairs** and eliminating false-positive Covered classifications. *(Full benchmark details in [`evaluation_report.md`](evaluation_report.md)).*
+
+> **Quick Run:** Execute the empirical benchmark comparison at any time via CLI:
+> ```powershell
+> python -m orion.evaluation.evaluator
+> # or full verification with markdown export:
+> python backend/scripts/verify_phase10.py
+> ```
 
 ---
 
@@ -186,10 +194,15 @@ cp .env.example .env
 
 Your `.env` should contain:
 ```env
+# Database Configuration
 DATABASE_URL=postgresql+asyncpg://orion:your_password@localhost:5432/orion_db
 DATABASE_URL_SYNC=postgresql://orion:your_password@localhost:5432/orion_db
 
-# Webhook secrets (HMAC-SHA256)
+# Authentication (JWT Secret Key — REQUIRED)
+# Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+SECRET_KEY=your-32-byte-hex-secret-key-here
+
+# Webhook Secrets (HMAC-SHA256)
 JIRA_WEBHOOK_SECRET=your-jira-webhook-secret
 GITHUB_WEBHOOK_SECRET=your-github-webhook-secret
 
@@ -207,6 +220,9 @@ JIRA_PROJECT_KEY=YOUR_PROJECT_KEY
 # LLM Verbalization (optional — falls back to deterministic template)
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.1:8b
+
+# Error Tracking (optional)
+SENTRY_DSN=
 ```
 
 ### 3. Start Database & Run Migrations
@@ -241,23 +257,58 @@ python scripts/verify_phase13.py    # Asynchronous Task Queue & Background Worke
 python scripts/verify_phase15.py    # Workspaces & Multi-Tenancy Segregation
 python scripts/verify_phase16.py    # Tree-sitter Polyglot AST Extractor (JS, TS, Java, Go)
 python scripts/verify_jira_sync.py  # Jira Cloud REST v3 sync & recursive ADF parser
+
+# Run benchmark evaluation directly:
+python -m orion.evaluation.evaluator
 ```
 
-### 5. Start the Application
+### 5. Live Pipeline & Database Audit
 
-**Terminal 1 — Backend API (from `backend/`):**
+Run the live diagnostic audit script to inspect active database records, multi-tenant workspaces, background task runs (`task_jobs`), and real-time traceability matrix classifications:
+
 ```powershell
-uvicorn orion.app:app --reload --port 8000
+python diagnose_actual_runs.py
 ```
-Interactive API Swagger documentation will be available at `http://localhost:8000/docs`.
 
-**Terminal 2 — Frontend Dashboard (from `frontend/`):**
+### 6. Start the Application
+
+Open two terminal windows to launch both the backend API and frontend dev server:
+
+#### **Terminal 1 — Backend API (FastAPI + Uvicorn)**
+From the `backend/` directory:
 ```powershell
-cd ../frontend
+# Windows PowerShell / macOS / Linux
+uvicorn orion.app:app --host 127.0.0.1 --port 8000 --reload
+```
+> **Backend Service URLs:**
+> - **API Base:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+> - **Interactive Swagger Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+> - **ReDoc Alternative:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+> - **Health Check:** [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+
+---
+
+#### **Terminal 2 — Frontend Dashboard (React 19 + Vite)**
+From the `frontend/` directory:
+```powershell
+cd frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:5173` to access the interactive RTM dashboard. Use the built-in RBAC demo presets to log in as **QA Lead** or **Developer**.
+
+> **Windows PowerShell Note:** If script execution is restricted (`PSSecurityException`), run:
+> ```powershell
+> npm.cmd run dev
+> # or via cmd wrapper:
+> cmd /c npm run dev
+> ```
+
+> **Frontend Service URL:**
+> - **Web Dashboard:** [http://localhost:5173/](http://localhost:5173/)
+>
+> *(The Vite dev server automatically proxies all `/api` requests to `http://127.0.0.1:8000`.)*
+>
+> Use the built-in RBAC demo presets to log in as **QA Lead** (full control: overrides, calibration, simulator) or **Developer** (read-only audit).
 
 ---
 
@@ -265,6 +316,9 @@ Open `http://localhost:5173` to access the interactive RTM dashboard. Use the bu
 
 ```
 ORION/
+├── Level_1_DFD_ORION_Corrected.png    # Level 1 Data Flow Diagram (DFD)
+├── orion_50_realworld_requirements.csv # Real-world requirements dataset
+├── diagnose_actual_runs.py            # Live database audit & run diagnostic script
 ├── backend/                           # Backend FastAPI application
 │   ├── orion/                         # Core application package (13 Subsystems)
 │   │   ├── analysis/                  # Kuhn-Munkres matching, risk engine, & delta service
@@ -278,6 +332,8 @@ ORION/
 │   │   │   ├── routes.py              # /api/v1/auth (/token, /workspaces)
 │   │   │   └── security.py            # Password hashing & JWT token issuance
 │   │   ├── config.py                  # Pydantic BaseSettings environment configuration
+│   │   ├── core/                      # Object-oriented extractor wrappers
+│   │   │   └── extractor/             # RequirementExtractor & CodeExtractor
 │   │   ├── dashboard/                 # Dashboard endpoints & response models
 │   │   │   ├── routes.py              # /api/v1/dashboard (matrix, reclassify, heatmap, stats, simulate, override)
 │   │   │   ├── schemas.py             # Pydantic schemas for dashboard payloads

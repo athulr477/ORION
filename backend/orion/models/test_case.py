@@ -39,42 +39,35 @@ class TestCase(Base):
         default=uuid.uuid4,
     )
     workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("workspaces.id", ondelete="CASCADE"),
-        nullable=False,
     )
     requirement_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("requirements.id", ondelete="SET NULL"),
-        nullable=True,
         comment="FK to linked requirement (from @traces decorator)",
     )
     external_id: Mapped[str] = mapped_column(
         String(500),
         unique=True,
-        nullable=False,
         comment="Unique ID: file_path::function_name",
     )
     function_name: Mapped[str] = mapped_column(
         String(255),
-        nullable=False,
     )
     file_path: Mapped[str] = mapped_column(
         String(500),
-        nullable=False,
     )
     source_code: Mapped[str] = mapped_column(
         Text,
-        nullable=False,
         default="",
     )
     docstring: Mapped[str | None] = mapped_column(
         Text,
-        nullable=True,
         comment="Test docstring; null triggers fallback embedding strategy",
     )
     assertions_extracted: Mapped[dict | None] = mapped_column(
         JSONB,
-        nullable=True,
         comment="Structured assertions extracted in Phase 3",
     )
     embedding = mapped_column(
@@ -86,13 +79,11 @@ class TestCase(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False,
     )
 
     # Relationships

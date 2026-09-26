@@ -12,10 +12,10 @@ import logging
 from dataclasses import dataclass, field
 
 from orion.analysis.risk_engine import (
-    THRESHOLD_COVERED,
-    THRESHOLD_DRIFTED,
     SEMANTIC_WEIGHT,
     STRUCTURAL_WEIGHT,
+    THRESHOLD_COVERED,
+    THRESHOLD_DRIFTED,
 )
 
 logger = logging.getLogger(__name__)

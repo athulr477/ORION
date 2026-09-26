@@ -12,8 +12,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends
 import httpx
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from orion.auth.dependencies import get_current_workspace

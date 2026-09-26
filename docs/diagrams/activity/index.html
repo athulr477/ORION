@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orion Activity Diagram Specification — Calicut University MCA Project Report</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-surface: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --code-bg: #090d16;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-info h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .header-info p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn {
+      background: #334155;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: #475569;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      color: #ffffff;
+    }
+
+    /* Diagram Card */
+    .diagram-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 40px;
+      overflow: hidden;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .card-title h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .card-title p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .card-tools {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-tool:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+
+    .svg-viewport {
+      background: #ffffff;
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .svg-viewport img {
+      max-width: 650px;
+      width: 100%;
+      height: auto;
+      display: block;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      border-radius: 6px;
+    }
+
+    .card-details {
+      padding: 24px;
+      background: #0f172a;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .card-details h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .step-list {
+      margin-top: 12px;
+      padding-left: 20px;
+      font-size: 13.5px;
+      color: #cbd5e1;
+    }
+
+    .step-list li {
+      margin-bottom: 10px;
+    }
+
+    .step-list strong {
+      color: #ffffff;
+    }
+
+    .code-box {
+      background: var(--code-bg);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      position: relative;
+    }
+
+    .code-box pre {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 12.5px;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #334155;
+      color: #ffffff;
+      border: none;
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background: #475569;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+      header, .card-tools, .header-actions, .copy-btn {
+        display: none !important;
+      }
+      .diagram-card {
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+      }
+      .card-header {
+        border-bottom: 1px solid #000000 !important;
+      }
+      .card-title h2, .card-title p {
+        color: #000000 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+      }
+      .card-details {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .card-details h3, .step-list li {
+        color: #000000 !important;
+      }
+      .svg-viewport {
+        padding: 0 !important;
+      }
+      .svg-viewport img {
+        box-shadow: none !important;
+        max-width: 90% !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="header-info">
+        <h1>
+          ORION ACTIVITY DIAGRAM
+          <span class="badge">Calicut University MCA Report</span>
+        </h1>
+        <p>Project Chapter 3: System Design — Operational Workflow (Standard Textbook UML Activity Model)</p>
+      </div>
+      <div class="header-actions">
+        <a href="../dfd/index.html" class="btn">📊 View DFD Diagrams</a>
+        <a href="../use_case/index.html" class="btn">👥 View Use Case Diagrams</a>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save to PDF</button>
+      </div>
+    </header>
+
+    <!-- Activity Diagram Card -->
+    <section class="diagram-card">
+      <div class="card-header">
+        <div class="card-title">
+          <h2>Figure 3.8: UML Activity Diagram — Orion Traceability &amp; Drift Detection Pipeline</h2>
+          <p>Standard textbook UML activity model matching university syllabus guidelines</p>
+        </div>
+        <div class="card-tools">
+          <a href="activity_diagram.svg" target="_blank" class="btn-tool">Open Full SVG</a>
+          <a href="activity_diagram.png" download="Orion_Activity_Diagram_Figure_3_8.png" class="btn-tool">Download PNG (300 DPI)</a>
+          <a href="activity_diagram.svg" download="Orion_Activity_Diagram_Figure_3_8.svg" class="btn-tool">Download SVG</a>
+        </div>
+      </div>
+      <div class="svg-viewport">
+        <img src="activity_diagram.png" alt="Orion UML Activity Diagram Figure 3.8" />
+      </div>
+      <div class="card-details">
+        <h3>Step-by-Step Operational Workflow</h3>
+        <ol class="step-list">
+          <li><strong>Initial State (●):</strong> Triggered when a software developer pushes test commits with <code>@traces("REQ-xxx")</code> tags and opens or updates a Pull Request.</li>
+          <li><strong>Receive Pull Request and Ingest Requirements:</strong> FastAPI webhook handler intercepts the event and fetches the linked Jira requirements via JQL API.</li>
+          <li><strong>Decision Diamond 1 (Dual-Sided Analysis):</strong>
+            <ul>
+              <li><strong>[semantic vector analysis]:</strong> Generates dense vector representations using FastEmbed ONNX (<code>BAAI/bge-small-en-v1.5</code>).</li>
+              <li><strong>[structural assertion analysis]:</strong> Python <code>ast.NodeVisitor</code> parses comparison expressions (<code>left</code>, <code>op</code>, <code>right</code>) and normalizes measurement units (e.g. <code>200ms</code> &harr; <code>0.2s</code>).</li>
+            </ul>
+          </li>
+          <li><strong>Execute Kuhn-Munkres Bipartite Matcher:</strong> Resolves global optimal alignment between requirement constraints and test assertions based on Dice keyword coefficient.</li>
+          <li><strong>Compute Hybrid Risk Score &amp; Classify Status:</strong> Synthesizes alignment score and calculates true risk: $\text{Risk} = 1.0 - (0.6 \cdot \text{sem} + 0.4 \cdot \text{struct})$.</li>
+          <li><strong>Decision Diamond 2 (Drift Evaluation Gate):</strong>
+            <ul>
+              <li><strong>[specification drift detected] (Risk &gt; 0.60):</strong> Invokes Ollama Llama 3.1:8B Evidence-Grounded Verbalizer with AST assertion diffs to generate human-readable explanations (with attached document note), posts a <code>failure</code> GitHub Check Run to block merge, and files an audit warning comment on the Jira issue.</li>
+              <li><strong>[traceability verified / compliant] (Risk &le; 0.60):</strong> Bypasses drift alerting, unblocks the pull request, and transitions directly to the final state.</li>
+            </ul>
+          </li>
+          <li><strong>Activity Final State (⊙):</strong> Traceability verification and compliance workflow successfully concludes.</li>
+        </ol>
+
+        <h3 style="margin-top: 24px;">Mermaid UML Activity Specification</h3>
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyMermaid()">📋 Copy Mermaid Code</button>
+          <pre id="mermaid-code">flowchart TD
+    Start((●)) --> A1["Receive Pull Request and\nIngest Requirements"]
+    
+    A1 --> D1{" "}
+    
+    D1 -->|"[semantic vector analysis]"| A2A["Generate FastEmbed\nVector Embeddings"]
+    D1 -->|"[structural assertion analysis]"| A2B["Extract AST Assertions\n& Normalize Units"]
+    
+    A2A --> A3["Execute Kuhn-Munkres\nBipartite Matcher"]
+    A2B --> A3
+    
+    A3 --> A4["Compute Hybrid Risk Score\n& Classify Status"]
+    
+    A4 --> D2{" "}
+    
+    D2 -->|"[specification drift detected]"| A5["Generate XAI Drift Summary\nvia Ollama LLM"]
+    Note["See the Activity Diagram\nfor Evidence-Grounded\nVerbalizer details"] -.-> A5
+    
+    A5 --> A6["Post Check Run Failure\n& Alert Jira Issue"]
+    A6 --> Final((⊙))
+    
+    D2 -->|"[traceability verified / compliant]"| Final
+
+    classDef action fill:#96c8eb,stroke:#000000,stroke-width:1.6px,color:#000000;
+    classDef decision fill:#96c8eb,stroke:#000000,stroke-width:1.6px,color:#000000;
+    classDef note fill:#96c8eb,stroke:#000000,stroke-width:1.4px,color:#000000;
+    classDef startNode fill:#000000,stroke:#000000,color:#ffffff;
+    classDef endNode fill:#000000,stroke:#000000,color:#ffffff;
+
+    class Start startNode;
+    class Final endNode;
+    class A1,A2A,A2B,A3,A4,A5,A6 action;
+    class D1,D2 decision;
+    class Note note;</pre>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function copyMermaid() {
+      const code = document.getElementById('mermaid-code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.innerText = '✅ Copied!';
+        setTimeout(() => { btn.innerText = '📋 Copy Mermaid Code'; }, 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -28,9 +28,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from orion.analysis.risk_engine import (
-    classify,
     SEMANTIC_WEIGHT,
     STRUCTURAL_WEIGHT,
+    classify,
 )
 
 logger = logging.getLogger(__name__)
@@ -100,6 +100,37 @@ class EvaluationReport:
     macro_f1: float
     accuracy: float
 
+    def format_table(self) -> str:
+        """Format confusion matrix and classification metrics as an ASCII table."""
+        lines = [
+            f"Engine: {self.engine_name}",
+            "",
+            "  Confusion Matrix:",
+            f"  {'':16s} {'Pred:Covered':>14} {'Pred:Partial':>13} {'Pred:Drifted':>13}",
+            f"  {'-' * 60}",
+        ]
+        for i, label in enumerate(_LABELS):
+            row_label = f"True:{label}"
+            cells = "  ".join(f"{self.confusion_matrix[i][j]:>10}" for j in range(3))
+            lines.append(f"  {row_label:<16} {cells}")
+
+        lines.extend([
+            "",
+            "  Classification Metrics:",
+            f"  {'Class':<12} {'Precision':>10} {'Recall':>10} {'F1-Score':>10} {'Support':>10}",
+            f"  {'-' * 54}",
+        ])
+        for m in self.per_class:
+            lines.append(
+                f"  {m.label:<12} {m.precision:>10.3f} {m.recall:>10.3f} {m.f1:>10.3f} {m.support:>10}"
+            )
+        lines.extend([
+            f"  {'-' * 54}",
+            f"  {'Macro avg':<12} {self.macro_precision:>10.3f} {self.macro_recall:>10.3f} {self.macro_f1:>10.3f} {len(self.pairs):>10}",
+            f"  {'Accuracy':<12} {'':>10} {'':>10} {self.accuracy:>10.3f} {len(self.pairs):>10}",
+        ])
+        return "\n".join(lines)
+
 
 # ---------------------------------------------------------------------------
 # Scoring functions — delegate to risk_engine for consistency
@@ -111,7 +142,7 @@ def _semantic_score_from_texts(req_text: str, test_text: str) -> float:
 
     Uses semantic_similarity() which floors at 0.0 for a clean [0, 1] range.
     """
-    from orion.embedding.engine import semantic_similarity, embed_text
+    from orion.embedding.engine import embed_text, semantic_similarity
 
     req_emb = embed_text(req_text)
     test_emb = embed_text(test_text)
@@ -313,3 +344,56 @@ def run_evaluation(
     )
 
     return hybrid_report, cosine_report
+
+
+def main() -> None:
+    """CLI runner for empirical benchmark evaluation."""
+    import io
+    import sys
+
+    if sys.stdout and hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
+    print("=" * 70)
+    print("  Orion Empirical Benchmark Evaluation")
+    print("=" * 70)
+    hybrid_report, cosine_report = run_evaluation(verbose=True)
+
+    print("\n" + hybrid_report.format_table())
+    print("\n" + cosine_report.format_table())
+
+    print("\n" + "=" * 70)
+    print("  Side-by-Side Summary Comparison")
+    print("=" * 70)
+    print(f"\n  {'Class':<10} | {'Hybrid Engine':^35} | {'Cosine Baseline':^35}")
+    print(
+        f"  {'':10} | {'Prec':>10} {'Rec':>10} {'F1':>10} {'Sup':>5} | "
+        f"{'Prec':>10} {'Rec':>10} {'F1':>10} {'Sup':>5}"
+    )
+    print(f"  {'-' * 82}")
+
+    for hm, cm_cls in zip(hybrid_report.per_class, cosine_report.per_class):
+        print(
+            f"  {hm.label:<10} | "
+            f"{hm.precision:>10.3f} {hm.recall:>10.3f} {hm.f1:>10.3f} {hm.support:>5} | "
+            f"{cm_cls.precision:>10.3f} {cm_cls.recall:>10.3f} {cm_cls.f1:>10.3f} {cm_cls.support:>5}"
+        )
+
+    print(f"  {'-' * 82}")
+    print(
+        f"  {'Macro avg':<10} | "
+        f"{hybrid_report.macro_precision:>10.3f} {hybrid_report.macro_recall:>10.3f} "
+        f"{hybrid_report.macro_f1:>10.3f} {'':>5} | "
+        f"{cosine_report.macro_precision:>10.3f} {cosine_report.macro_recall:>10.3f} "
+        f"{cosine_report.macro_f1:>10.3f} {'':>5}"
+    )
+    print(
+        f"  {'Accuracy':<10} | "
+        f"{'':>10} {'':>10} {hybrid_report.accuracy:>10.3f} {'':>5} | "
+        f"{'':>10} {'':>10} {cosine_report.accuracy:>10.3f} {'':>5}"
+    )
+    print(f"  {'=' * 82}\n")
+
+
+if __name__ == "__main__":
+    main()

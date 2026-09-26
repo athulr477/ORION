@@ -1,8 +1,8 @@
 """Task handlers for the background worker."""
 
 import logging
+from collections.abc import Awaitable, Callable
 from typing import Any
-from collections.abc import Callable, Coroutine
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 async def handle_pr_analysis(
     payload: dict[str, Any],
     session: AsyncSession,
-    update_progress: Callable[[float, str], Coroutine[Any, Any, None]]
+    update_progress: Callable[[float, str], Awaitable[None]]
 ) -> dict[str, Any]:
     """Execute the PR analysis pipeline.
     
@@ -40,12 +40,11 @@ async def handle_pr_analysis(
     installation_id = payload["installation_id"]
     check_run_id = payload["check_run_id"]
     token = payload["token"]
+    workspace_id = payload.get("workspace_id", "")
 
     await update_progress(0.3, f"Fetching and parsing PR #{pull_number}")
     
     # Run the heavy PR analysis function
-    # Wait! _analyse_pr in github/routes.py doesn't return anything or take a session.
-    # It fetches files, runs the pipeline and posts the check run.
     await _analyse_pr(
         owner=owner,
         repo=repo,
@@ -53,7 +52,8 @@ async def handle_pr_analysis(
         head_sha=head_sha,
         installation_id=installation_id,
         check_run_id=check_run_id,
-        token=token
+        token=token,
+        workspace_id=workspace_id,
     )
     
     await update_progress(0.9, "Check Run posted to GitHub")
@@ -64,7 +64,7 @@ async def handle_pr_analysis(
 async def handle_simulate_run(
     payload: dict[str, Any],
     session: AsyncSession,
-    update_progress: Callable[[float, str], Coroutine[Any, Any, None]]
+    update_progress: Callable[[float, str], Awaitable[None]]
 ) -> dict[str, Any]:
     """Execute the simulation pipeline incrementally."""
     await update_progress(0.1, "Initializing simulation pipeline")
@@ -74,7 +74,8 @@ async def handle_simulate_run(
     from orion.dashboard.service import simulate_webhook_logic
 
     request = SimulateRequest(**payload)
+    workspace_id = payload.get("workspace_id")
     
-    result = await simulate_webhook_logic(request, session, update_progress)
+    result = await simulate_webhook_logic(request, session, update_progress, workspace_id=workspace_id)
     return result
 

@@ -16,28 +16,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from orion.analysis.structural_matcher import compute_structural_score
-from orion.auth.security import require_qa_lead
 from orion.auth.dependencies import get_current_workspace
-from orion.models.user import User
-from orion.models.workspace import Workspace
-from orion.models.audit_log import AuditLog
+from orion.auth.security import require_qa_lead
 from orion.dashboard.schemas import (
     HeatmapConstraintMatch,
     HeatmapKeyword,
     HeatmapResponse,
     MatrixResponse,
     MatrixRow,
+    OverrideRequest,
     ReclassifiedRow,
     ReclassifyRequest,
     ReclassifyResponse,
     SimulateRequest,
     StatsResponse,
-    OverrideRequest,
 )
 from orion.database import get_session
+from orion.models.audit_log import AuditLog
 from orion.models.requirement import Requirement
 from orion.models.test_case import TestCase
 from orion.models.traceability_matrix import TraceabilityMatrix, TraceabilityStatus
+from orion.models.user import User
+from orion.models.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -49,29 +49,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 # ---------------------------------------------------------------------------
 
 
-def _build_matrix_row(entry: TraceabilityMatrix) -> MatrixRow:
-    """Convert a TraceabilityMatrix ORM instance (with loaded relations) to a MatrixRow."""
-    req = entry.requirement
-    tc = entry.test_case
-    return MatrixRow(
-        id=str(entry.id),
-        requirement_id=str(entry.requirement_id),
-        requirement_external_id=req.external_id if req else "?",
-        requirement_title=req.title if req else "Unknown",
-        test_case_id=str(entry.test_case_id),
-        test_function_name=tc.function_name if tc else "Unknown",
-        test_file_path=tc.file_path if tc else "",
-        semantic_score=round(entry.semantic_score, 4) if entry.semantic_score is not None else None,
-        structural_score=round(entry.structural_score, 4) if entry.structural_score is not None else None,
-        risk_score=round(entry.risk_score, 4) if entry.risk_score is not None else None,
-        confidence=round(entry.confidence, 4) if entry.confidence is not None else None,
-        status=entry.status.value if entry.status else None,
-        audit_summary=entry.audit_summary,
-        has_delta=entry.requirement_delta is not None and bool(entry.requirement_delta),
-        is_manually_overridden=getattr(entry, "is_manually_overridden", False),
-        created_at=entry.created_at.isoformat() if entry.created_at else None,
-        updated_at=entry.updated_at.isoformat() if entry.updated_at else None,
-    )
+from orion.dashboard.service import build_matrix_row as _build_matrix_row
 
 
 # ---------------------------------------------------------------------------
@@ -107,8 +85,8 @@ async def get_matrix(
         try:
             status_enum = TraceabilityStatus(status)
             stmt = stmt.where(TraceabilityMatrix.status == status_enum)
-        except ValueError:
-            raise HTTPException(400, f"Invalid status: {status}")
+        except ValueError as exc:
+            raise HTTPException(400, f"Invalid status: {status}") from exc
 
     # Search filter — join requirement table for search
     if search:
@@ -273,8 +251,8 @@ async def get_heatmap(
     """
     try:
         entry_uuid = uuid.UUID(entry_id)
-    except ValueError:
-        raise HTTPException(400, "Invalid entry ID format")
+    except ValueError as exc:
+        raise HTTPException(400, "Invalid entry ID format") from exc
 
     stmt = (
         select(TraceabilityMatrix)
@@ -449,7 +427,7 @@ async def simulate_webhook(
     from orion.queue.broker import enqueue_task
     payload = body.model_dump()
     payload["workspace_id"] = str(current_workspace.id)
-    task_id = await enqueue_task(session, "simulate_run", payload)
+    task_id = await enqueue_task(session, "simulate_run", payload, workspace_id=current_workspace.id)
     return {"status": "accepted", "task_id": str(task_id)}
 
 
@@ -473,8 +451,8 @@ async def override_matrix_entry(
     """Manually override a risk score and write to the audit log."""
     try:
         entry_uuid = uuid.UUID(entry_id)
-    except ValueError:
-        raise HTTPException(400, "Invalid entry ID format")
+    except ValueError as exc:
+        raise HTTPException(400, "Invalid entry ID format") from exc
 
     stmt = select(TraceabilityMatrix).where(
         TraceabilityMatrix.id == entry_uuid,
@@ -488,8 +466,8 @@ async def override_matrix_entry(
 
     try:
         new_status = TraceabilityStatus(body.new_status)
-    except ValueError:
-        raise HTTPException(400, f"Invalid status: {body.new_status}")
+    except ValueError as exc:
+        raise HTTPException(400, f"Invalid status: {body.new_status}") from exc
 
     old_status = entry.status.value if entry.status else "Unknown"
 

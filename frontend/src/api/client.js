@@ -97,6 +97,11 @@ export async function fetchTasks(limit = 10) {
   return request(`/api/v1/tasks?limit=${limit}`);
 }
 
+/** Fetch single background task by ID. */
+export async function fetchTask(taskId) {
+  return request(`/api/v1/tasks/${taskId}`);
+}
+
 /** Fetch all workspace integrations status (Jira, GitHub, Ollama). */
 export async function fetchIntegrationsStatus() {
   return request('/api/v1/integrations/status');

@@ -89,7 +89,7 @@ _OPERATOR_PATTERNS: list[tuple[str, str]] = [
     # Strict inequality
     (r"greater\s+than", ">"),
     (r"more\s+than", ">"),
-    (r"exceeds?", ">"),
+    (r"exceed(?:s|ing)?", ">"),
     (r"above", ">"),
     (r"over", ">"),
     (r"less\s+than", "<"),
@@ -165,6 +165,7 @@ def _extract_threshold_constraints(text: str) -> list[ConstraintData]:
     """
     constraints: list[ConstraintData] = []
     text_lower = text.lower()
+    matched_spans: list[tuple[int, int]] = []
 
     for pattern_str, operator in _OPERATOR_PATTERNS:
         # Build regex: operator_pattern + optional article/filler word + number + optional unit
@@ -179,6 +180,11 @@ def _extract_threshold_constraints(text: str) -> list[ConstraintData]:
         )
 
         for match in re.finditer(full_pattern, text_lower, re.IGNORECASE):
+            s, e = match.span()
+            if any(ms <= s < me or ms < e <= me for ms, me in matched_spans):
+                continue
+            matched_spans.append((s, e))
+
             number_str = match.group(2).replace(",", "")
             unit = match.group(3)
 

@@ -61,12 +61,17 @@ class OllamaClient:
             self.temperature,
         )
 
+    _cached_available: bool | None = None
+
     def is_available(self) -> bool:
         """Check whether the Ollama server is reachable and the model is loaded.
 
         Returns:
             True if the server responds and the model exists.
         """
+        if OllamaClient._cached_available is not None:
+            return OllamaClient._cached_available
+
         try:
             # List available models to verify connectivity
             models_response = self._client.list()
@@ -74,20 +79,24 @@ class OllamaClient:
                 m.model for m in models_response.models
             ]
             if self.model in available_models:
+                OllamaClient._cached_available = True
                 return True
             # Also check without tag (e.g. "llama3.1" matches "llama3.1:8b")
             base_model = self.model.split(":")[0]
             for m in available_models:
                 if m.startswith(base_model):
+                    OllamaClient._cached_available = True
                     return True
             logger.warning(
                 "Ollama server is up but model '%s' not found. Available: %s",
                 self.model,
                 available_models,
             )
+            OllamaClient._cached_available = False
             return False
         except Exception as e:
             logger.warning("Ollama server not available at %s: %s", self.base_url, e)
+            OllamaClient._cached_available = False
             return False
 
     def generate(self, prompt: str) -> LLMResponse:

@@ -57,6 +57,7 @@ class RiskResult:
 def classify(
     semantic_score: float,
     structural_score: float,
+    has_drift: bool = False,
 ) -> RiskResult:
     """Compute risk_score, confidence, and classify a requirement-test pair.
 
@@ -75,6 +76,7 @@ def classify(
     Args:
         semantic_score: Cosine similarity from Phase 4 (in [0, 1] typically).
         structural_score: Structural match score from Phase 5 matcher (in [0, 1]).
+        has_drift: True if an assertion boundary violation or specification drift occurred.
 
     Returns:
         RiskResult with all scores and classification.
@@ -88,7 +90,10 @@ def classify(
     risk_score = 1.0 - alignment
 
     # Classify
-    if risk_score < THRESHOLD_COVERED:
+    if has_drift:
+        status = STATUS_DRIFTED
+        risk_score = max(0.85, risk_score)
+    elif risk_score < THRESHOLD_COVERED:
         status = STATUS_COVERED
     elif risk_score > THRESHOLD_DRIFTED:
         status = STATUS_DRIFTED
