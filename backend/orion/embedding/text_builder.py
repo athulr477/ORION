@@ -79,9 +79,7 @@ def build_test_text(
     if not parts and source_code:
         # Take assert lines from source
         assert_lines = [
-            line.strip()
-            for line in source_code.splitlines()
-            if line.strip().startswith("assert ")
+            line.strip() for line in source_code.splitlines() if line.strip().startswith("assert ")
         ]
         if assert_lines:
             parts.append(". ".join(assert_lines[:5]))

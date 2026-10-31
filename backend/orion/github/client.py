@@ -54,6 +54,7 @@ def _is_test_file(filename: str) -> bool:
 # PR File Listing
 # ---------------------------------------------------------------------------
 
+
 def fetch_pr_files(
     owner: str,
     repo: str,
@@ -109,7 +110,10 @@ def fetch_pr_files(
 
     logger.info(
         "PR #%d in %s/%s: %d test file(s) changed",
-        pull_number, owner, repo, len(test_files),
+        pull_number,
+        owner,
+        repo,
+        len(test_files),
     )
     return test_files
 
@@ -117,6 +121,7 @@ def fetch_pr_files(
 # ---------------------------------------------------------------------------
 # File Content Fetching
 # ---------------------------------------------------------------------------
+
 
 def fetch_file_content(
     owner: str,
@@ -164,6 +169,7 @@ def fetch_file_content(
 # Check Run Management
 # ---------------------------------------------------------------------------
 
+
 def create_check_run(
     owner: str,
     repo: str,
@@ -205,7 +211,10 @@ def create_check_run(
     check_run_id: int = response.json()["id"]
     logger.info(
         "Created Check Run #%d for %s/%s @ %s",
-        check_run_id, owner, repo, head_sha[:8],
+        check_run_id,
+        owner,
+        repo,
+        head_sha[:8],
     )
     return check_run_id
 
@@ -256,7 +265,8 @@ def complete_check_run(
 
     logger.info(
         "Completed Check Run #%d with conclusion=%s",
-        check_run_id, conclusion,
+        check_run_id,
+        conclusion,
     )
 
 
@@ -291,7 +301,8 @@ def fail_check_run(
     except Exception:
         logger.exception(
             "Failed to mark Check Run #%d as failed — error was: %s",
-            check_run_id, error_message,
+            check_run_id,
+            error_message,
         )
 
 
@@ -332,9 +343,9 @@ def build_check_summary(results: list[dict]) -> tuple[str, str, str]:
             "neutral",
             "Orion Traceability — No test files with @traces found",
             (
-                "No test files containing `@traces(\"REQ-xxx\")` decorators were found "
+                'No test files containing `@traces("REQ-xxx")` decorators were found '
                 "in this pull request. Orion could not analyse traceability.\n\n"
-                "Add `@traces(\"REQ-xxx\")` decorators to your test functions to link "
+                'Add `@traces("REQ-xxx")` decorators to your test functions to link '
                 "them to requirements."
             ),
         )
@@ -362,8 +373,10 @@ def build_check_summary(results: list[dict]) -> tuple[str, str, str]:
     )
 
     # Build markdown summary table
-    rows = ["| Requirement | Test Function | Status | Risk | Semantic | Structural |",
-            "|---|---|:---:|:---:|:---:|:---:|"]
+    rows = [
+        "| Requirement | Test Function | Status | Risk | Semantic | Structural |",
+        "|---|---|:---:|:---:|:---:|:---:|",
+    ]
     for r in results:
         status_emoji = _STATUS_EMOJI.get(r["status"], "❓")
         rows.append(
@@ -381,9 +394,7 @@ def build_check_summary(results: list[dict]) -> tuple[str, str, str]:
     audit_lines: list[str] = []
     for r in results:
         if r["status"] in ("Partial", "Drifted") and r.get("audit_summary"):
-            audit_lines.append(
-                f"**`{r['req_id']}`** ({r['status']}): {r['audit_summary']}"
-            )
+            audit_lines.append(f"**`{r['req_id']}`** ({r['status']}): {r['audit_summary']}")
 
     audit_section = ""
     if audit_lines:

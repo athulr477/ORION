@@ -102,9 +102,7 @@ async def github_webhook(
     for test_file in payload.test_files:
         functions = extract_test_functions(test_file.content)
         if not functions:
-            logger.info(
-                "No test functions found in %s — skipping", test_file.file_path
-            )
+            logger.info("No test functions found in %s — skipping", test_file.file_path)
             continue
 
         created, updated, linked, unlinked = await upsert_test_cases(

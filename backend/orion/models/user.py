@@ -13,6 +13,7 @@ from orion.database import Base
 
 class UserRole(enum.StrEnum):
     """User roles determining access level in Orion."""
+
     QA_LEAD = "QA_LEAD"
     DEVELOPER = "DEVELOPER"
 

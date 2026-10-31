@@ -96,8 +96,7 @@ async def apply_requirement_delta(
     await session.flush()
 
     logger.info(
-        "Applied requirement delta to %d/%d traceability entries for %s "
-        "(%d changes: %s)",
+        "Applied requirement delta to %d/%d traceability entries for %s (%d changes: %s)",
         updated_count,
         len(entries),
         requirement.external_id,

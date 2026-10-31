@@ -31,6 +31,7 @@ router = APIRouter(prefix="/integrations", tags=["integrations"])
 # Schemas
 # ---------------------------------------------------------------------------
 
+
 class JiraStatus(BaseModel):
     configured: bool
     base_url: str
@@ -75,6 +76,7 @@ class JiraTestRequest(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _mask_secret(secret: str) -> str:
     if not secret:
         return ""
@@ -83,10 +85,10 @@ def _mask_secret(secret: str) -> str:
     return f"{secret[:5]}...{secret[-4:]}"
 
 
-def _check_ollama_available(base_url: str) -> bool:
+async def _check_ollama_available(base_url: str) -> bool:
     try:
-        with httpx.Client(timeout=2.0) as client:
-            res = client.get(f"{base_url.rstrip('/')}/api/tags")
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            res = await client.get(f"{base_url.rstrip('/')}/api/tags")
             return res.is_success
     except Exception:
         return False
@@ -96,17 +98,20 @@ def _check_ollama_available(base_url: str) -> bool:
 # Endpoints
 # ---------------------------------------------------------------------------
 
+
 @router.get("/status", response_model=IntegrationsStatusResponse)
 async def get_integrations_status(
     current_workspace: Workspace = Depends(get_current_workspace),
 ) -> dict[str, Any]:
     """Get the current integration status for the active workspace."""
-    pem_path = Path(settings.github_app_private_key_path) if settings.github_app_private_key_path else None
+    pem_path = (
+        Path(settings.github_app_private_key_path) if settings.github_app_private_key_path else None
+    )
     pem_exists = pem_path.exists() if pem_path else False
 
     jira_configured = bool(settings.jira_base_url and settings.jira_api_token)
     github_configured = bool(settings.github_app_id and pem_exists)
-    ollama_ok = _check_ollama_available(settings.ollama_base_url)
+    ollama_ok = await _check_ollama_available(settings.ollama_base_url)
 
     return {
         "workspace_id": str(current_workspace.id),

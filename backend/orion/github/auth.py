@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _GITHUB_API_BASE = "https://api.github.com"
-_JWT_EXPIRY_SECONDS = 600          # GitHub requires <= 10 min
+_JWT_EXPIRY_SECONDS = 600  # GitHub requires <= 10 min
 _TOKEN_REFRESH_BUFFER_SECONDS = 300  # Refresh 5 min before token expires
 
 # ---------------------------------------------------------------------------
@@ -43,6 +43,7 @@ _token_expires_at: float = 0.0  # epoch seconds
 # ---------------------------------------------------------------------------
 # JWT minting
 # ---------------------------------------------------------------------------
+
 
 def _load_private_key() -> str:
     """Load the GitHub App private key PEM from the configured path.
@@ -78,7 +79,7 @@ def _mint_jwt(app_id: int, private_key_pem: str) -> str:
     """
     now = int(time.time())
     payload = {
-        "iat": now - 60,   # issued-at (60s in past to account for clock skew)
+        "iat": now - 60,  # issued-at (60s in past to account for clock skew)
         "exp": now + _JWT_EXPIRY_SECONDS,
         "iss": str(app_id),
     }
@@ -90,6 +91,7 @@ def _mint_jwt(app_id: int, private_key_pem: str) -> str:
 # ---------------------------------------------------------------------------
 # Installation Access Token exchange
 # ---------------------------------------------------------------------------
+
 
 async def _exchange_for_installation_token(app_jwt: str, installation_id: int) -> tuple[str, float]:
     """Exchange a GitHub App JWT for an Installation Access Token.
@@ -122,6 +124,7 @@ async def _exchange_for_installation_token(app_jwt: str, installation_id: int) -
     expires_at_str: str = data.get("expires_at", "")
     if expires_at_str:
         from datetime import datetime
+
         dt = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
         expires_at = dt.timestamp() - _TOKEN_REFRESH_BUFFER_SECONDS
     else:
@@ -139,6 +142,7 @@ async def _exchange_for_installation_token(app_jwt: str, installation_id: int) -
 # ---------------------------------------------------------------------------
 # Public API — cached token getter
 # ---------------------------------------------------------------------------
+
 
 def get_installation_token(installation_id: int | None = None) -> str:
     """Return a valid GitHub Installation Access Token, refreshing if needed.
@@ -162,46 +166,51 @@ def get_installation_token(installation_id: int | None = None) -> str:
     inst_id = installation_id or settings.github_app_installation_id
     if not inst_id:
         raise ValueError(
-            "GITHUB_APP_INSTALLATION_ID is not configured. "
-            "Set it in .env or pass it explicitly."
+            "GITHUB_APP_INSTALLATION_ID is not configured. Set it in .env or pass it explicitly."
         )
 
     now = time.time()
     if _cached_token and now < _token_expires_at:
-        logger.debug("Using cached GitHub installation token (expires in %.0f s)", _token_expires_at - now)
+        logger.debug(
+            "Using cached GitHub installation token (expires in %.0f s)", _token_expires_at - now
+        )
         return _cached_token
 
     logger.info("GitHub installation token expired or missing — refreshing")
     private_key_pem = _load_private_key()
     app_jwt = _mint_jwt(settings.github_app_id, private_key_pem)
-    
-    import asyncio
-    import threading
-    
-    def run_sync(coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-            
-        if loop and loop.is_running():
-            result = []
-            err = []
-            def runner():
-                try:
-                    result.append(asyncio.run(coro))
-                except Exception as e:
-                    err.append(e)
-            t = threading.Thread(target=runner)
-            t.start()
-            t.join()
-            if err:
-                raise err[0]
-            return result[0]
-        else:
-            return asyncio.run(coro)
 
-    token, expires_at = run_sync(_exchange_for_installation_token(app_jwt, inst_id))
+    import asyncio
+    import concurrent.futures
+
+    def run_in_new_loop(coro):
+        """Run an async coroutine in a brand-new event loop in a worker thread.
+
+        This avoids nested asyncio.run() issues when called from inside a
+        running uvicorn event loop. Using a fresh loop in a dedicated thread
+        prevents JWT clock-skew problems caused by the threading delay.
+        """
+        result_holder = {}
+
+        def _target():
+            new_loop = asyncio.new_event_loop()
+            try:
+                result_holder["value"] = new_loop.run_until_complete(coro)
+            except Exception as exc:
+                result_holder["error"] = exc
+            finally:
+                new_loop.close()
+
+        t = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        future = t.submit(_target)
+        future.result(timeout=30)
+        t.shutdown(wait=False)
+
+        if "error" in result_holder:
+            raise result_holder["error"]
+        return result_holder["value"]
+
+    token, expires_at = run_in_new_loop(_exchange_for_installation_token(app_jwt, inst_id))
 
     _cached_token = token
     _token_expires_at = expires_at

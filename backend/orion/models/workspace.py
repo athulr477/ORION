@@ -13,6 +13,7 @@ from orion.database import Base
 
 class WorkspaceRole(enum.StrEnum):
     """User roles within a specific workspace."""
+
     ADMIN = "ADMIN"
     MEMBER = "MEMBER"
 

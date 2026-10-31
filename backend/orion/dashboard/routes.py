@@ -23,7 +23,6 @@ from orion.dashboard.schemas import (
     HeatmapKeyword,
     HeatmapResponse,
     MatrixResponse,
-    MatrixRow,
     OverrideRequest,
     ReclassifiedRow,
     ReclassifyRequest,
@@ -31,6 +30,7 @@ from orion.dashboard.schemas import (
     SimulateRequest,
     StatsResponse,
 )
+from orion.dashboard.service import build_matrix_row as _build_matrix_row
 from orion.database import get_session
 from orion.models.audit_log import AuditLog
 from orion.models.requirement import Requirement
@@ -42,14 +42,6 @@ from orion.models.workspace import Workspace
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
-
-
-# ---------------------------------------------------------------------------
-# Helper: build MatrixRow from ORM objects
-# ---------------------------------------------------------------------------
-
-
-from orion.dashboard.service import build_matrix_row as _build_matrix_row
 
 
 # ---------------------------------------------------------------------------
@@ -91,8 +83,7 @@ async def get_matrix(
     # Search filter — join requirement table for search
     if search:
         stmt = stmt.join(TraceabilityMatrix.requirement).where(
-            Requirement.title.ilike(f"%{search}%")
-            | Requirement.external_id.ilike(f"%{search}%")
+            Requirement.title.ilike(f"%{search}%") | Requirement.external_id.ilike(f"%{search}%")
         )
 
     # Count total (before pagination)
@@ -220,16 +211,83 @@ def _extract_keywords(text: str) -> list[str]:
         return []
     words = re.findall(r"[a-zA-Z_]\w{2,}", text)
     stopwords = {
-        "the", "and", "for", "are", "but", "not", "you", "all", "can",
-        "her", "was", "one", "our", "out", "has", "had", "his", "how",
-        "its", "may", "new", "now", "old", "see", "way", "who", "did",
-        "get", "let", "say", "she", "too", "use", "that", "this", "with",
-        "have", "from", "they", "been", "will", "each", "make", "like",
-        "than", "them", "then", "what", "when", "some", "time", "very",
-        "must", "shall", "should", "would", "could", "into", "also",
-        "about", "other", "which", "their", "there", "these", "just",
-        "over", "such", "more", "only", "after", "those", "being",
-        "under", "between", "does", "none",
+        "the",
+        "and",
+        "for",
+        "are",
+        "but",
+        "not",
+        "you",
+        "all",
+        "can",
+        "her",
+        "was",
+        "one",
+        "our",
+        "out",
+        "has",
+        "had",
+        "his",
+        "how",
+        "its",
+        "may",
+        "new",
+        "now",
+        "old",
+        "see",
+        "way",
+        "who",
+        "did",
+        "get",
+        "let",
+        "say",
+        "she",
+        "too",
+        "use",
+        "that",
+        "this",
+        "with",
+        "have",
+        "from",
+        "they",
+        "been",
+        "will",
+        "each",
+        "make",
+        "like",
+        "than",
+        "them",
+        "then",
+        "what",
+        "when",
+        "some",
+        "time",
+        "very",
+        "must",
+        "shall",
+        "should",
+        "would",
+        "could",
+        "into",
+        "also",
+        "about",
+        "other",
+        "which",
+        "their",
+        "there",
+        "these",
+        "just",
+        "over",
+        "such",
+        "more",
+        "only",
+        "after",
+        "those",
+        "being",
+        "under",
+        "between",
+        "does",
+        "none",
     }
     return [w.lower() for w in words if w.lower() not in stopwords]
 
@@ -262,7 +320,7 @@ async def get_heatmap(
         )
         .where(
             TraceabilityMatrix.id == entry_uuid,
-            TraceabilityMatrix.workspace_id == current_workspace.id
+            TraceabilityMatrix.workspace_id == current_workspace.id,
         )
     )
     result = await session.execute(stmt)
@@ -289,7 +347,11 @@ async def get_heatmap(
     # Build match details for the heatmap
     matches: list[HeatmapConstraintMatch] = []
     for detail in match_result.match_details:
-        c = constraints[detail.constraint_index] if detail.constraint_index < len(constraints) else {}
+        c = (
+            constraints[detail.constraint_index]
+            if detail.constraint_index < len(constraints)
+            else {}
+        )
         a = assertions[detail.assertion_index] if detail.assertion_index < len(assertions) else {}
 
         matches.append(
@@ -318,18 +380,24 @@ async def get_heatmap(
 
     keywords: list[HeatmapKeyword] = []
     for w in sorted(req_set):
-        keywords.append(HeatmapKeyword(
-            word=w, source="requirement",
-            matched=w in overlap,
-            score=1.0 if w in overlap else 0.0,
-        ))
+        keywords.append(
+            HeatmapKeyword(
+                word=w,
+                source="requirement",
+                matched=w in overlap,
+                score=1.0 if w in overlap else 0.0,
+            )
+        )
     for w in sorted(test_set):
         if w not in req_set:  # Avoid duplicates
-            keywords.append(HeatmapKeyword(
-                word=w, source="test",
-                matched=False,
-                score=0.0,
-            ))
+            keywords.append(
+                HeatmapKeyword(
+                    word=w,
+                    source="test",
+                    matched=False,
+                    score=0.0,
+                )
+            )
 
     return HeatmapResponse(
         entry_id=str(entry.id),
@@ -339,7 +407,9 @@ async def get_heatmap(
         test_function_name=tc.function_name,
         test_file_path=tc.file_path,
         semantic_score=round(entry.semantic_score, 4) if entry.semantic_score is not None else None,
-        structural_score=round(entry.structural_score, 4) if entry.structural_score is not None else None,
+        structural_score=round(entry.structural_score, 4)
+        if entry.structural_score is not None
+        else None,
         risk_score=round(entry.risk_score, 4) if entry.risk_score is not None else None,
         status=entry.status.value if entry.status else None,
         audit_summary=entry.audit_summary,
@@ -367,14 +437,17 @@ async def get_stats(
     status_counts = {}
     for s in TraceabilityStatus:
         count_stmt = select(func.count()).where(
-            TraceabilityMatrix.workspace_id == current_workspace.id,
-            TraceabilityMatrix.status == s
+            TraceabilityMatrix.workspace_id == current_workspace.id, TraceabilityMatrix.status == s
         )
         result = await session.execute(count_stmt)
         status_counts[s.value] = result.scalar() or 0
 
     # Total entries
-    total_stmt = select(func.count()).select_from(TraceabilityMatrix).where(TraceabilityMatrix.workspace_id == current_workspace.id)
+    total_stmt = (
+        select(func.count())
+        .select_from(TraceabilityMatrix)
+        .where(TraceabilityMatrix.workspace_id == current_workspace.id)
+    )
     total_result = await session.execute(total_stmt)
     total = total_result.scalar() or 0
 
@@ -388,11 +461,19 @@ async def get_stats(
     avg_row = avg_result.one()
 
     # Total requirements and test cases
-    req_count_stmt = select(func.count()).select_from(Requirement).where(Requirement.workspace_id == current_workspace.id)
+    req_count_stmt = (
+        select(func.count())
+        .select_from(Requirement)
+        .where(Requirement.workspace_id == current_workspace.id)
+    )
     req_result = await session.execute(req_count_stmt)
     total_reqs = req_result.scalar() or 0
 
-    tc_count_stmt = select(func.count()).select_from(TestCase).where(TestCase.workspace_id == current_workspace.id)
+    tc_count_stmt = (
+        select(func.count())
+        .select_from(TestCase)
+        .where(TestCase.workspace_id == current_workspace.id)
+    )
     tc_result = await session.execute(tc_count_stmt)
     total_tests = tc_result.scalar() or 0
 
@@ -425,9 +506,12 @@ async def simulate_webhook(
 ) -> dict:
     """Enqueue a simulation task to run in the background."""
     from orion.queue.broker import enqueue_task
+
     payload = body.model_dump()
     payload["workspace_id"] = str(current_workspace.id)
-    task_id = await enqueue_task(session, "simulate_run", payload, workspace_id=current_workspace.id)
+    task_id = await enqueue_task(
+        session, "simulate_run", payload, workspace_id=current_workspace.id
+    )
     return {"status": "accepted", "task_id": str(task_id)}
 
 
@@ -455,8 +539,7 @@ async def override_matrix_entry(
         raise HTTPException(400, "Invalid entry ID format") from exc
 
     stmt = select(TraceabilityMatrix).where(
-        TraceabilityMatrix.id == entry_uuid,
-        TraceabilityMatrix.workspace_id == current_workspace.id
+        TraceabilityMatrix.id == entry_uuid, TraceabilityMatrix.workspace_id == current_workspace.id
     )
     result = await session.execute(stmt)
     entry = result.scalar_one_or_none()

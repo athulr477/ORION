@@ -70,10 +70,11 @@ async def simulate_webhook_logic(
 
     if not target_ws_id:
         from orion.models.workspace import Workspace
+
         stmt_ws = select(Workspace.id).order_by(Workspace.created_at).limit(1)
         res_ws = await session.execute(stmt_ws)
         target_ws_id = res_ws.scalar_one_or_none()
-        
+
     if not target_ws_id:
         raise ValueError("Could not determine target workspace_id for simulation.")
 

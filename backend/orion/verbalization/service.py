@@ -31,12 +31,13 @@ logger = logging.getLogger(__name__)
 # Prompt template
 # ---------------------------------------------------------------------------
 
-_PROMPT_TEMPLATE = """Based ONLY on the evidence below, write ONE concise sentence explaining why this requirement-test pair is classified as {status}.
-
-Evidence:
-{evidence_context}
-
-Write exactly one sentence. Do not invent any claims not present in the evidence above."""
+_PROMPT_TEMPLATE = (
+    "Based ONLY on the evidence below, write ONE concise sentence explaining "
+    "why this requirement-test pair is classified as {status}.\n\n"
+    "Evidence:\n"
+    "{evidence_context}\n\n"
+    "Write exactly one sentence. Do not invent any claims not present in the evidence above."
+)
 
 
 def _build_prompt(evidence: EvidenceTuple) -> str:
@@ -68,7 +69,7 @@ async def verbalize_entry(
         client: Optional pre-initialized OllamaClient.  If None, one is created.
 
     Returns:
-        The generated audit summary sentence, or None if skipped (Covered).
+        The generated audit summary sentence.
     """
     # Skip Covered entries — they don't need explanation
     if entry.status == TraceabilityStatus.COVERED:
@@ -105,8 +106,13 @@ async def verbalize_entry(
         return None
 
     # Build evidence tuple
+    status_str: str = (
+        entry.status.value
+        if isinstance(entry.status, TraceabilityStatus)
+        else (entry.status or "Unknown")
+    )
     evidence = build_evidence_tuple(
-        status=entry.status.value if isinstance(entry.status, TraceabilityStatus) else entry.status,
+        status=status_str,
         risk_score=entry.risk_score or 0.0,
         semantic_score=entry.semantic_score or 0.0,
         structural_score=entry.structural_score or 0.0,
@@ -169,7 +175,7 @@ async def verbalize_all_pending(
     session: AsyncSession,
     client: OllamaClient | None = None,
 ) -> int:
-    """Verbalize all Partial/Drifted entries that don't yet have an audit_summary.
+    """Verbalize all entries that don't yet have an audit_summary.
 
     Args:
         session: Async database session.
@@ -178,7 +184,7 @@ async def verbalize_all_pending(
     Returns:
         Number of entries that were verbalized.
     """
-    # Find all Partial/Drifted entries with no audit_summary
+    # Find all entries with no audit_summary
     stmt = (
         select(TraceabilityMatrix)
         .options(
@@ -186,10 +192,6 @@ async def verbalize_all_pending(
             selectinload(TraceabilityMatrix.test_case),
         )
         .where(
-            TraceabilityMatrix.status.in_([
-                TraceabilityStatus.PARTIAL,
-                TraceabilityStatus.DRIFTED,
-            ]),
             TraceabilityMatrix.audit_summary.is_(None),
         )
     )

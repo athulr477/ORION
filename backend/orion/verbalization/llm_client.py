@@ -75,16 +75,14 @@ class OllamaClient:
         try:
             # List available models to verify connectivity
             models_response = self._client.list()
-            available_models = [
-                m.model for m in models_response.models
-            ]
+            available_models = [m.model for m in models_response.models]
             if self.model in available_models:
                 OllamaClient._cached_available = True
                 return True
             # Also check without tag (e.g. "llama3.1" matches "llama3.1:8b")
             base_model = self.model.split(":")[0]
             for m in available_models:
-                if m.startswith(base_model):
+                if m and m.startswith(base_model):
                     OllamaClient._cached_available = True
                     return True
             logger.warning(
@@ -119,7 +117,8 @@ class OllamaClient:
                         "role": "system",
                         "content": (
                             "You are a requirements traceability auditor. "
-                            "Write exactly one concise sentence based ONLY on the evidence provided. "
+                            "Write exactly one concise sentence based ONLY "
+                            "on the evidence provided. "
                             "Do not invent any claims not present in the evidence."
                         ),
                     },
@@ -134,7 +133,7 @@ class OllamaClient:
                 },
             )
 
-            text = response.message.content.strip()
+            text = (response.message.content or "").strip()
 
             logger.info(
                 "LLM generated %d chars for prompt (%d chars)",

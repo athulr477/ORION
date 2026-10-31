@@ -48,9 +48,11 @@ _LABEL_IDX = {label: i for i, label in enumerate(_LABELS)}
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PairResult:
     """Classification result for one benchmark pair."""
+
     pair_id: str
     ground_truth: str
     # Scores
@@ -71,6 +73,7 @@ class ClassMetrics:
     only in to_dict() for display — macro averages are computed from
     these full-precision values to prevent accumulated rounding error.
     """
+
     label: str
     precision: float
     recall: float
@@ -91,6 +94,7 @@ class ClassMetrics:
 @dataclass
 class EvaluationReport:
     """Full evaluation report for one engine."""
+
     engine_name: str
     pairs: list[PairResult]
     confusion_matrix: list[list[int]]  # rows=true, cols=pred, order=_LABELS
@@ -114,21 +118,25 @@ class EvaluationReport:
             cells = "  ".join(f"{self.confusion_matrix[i][j]:>10}" for j in range(3))
             lines.append(f"  {row_label:<16} {cells}")
 
-        lines.extend([
-            "",
-            "  Classification Metrics:",
-            f"  {'Class':<12} {'Precision':>10} {'Recall':>10} {'F1-Score':>10} {'Support':>10}",
-            f"  {'-' * 54}",
-        ])
+        lines.extend(
+            [
+                "",
+                "  Classification Metrics:",
+                f"  {'Class':<12} {'Precision':>10} {'Recall':>10} {'F1-Score':>10} {'Support':>10}",
+                f"  {'-' * 54}",
+            ]
+        )
         for m in self.per_class:
             lines.append(
                 f"  {m.label:<12} {m.precision:>10.3f} {m.recall:>10.3f} {m.f1:>10.3f} {m.support:>10}"
             )
-        lines.extend([
-            f"  {'-' * 54}",
-            f"  {'Macro avg':<12} {self.macro_precision:>10.3f} {self.macro_recall:>10.3f} {self.macro_f1:>10.3f} {len(self.pairs):>10}",
-            f"  {'Accuracy':<12} {'':>10} {'':>10} {self.accuracy:>10.3f} {len(self.pairs):>10}",
-        ])
+        lines.extend(
+            [
+                f"  {'-' * 54}",
+                f"  {'Macro avg':<12} {self.macro_precision:>10.3f} {self.macro_recall:>10.3f} {self.macro_f1:>10.3f} {len(self.pairs):>10}",
+                f"  {'Accuracy':<12} {'':>10} {'':>10} {self.accuracy:>10.3f} {len(self.pairs):>10}",
+            ]
+        )
         return "\n".join(lines)
 
 
@@ -163,12 +171,16 @@ def _structural_score_from_pair(pair: dict) -> float:
     constraints_dict = constraints.to_dict() if hasattr(constraints, "to_dict") else constraints
 
     # extract_assertions returns a single CodeExtractionResult with .assertions list
-    raw_result = extract_assertions(test["source_code"], function_name=test.get("function_name", ""))
+    raw_result = extract_assertions(
+        test["source_code"], function_name=test.get("function_name", "")
+    )
     assertion_list: list[dict] = [a.__dict__ for a in raw_result.assertions]
     assertions_dict = {"assertions": assertion_list}
 
     score_result = compute_structural_score(constraints_dict, assertions_dict)
-    return float(score_result.structural_score if hasattr(score_result, "structural_score") else score_result)
+    return float(
+        score_result.structural_score if hasattr(score_result, "structural_score") else score_result
+    )
 
 
 def _build_req_text(pair: dict) -> str:
@@ -194,6 +206,7 @@ def _build_test_text_from_pair(pair: dict) -> str:
 # Metrics computation
 # ---------------------------------------------------------------------------
 
+
 def _compute_metrics(
     ground_truths: list[str],
     predictions: list[str],
@@ -211,7 +224,7 @@ def _compute_metrics(
     n = len(_LABELS)
     cm = [[0] * n for _ in range(n)]
 
-    for gt, pred in zip(ground_truths, predictions):
+    for gt, pred in zip(ground_truths, predictions, strict=False):
         if gt in _LABEL_IDX and pred in _LABEL_IDX:
             cm[_LABEL_IDX[gt]][_LABEL_IDX[pred]] += 1
 
@@ -227,13 +240,15 @@ def _compute_metrics(
         f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
         # Store full-precision values — rounding only in to_dict()
-        per_class.append(ClassMetrics(
-            label=label,
-            precision=precision,
-            recall=recall,
-            f1=f1,
-            support=support,
-        ))
+        per_class.append(
+            ClassMetrics(
+                label=label,
+                precision=precision,
+                recall=recall,
+                f1=f1,
+                support=support,
+            )
+        )
 
     # Macro averages computed from full-precision per-class values
     macro_p = sum(m.precision for m in per_class) / n
@@ -256,6 +271,7 @@ def _compute_metrics(
 # ---------------------------------------------------------------------------
 # Main evaluation runner
 # ---------------------------------------------------------------------------
+
 
 def run_evaluation(
     benchmark_path: Path | None = None,
@@ -303,16 +319,18 @@ def run_evaluation(
         # risk = 1.0 - (0.6 * sem + 0.4 * 0.0) = 1.0 - 0.6 * sem)
         cosine_result = classify(sem_score, 0.0)
 
-        pair_results.append(PairResult(
-            pair_id=pair_id,
-            ground_truth=ground_truth,
-            semantic_score=round(sem_score, 4),
-            structural_score=round(struct_score, 4),
-            hybrid_risk=round(hybrid_result.risk_score, 4),
-            hybrid_pred=hybrid_result.status,
-            cosine_risk=round(cosine_result.risk_score, 4),
-            cosine_pred=cosine_result.status,
-        ))
+        pair_results.append(
+            PairResult(
+                pair_id=pair_id,
+                ground_truth=ground_truth,
+                semantic_score=round(sem_score, 4),
+                structural_score=round(struct_score, 4),
+                hybrid_risk=round(hybrid_result.risk_score, 4),
+                hybrid_pred=hybrid_result.status,
+                cosine_risk=round(cosine_result.risk_score, 4),
+                cosine_pred=cosine_result.status,
+            )
+        )
 
     # Build reports
     gts = [r.ground_truth for r in pair_results]
@@ -372,7 +390,7 @@ def main() -> None:
     )
     print(f"  {'-' * 82}")
 
-    for hm, cm_cls in zip(hybrid_report.per_class, cosine_report.per_class):
+    for hm, cm_cls in zip(hybrid_report.per_class, cosine_report.per_class, strict=False):
         print(
             f"  {hm.label:<10} | "
             f"{hm.precision:>10.3f} {hm.recall:>10.3f} {hm.f1:>10.3f} {hm.support:>5} | "

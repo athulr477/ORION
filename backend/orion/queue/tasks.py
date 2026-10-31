@@ -6,19 +6,30 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from orion.queue.worker import worker
-
 logger = logging.getLogger(__name__)
 
 
-@worker.register("pr_analysis")
+def _get_worker():
+    """Lazy accessor for the worker singleton — avoids circular imports.
+
+    ``tasks.py`` is imported by ``worker.py`` (via ``_ensure_tasks_registered``),
+    so a top-level ``from orion.queue.worker import worker`` would create a
+    circular import and return a partially-initialized module, silently leaving
+    all handlers unregistered.  Deferring the import to call-time is safe
+    because by the time any decorator runs the ``worker`` object already exists.
+    """
+    from orion.queue.worker import worker  # noqa: PLC0415
+
+    return worker
+
+
 async def handle_pr_analysis(
     payload: dict[str, Any],
     session: AsyncSession,
-    update_progress: Callable[[float, str], Awaitable[None]]
+    update_progress: Callable[[float, str], Awaitable[None]],
 ) -> dict[str, Any]:
     """Execute the PR analysis pipeline.
-    
+
     Payload expects:
         owner: str
         repo: str
@@ -29,10 +40,9 @@ async def handle_pr_analysis(
         token: str
     """
     await update_progress(0.1, "Initializing PR analysis")
-    
-    # We import inline to avoid circular dependencies if worker is imported early
-    from orion.github.routes import _analyse_pr
-    
+
+    from orion.github.routes import _analyse_pr  # inline to avoid early import
+
     owner = payload["owner"]
     repo = payload["repo"]
     pull_number = payload["pull_number"]
@@ -43,8 +53,7 @@ async def handle_pr_analysis(
     workspace_id = payload.get("workspace_id", "")
 
     await update_progress(0.3, f"Fetching and parsing PR #{pull_number}")
-    
-    # Run the heavy PR analysis function
+
     await _analyse_pr(
         owner=owner,
         repo=repo,
@@ -55,27 +64,38 @@ async def handle_pr_analysis(
         token=token,
         workspace_id=workspace_id,
     )
-    
+
     await update_progress(0.9, "Check Run posted to GitHub")
     return {"status": "success", "pull_number": pull_number}
 
 
-@worker.register("simulate_run")
 async def handle_simulate_run(
     payload: dict[str, Any],
     session: AsyncSession,
-    update_progress: Callable[[float, str], Awaitable[None]]
+    update_progress: Callable[[float, str], Awaitable[None]],
 ) -> dict[str, Any]:
     """Execute the simulation pipeline incrementally."""
     await update_progress(0.1, "Initializing simulation pipeline")
-    
-    # Inline import
+
     from orion.dashboard.schemas import SimulateRequest
     from orion.dashboard.service import simulate_webhook_logic
 
     request = SimulateRequest(**payload)
     workspace_id = payload.get("workspace_id")
-    
-    result = await simulate_webhook_logic(request, session, update_progress, workspace_id=workspace_id)
+
+    result = await simulate_webhook_logic(
+        request, session, update_progress, workspace_id=workspace_id
+    )
     return result
 
+
+def register_all() -> None:
+    """Register all task handlers with the worker.
+
+    Called explicitly by the app lifespan (``orion.app``) after ``worker.py``
+    is fully initialized, so ``_get_worker()`` returns the real singleton.
+    """
+    w = _get_worker()
+    w.register("pr_analysis")(handle_pr_analysis)
+    w.register("simulate_run")(handle_simulate_run)
+    logging.getLogger(__name__).info("All task handlers registered.")

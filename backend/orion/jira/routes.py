@@ -46,8 +46,10 @@ router = APIRouter(prefix="/jira", tags=["jira"])
 # Schemas
 # ---------------------------------------------------------------------------
 
+
 class SyncResult(BaseModel):
     """Response from a Jira sync operation."""
+
     status: str
     project_key: str
     total_fetched: int
@@ -60,6 +62,7 @@ class SyncResult(BaseModel):
 
 class DriftReportRequest(BaseModel):
     """Request body for posting a drift alert comment to Jira."""
+
     issue_key: str
     test_function_name: str
     traceability_status: str  # "Partial" or "Drifted"
@@ -72,6 +75,7 @@ class DriftReportRequest(BaseModel):
 
 class DriftReportResult(BaseModel):
     """Response from a drift comment post."""
+
     issue_key: str
     comment_posted: bool
     skipped_reason: str | None = None
@@ -80,6 +84,7 @@ class DriftReportResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Helper: build RequirementData from a JiraIssue
 # ---------------------------------------------------------------------------
+
 
 def _jira_issue_to_requirement_data(issue) -> RequirementData:
     """Convert a JiraIssue to RequirementData for upsert_requirement."""
@@ -99,13 +104,14 @@ def _jira_issue_to_requirement_data(issue) -> RequirementData:
         source="jira",
         raw_payload=issue.raw,
         changelog=None,  # REST API fetch doesn't include changelog
-        workspace_id=None, # To be populated by caller
+        workspace_id=None,  # To be populated by caller
     )
 
 
 # ---------------------------------------------------------------------------
 # POST /api/v1/jira/sync — bulk project sync
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/sync",
@@ -187,7 +193,11 @@ async def sync_jira_project(
 
     logger.info(
         "Jira sync complete: project=%s fetched=%d created=%d updated=%d errors=%d",
-        key, total_fetched, created, updated, errors,
+        key,
+        total_fetched,
+        created,
+        updated,
+        errors,
     )
 
     return SyncResult(
@@ -205,6 +215,7 @@ async def sync_jira_project(
 # ---------------------------------------------------------------------------
 # POST /api/v1/jira/sync/{issue_key} — single-ticket on-demand refresh
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/sync/{issue_key}",
@@ -265,6 +276,7 @@ async def sync_single_issue(
 # ---------------------------------------------------------------------------
 # POST /api/v1/jira/report-drift — post drift comment back to Jira
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/report-drift",

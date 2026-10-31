@@ -86,7 +86,11 @@ class TraceabilityMatrix(Base):
         comment="Classification confidence (0.0–1.0)",
     )
     status: Mapped[TraceabilityStatus | None] = mapped_column(
-        Enum(TraceabilityStatus, name="traceability_status", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            TraceabilityStatus,
+            name="traceability_status",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         comment="Covered / Partial / Drifted",
     )
 

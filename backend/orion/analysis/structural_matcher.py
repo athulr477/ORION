@@ -127,7 +127,9 @@ def _operator_score(req_op: str | None, test_op: str | None) -> float:
     return 0.0
 
 
-def _value_score(req_value, test_value, req_unit: str | None = None, test_unit: str | None = None) -> float:
+def _value_score(
+    req_value, test_value, req_unit: str | None = None, test_unit: str | None = None
+) -> float:
     """Score how close two numeric values are.
 
     Uses exponential decay based on relative difference:
@@ -150,19 +152,26 @@ def _value_score(req_value, test_value, req_unit: str | None = None, test_unit: 
     t_unit = _normalize_unit(test_unit)
 
     def to_base(val: float, unit: str) -> float:
-        if unit == "s": return val * 1000.0
-        if unit == "min": return val * 60000.0
-        if unit == "h": return val * 3600000.0
-        if unit == "kb": return val * 1024.0
-        if unit == "mb": return val * 1048576.0
-        if unit == "gb": return val * 1073741824.0
+        if unit == "s":
+            return val * 1000.0
+        if unit == "min":
+            return val * 60000.0
+        if unit == "h":
+            return val * 3600000.0
+        if unit == "kb":
+            return val * 1024.0
+        if unit == "mb":
+            return val * 1048576.0
+        if unit == "gb":
+            return val * 1073741824.0
         return val
 
     rv_base = to_base(rv, r_unit)
     tv_base = to_base(tv, t_unit)
 
     def get_rel_diff(v1: float, v2: float) -> float:
-        if v1 == v2: return 0.0
+        if v1 == v2:
+            return 0.0
         return abs(v1 - v2) / max(abs(v1), abs(v2), 1e-9)
 
     rel_diff = min(get_rel_diff(rv, tv), get_rel_diff(rv_base, tv_base))
@@ -399,13 +408,9 @@ def compute_structural_score(
     assertions = (test_assertions or {}).get("assertions", [])
 
     # Filter to only threshold constraints (most structurally matchable)
-    threshold_constraints = [
-        c for c in constraints if c.get("type") == "threshold"
-    ]
+    threshold_constraints = [c for c in constraints if c.get("type") == "threshold"]
     # Filter to comparison assertions (most structurally matchable)
-    comparison_assertions = [
-        a for a in assertions if a.get("type") in ("comparison", "raises")
-    ]
+    comparison_assertions = [a for a in assertions if a.get("type") in ("comparison", "raises")]
 
     result.requirement_constraint_count = len(threshold_constraints)
     result.test_assertion_count = len(comparison_assertions)

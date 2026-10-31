@@ -34,6 +34,7 @@ async def enrich_requirement(session: AsyncSession, requirement: Requirement) ->
 
     if requirement.constraints_extracted is None:
         from orion.extraction.requirement_extractor import extract_constraints
+
         constraints = extract_constraints(requirement.description or "")
         requirement.constraints_extracted = (
             constraints.to_dict() if hasattr(constraints, "to_dict") else constraints
@@ -43,6 +44,7 @@ async def enrich_requirement(session: AsyncSession, requirement: Requirement) ->
     if requirement.embedding is None:
         from orion.embedding.engine import embed_text
         from orion.embedding.text_builder import build_requirement_text
+
         req_text = build_requirement_text(requirement.title, requirement.description or "")
         requirement.embedding = embed_text(req_text)
         updated = True
@@ -54,6 +56,7 @@ async def enrich_requirement(session: AsyncSession, requirement: Requirement) ->
 async def get_default_workspace_id(session: AsyncSession) -> uuid.UUID:
     """Retrieve or create the Default Workspace ID."""
     from orion.models.workspace import Workspace
+
     stmt = select(Workspace.id).where(Workspace.name == "Default Workspace")
     result = await session.execute(stmt)
     ws_id = result.scalar_one_or_none()
@@ -139,7 +142,9 @@ async def upsert_requirement(
                 )
                 if delta.changes:
                     updated_count = await apply_requirement_delta(
-                        session, existing, delta,
+                        session,
+                        existing,
+                        delta,
                     )
                     logger.info(
                         "Phase 6: Applied delta with %d changes to %d entries for %s",
@@ -258,4 +263,3 @@ async def upsert_test_cases(
 
     await session.flush()
     return created, updated, linked, unlinked
-

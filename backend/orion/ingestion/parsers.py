@@ -161,7 +161,12 @@ class _TracesVisitor(ast.NodeVisitor):
 
         # Check the function being called is named "traces"
         func = decorator.func
-        if isinstance(func, ast.Name) and func.id == "traces" or isinstance(func, ast.Attribute) and func.attr == "traces":
+        if (
+            isinstance(func, ast.Name)
+            and func.id == "traces"
+            or isinstance(func, ast.Attribute)
+            and func.attr == "traces"
+        ):
             pass
         else:
             return None

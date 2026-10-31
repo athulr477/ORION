@@ -51,8 +51,7 @@ class RequirementExtractionResult:
         return {
             "requirement_id": self.requirement_id,
             "constraints": [
-                {k: v for k, v in c.__dict__.items() if v is not None}
-                for c in self.constraints
+                {k: v for k, v in c.__dict__.items() if v is not None} for c in self.constraints
             ],
             "keywords": self.keywords,
         }
@@ -69,7 +68,7 @@ _OPERATOR_PATTERNS: list[tuple[str, str]] = [
     (r"shall\s+not\s+exceed", "<="),
     (r"should\s+not\s+exceed", "<="),
     (r"cannot\s+exceed", "<="),
-    (r"not\s+to\s+exceed", "<="),       # FIX: 'not to exceed 500ms' — must appear before bare 'exceeds?'
+    (r"not\s+to\s+exceed", "<="),  # FIX: 'not to exceed 500ms' — must appear before bare 'exceeds?'
     (r"not\s+take\s+longer\s+than", "<="),  # FIX: 'should not take longer than 100ms'
     (r"take\s+no\s+longer\s+than", "<="),
     (r"no\s+more\s+than", "<="),
@@ -190,11 +189,7 @@ def _extract_threshold_constraints(text: str) -> list[ConstraintData]:
 
             # Parse the numeric value
             try:
-                value: int | float = (
-                    float(number_str)
-                    if "." in number_str
-                    else int(number_str)
-                )
+                value: int | float = float(number_str) if "." in number_str else int(number_str)
             except ValueError:
                 continue
 
@@ -224,7 +219,7 @@ def _extract_boolean_constraints(text: str) -> list[ConstraintData]:
     for pattern in _BOOLEAN_NEGATIVE:
         for match in re.finditer(pattern, text_lower):
             # Get context: the clause after the boolean keyword
-            after = text_lower[match.end():match.end() + 80].strip()
+            after = text_lower[match.end() : match.end() + 80].strip()
             clause = after.split(".")[0].split(",")[0].strip()
             if clause:
                 constraints.append(
@@ -239,11 +234,11 @@ def _extract_boolean_constraints(text: str) -> list[ConstraintData]:
     for pattern in _BOOLEAN_POSITIVE:
         for match in re.finditer(pattern, text_lower):
             # Skip if this is part of a "must not" already captured
-            after_text = text_lower[match.end():match.end() + 10].strip()
+            after_text = text_lower[match.end() : match.end() + 10].strip()
             if after_text.startswith("not") or after_text.startswith("never"):
                 continue
 
-            after = text_lower[match.end():match.end() + 80].strip()
+            after = text_lower[match.end() : match.end() + 80].strip()
             clause = after.split(".")[0].split(",")[0].strip()
             if clause:
                 constraints.append(
@@ -269,7 +264,7 @@ def _find_subject_before(text: str, pos: int) -> str | None:
     for sep in [".", ";", ","]:
         idx = before.rfind(sep)
         if idx >= 0:
-            before = before[idx + 1:].strip()
+            before = before[idx + 1 :].strip()
             break
 
     # Strip common leading words
@@ -291,16 +286,80 @@ def _find_subject_before(text: str, pos: int) -> str | None:
     return before if before else None
 
 
-STOP_WORDS = frozenset({
-    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-    "have", "has", "had", "do", "does", "did", "will", "would", "could",
-    "should", "may", "might", "shall", "can", "must", "need", "to", "of",
-    "in", "for", "on", "with", "at", "by", "from", "as", "into", "through",
-    "during", "before", "after", "and", "but", "or", "nor", "not", "no",
-    "so", "if", "then", "than", "that", "this", "these", "those", "it",
-    "its", "they", "their", "them", "we", "our", "you", "your", "he", "she",
-    "him", "her", "his",
-})
+STOP_WORDS = frozenset(
+    {
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "shall",
+        "can",
+        "must",
+        "need",
+        "to",
+        "of",
+        "in",
+        "for",
+        "on",
+        "with",
+        "at",
+        "by",
+        "from",
+        "as",
+        "into",
+        "through",
+        "during",
+        "before",
+        "after",
+        "and",
+        "but",
+        "or",
+        "nor",
+        "not",
+        "no",
+        "so",
+        "if",
+        "then",
+        "than",
+        "that",
+        "this",
+        "these",
+        "those",
+        "it",
+        "its",
+        "they",
+        "their",
+        "them",
+        "we",
+        "our",
+        "you",
+        "your",
+        "he",
+        "she",
+        "him",
+        "her",
+        "his",
+    }
+)
+
 
 def _extract_keywords(text: str) -> list[str]:
     """Extract domain-relevant keywords from requirement text.
@@ -329,9 +388,7 @@ def _extract_keywords(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def extract_constraints(
-    text: str, requirement_id: str = ""
-) -> RequirementExtractionResult:
+def extract_constraints(text: str, requirement_id: str = "") -> RequirementExtractionResult:
     """Extract all structured constraints from a requirement text.
 
     This is the main entry point for requirement-side extraction.

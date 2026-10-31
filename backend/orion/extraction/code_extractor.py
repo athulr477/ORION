@@ -63,8 +63,7 @@ class CodeExtractionResult:
         return {
             "function_name": self.function_name,
             "assertions": [
-                {k: v for k, v in a.__dict__.items() if v is not None}
-                for a in self.assertions
+                {k: v for k, v in a.__dict__.items() if v is not None} for a in self.assertions
             ],
             "docstring": self.docstring,
             "fallback_used": self.fallback_used,
@@ -88,8 +87,11 @@ def _extract_literal_value(node: ast.expr) -> Any:
     """Extract a literal value from an AST node, or None if not a literal."""
     if isinstance(node, ast.Constant):
         return node.value
-    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub) and isinstance(node.operand, ast.Constant) and isinstance(
-        node.operand.value, (int, float)
+    if (
+        isinstance(node, ast.UnaryOp)
+        and isinstance(node.op, ast.USub)
+        and isinstance(node.operand, ast.Constant)
+        and isinstance(node.operand.value, (int, float))
     ):
         # Handle negative literals: -0.2, -100
         return -node.operand.value
@@ -160,9 +162,7 @@ class _AssertionVisitor(ast.NodeVisitor):
                 if literal_val is None:
                     literal_val = _extract_literal_value(left)
 
-                func_calls = _extract_function_calls(left) + _extract_function_calls(
-                    comparator
-                )
+                func_calls = _extract_function_calls(left) + _extract_function_calls(comparator)
 
                 self.assertions.append(
                     AssertionData(
@@ -205,7 +205,9 @@ class _AssertionVisitor(ast.NodeVisitor):
             )
 
 
-def _extract_assertions_python_ast(source_code: str, function_name: str = "") -> CodeExtractionResult:
+def _extract_assertions_python_ast(
+    source_code: str, function_name: str = ""
+) -> CodeExtractionResult:
     """Primary Python extraction path using the native ast.NodeVisitor.
 
     Parses the given source code with Python's built-in ``ast`` module and
@@ -225,7 +227,8 @@ def _extract_assertions_python_ast(source_code: str, function_name: str = "") ->
     except SyntaxError as exc:
         logger.warning(
             "ast.parse failed for function %r (%s) — using fallback",
-            function_name, exc,
+            function_name,
+            exc,
         )
         return CodeExtractionResult(function_name=function_name, fallback_used=True)
 
@@ -254,7 +257,9 @@ def _extract_assertions_python_ast(source_code: str, function_name: str = "") ->
     )
 
 
-def extract_assertions(source_code: str, function_name: str = "", filename: str = "") -> CodeExtractionResult:
+def extract_assertions(
+    source_code: str, function_name: str = "", filename: str = ""
+) -> CodeExtractionResult:
     """Parse a test function's source code and extract structural assertion data.
 
     **Primary path (Python):** uses the native ``ast.NodeVisitor`` (``_AssertionVisitor``)
@@ -273,6 +278,7 @@ def extract_assertions(source_code: str, function_name: str = "", filename: str 
         CodeExtractionResult with extracted assertions and metadata.
     """
     import os
+
     _, ext = os.path.splitext(filename or "")
     ext = ext.lower()
 
@@ -282,14 +288,19 @@ def extract_assertions(source_code: str, function_name: str = "", filename: str 
 
     # --- Polyglot path: Tree-sitter for non-Python languages ---
     from orion.extraction.tree_sitter_engine import PolyglotExtractor
-    results = PolyglotExtractor.extract(source_code, filename=filename, target_function=function_name)
+
+    results = PolyglotExtractor.extract(
+        source_code, filename=filename, target_function=function_name
+    )
     if results:
         return results[0]
 
     return CodeExtractionResult(function_name=function_name, fallback_used=True)
 
 
-def extract_assertions_from_file(source_code: str, filename: str = "") -> list[CodeExtractionResult]:
+def extract_assertions_from_file(
+    source_code: str, filename: str = ""
+) -> list[CodeExtractionResult]:
     """Parse an entire test file and extract assertions for each test function.
 
     **Primary path (Python):** walks the AST with ``_AssertionVisitor`` per function.
@@ -303,6 +314,7 @@ def extract_assertions_from_file(source_code: str, filename: str = "") -> list[C
         List of CodeExtractionResult, one per test function found.
     """
     import os
+
     _, ext = os.path.splitext(filename or "")
     ext = ext.lower()
 
@@ -334,4 +346,5 @@ def extract_assertions_from_file(source_code: str, filename: str = "") -> list[C
 
     # --- Polyglot path ---
     from orion.extraction.tree_sitter_engine import PolyglotExtractor
+
     return PolyglotExtractor.extract(source_code, filename=filename)

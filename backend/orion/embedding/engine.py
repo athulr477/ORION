@@ -74,9 +74,7 @@ def _get_session():
     return _SESSION
 
 
-def _mean_pooling(
-    token_embeddings: np.ndarray, attention_mask: np.ndarray
-) -> np.ndarray:
+def _mean_pooling(token_embeddings: np.ndarray, attention_mask: np.ndarray) -> np.ndarray:
     """Apply mean pooling to token embeddings, respecting the attention mask."""
     mask_expanded = np.expand_dims(attention_mask, axis=-1).astype(np.float32)
     sum_embeddings = np.sum(token_embeddings * mask_expanded, axis=1)

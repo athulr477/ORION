@@ -65,7 +65,9 @@ def _auth_headers(email: str | None = None, token: str | None = None) -> dict[st
 def _base_url(base_url: str | None = None) -> str:
     base = (base_url or settings.jira_base_url).rstrip("/")
     if not base:
-        raise ValueError("JIRA_BASE_URL must be configured in .env or passed explicitly (e.g. https://yoursite.atlassian.net)")
+        raise ValueError(
+            "JIRA_BASE_URL must be configured in .env or passed explicitly (e.g. https://yoursite.atlassian.net)"
+        )
     return _API_BASE.format(base_url=base)
 
 
@@ -91,13 +93,22 @@ def test_jira_connection(
         try:
             res = client.get(f"{url_prefix}/myself", headers=headers)
             if res.status_code == 401:
-                return {"success": False, "error": "Invalid Jira credentials (HTTP 401 Unauthorized). Check email and API token."}
+                return {
+                    "success": False,
+                    "error": "Invalid Jira credentials (HTTP 401 Unauthorized). Check email and API token.",
+                }
             elif res.status_code == 403:
-                return {"success": False, "error": "Access forbidden (HTTP 403). Ensure the API token has sufficient permissions."}
+                return {
+                    "success": False,
+                    "error": "Access forbidden (HTTP 403). Ensure the API token has sufficient permissions.",
+                }
             res.raise_for_status()
             user_data = res.json()
         except httpx.RequestError as exc:
-            return {"success": False, "error": f"Failed to connect to Jira server at {base_url or settings.jira_base_url}: {exc}"}
+            return {
+                "success": False,
+                "error": f"Failed to connect to Jira server at {base_url or settings.jira_base_url}: {exc}",
+            }
         except Exception as exc:
             return {"success": False, "error": f"Jira API error: {exc}"}
 
@@ -129,6 +140,7 @@ def test_jira_connection(
 # ---------------------------------------------------------------------------
 # Issue Data Model
 # ---------------------------------------------------------------------------
+
 
 class JiraIssue:
     """Parsed data from a Jira issue, ready to upsert as a Requirement."""
@@ -191,6 +203,7 @@ def _parse_issue(issue_data: dict) -> JiraIssue:
 # Public API: Fetch a single issue
 # ---------------------------------------------------------------------------
 
+
 def fetch_issue(issue_key: str) -> JiraIssue:
     """Fetch a single Jira issue by its key (e.g. 'SCRUM-1').
 
@@ -216,7 +229,10 @@ def fetch_issue(issue_key: str) -> JiraIssue:
     issue = _parse_issue(issue_data)
     logger.info(
         "Fetched Jira issue %s: %s (type=%s, status=%s)",
-        issue.key, issue.summary[:60], issue.issue_type, issue.status,
+        issue.key,
+        issue.summary[:60],
+        issue.issue_type,
+        issue.status,
     )
     return issue
 
@@ -224,6 +240,7 @@ def fetch_issue(issue_key: str) -> JiraIssue:
 # ---------------------------------------------------------------------------
 # Public API: JQL search (paginated)
 # ---------------------------------------------------------------------------
+
 
 def search_issues(
     jql: str,
@@ -288,7 +305,8 @@ def search_issues(
 
             logger.info(
                 "JQL search '%s': fetched %d issues so far",
-                jql[:60], len(issues),
+                jql[:60],
+                len(issues),
             )
 
             # Pagination: the new endpoint uses nextPageToken
@@ -303,6 +321,7 @@ def search_issues(
 # ---------------------------------------------------------------------------
 # Public API: Project bulk sync
 # ---------------------------------------------------------------------------
+
 
 def fetch_project_issues(
     project_key: str | None = None,
@@ -390,7 +409,11 @@ def post_drift_comment(
             {
                 "type": "paragraph",
                 "content": [
-                    {"type": "text", "text": f"{status_emoji} Orion Traceability Alert", "marks": [{"type": "strong"}]},
+                    {
+                        "type": "text",
+                        "text": f"{status_emoji} Orion Traceability Alert",
+                        "marks": [{"type": "strong"}],
+                    },
                     {"type": "text", "text": f" — {status}"},
                 ],
             },
@@ -430,7 +453,9 @@ def post_drift_comment(
 
     logger.info(
         "Posted drift comment to %s (status=%s, risk=%.3f)",
-        issue_key, status, risk_score,
+        issue_key,
+        status,
+        risk_score,
     )
 
 

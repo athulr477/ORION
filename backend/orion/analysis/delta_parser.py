@@ -127,24 +127,28 @@ def _diff_constraints(
         if old_c and not new_c:
             # Removed condition
             raw = old_c.get("raw_text", "")
-            changes.append(DeltaChange(
-                type="removed_condition",
-                field="description",
-                old_value=_constraint_summary(old_c),
-                new_value=None,
-                details=f"Removed constraint: {raw}" if raw else "Removed constraint",
-            ))
+            changes.append(
+                DeltaChange(
+                    type="removed_condition",
+                    field="description",
+                    old_value=_constraint_summary(old_c),
+                    new_value=None,
+                    details=f"Removed constraint: {raw}" if raw else "Removed constraint",
+                )
+            )
 
         elif new_c and not old_c:
             # Added condition
             raw = new_c.get("raw_text", "")
-            changes.append(DeltaChange(
-                type="added_condition",
-                field="description",
-                old_value=None,
-                new_value=_constraint_summary(new_c),
-                details=f"Added constraint: {raw}" if raw else "Added constraint",
-            ))
+            changes.append(
+                DeltaChange(
+                    type="added_condition",
+                    field="description",
+                    old_value=None,
+                    new_value=_constraint_summary(new_c),
+                    details=f"Added constraint: {raw}" if raw else "Added constraint",
+                )
+            )
 
         elif old_c and new_c:
             # Both exist — check for value changes
@@ -154,17 +158,19 @@ def _diff_constraints(
             new_unit = new_c.get("unit") or ""
 
             if old_val != new_val or old_unit != new_unit:
-                changes.append(DeltaChange(
-                    type="changed_threshold",
-                    field="description",
-                    old_value=_constraint_summary(old_c),
-                    new_value=_constraint_summary(new_c),
-                    details=(
-                        f"Threshold changed: "
-                        f"{old_c.get('operator', '')} {old_val} {old_unit}"
-                        f" → {new_c.get('operator', '')} {new_val} {new_unit}"
-                    ).strip(),
-                ))
+                changes.append(
+                    DeltaChange(
+                        type="changed_threshold",
+                        field="description",
+                        old_value=_constraint_summary(old_c),
+                        new_value=_constraint_summary(new_c),
+                        details=(
+                            f"Threshold changed: "
+                            f"{old_c.get('operator', '')} {old_val} {old_unit}"
+                            f" → {new_c.get('operator', '')} {new_val} {new_unit}"
+                        ).strip(),
+                    )
+                )
 
     return changes
 
@@ -213,29 +219,35 @@ def _diff_text(old_text: str, new_text: str) -> list[DeltaChange]:
         new_chunk = " ".join(new_sentences[j1:j2]) if j1 < j2 else ""
 
         if tag == "delete":
-            changes.append(DeltaChange(
-                type="text_change",
-                field="description",
-                old_value=old_chunk,
-                new_value=None,
-                details=f"Removed text: \"{old_chunk[:100]}\"",
-            ))
+            changes.append(
+                DeltaChange(
+                    type="text_change",
+                    field="description",
+                    old_value=old_chunk,
+                    new_value=None,
+                    details=f'Removed text: "{old_chunk[:100]}"',
+                )
+            )
         elif tag == "insert":
-            changes.append(DeltaChange(
-                type="text_change",
-                field="description",
-                old_value=None,
-                new_value=new_chunk,
-                details=f"Added text: \"{new_chunk[:100]}\"",
-            ))
+            changes.append(
+                DeltaChange(
+                    type="text_change",
+                    field="description",
+                    old_value=None,
+                    new_value=new_chunk,
+                    details=f'Added text: "{new_chunk[:100]}"',
+                )
+            )
         elif tag == "replace":
-            changes.append(DeltaChange(
-                type="changed_literal",
-                field="description",
-                old_value=old_chunk,
-                new_value=new_chunk,
-                details=f"Changed: \"{old_chunk[:60]}\" → \"{new_chunk[:60]}\"",
-            ))
+            changes.append(
+                DeltaChange(
+                    type="changed_literal",
+                    field="description",
+                    old_value=old_chunk,
+                    new_value=new_chunk,
+                    details=f'Changed: "{old_chunk[:60]}" → "{new_chunk[:60]}"',
+                )
+            )
 
     return changes
 
@@ -271,13 +283,15 @@ def _process_changelog_items(changelog_items: list[dict]) -> list[DeltaChange]:
         new_val = item.get("to") or item.get("toString")
 
         if old_val != new_val:
-            changes.append(DeltaChange(
-                type="changed_literal",
-                field=field_name,
-                old_value=old_val,
-                new_value=new_val,
-                details=f"{field_name} changed: \"{old_val or ''}\" → \"{new_val or ''}\"",
-            ))
+            changes.append(
+                DeltaChange(
+                    type="changed_literal",
+                    field=field_name,
+                    old_value=old_val,
+                    new_value=new_val,
+                    details=f'{field_name} changed: "{old_val or ""}" → "{new_val or ""}"',
+                )
+            )
 
     return changes
 

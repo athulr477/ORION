@@ -24,10 +24,12 @@ class WorkerEngine:
 
     def register(self, task_type: str) -> Callable:
         """Register a handler function for a specific task type as a decorator."""
+
         def decorator(handler: Callable) -> Callable:
             self.handlers[task_type] = handler
             logger.info("Registered task handler for '%s'", task_type)
             return handler
+
         return decorator
 
     async def start(self, poll_interval: float = 2.0) -> None:
@@ -35,16 +37,16 @@ class WorkerEngine:
         _ensure_tasks_registered()
         if self._running:
             return
-        
+
         self._running = True
         logger.info("Worker engine started (poll interval: %ss)", poll_interval)
-        
+
         while self._running:
             try:
                 await self._poll_and_execute()
             except Exception as e:
                 logger.error("Worker engine encountered an error: %s", e, exc_info=True)
-            
+
             await asyncio.sleep(poll_interval)
 
     async def stop(self) -> None:
@@ -70,10 +72,11 @@ class WorkerEngine:
         async with get_session_context() as exec_session:
             # Re-fetch job
             from sqlalchemy import select
+
             stmt = select(TaskJob).where(TaskJob.id == job.id)
             result = await exec_session.execute(stmt)
             active_job = result.scalar_one()
-            
+
             handler = self.handlers.get(active_job.task_type)
             if not handler:
                 error_msg = f"No handler registered for task type '{active_job.task_type}'"
@@ -88,19 +91,21 @@ class WorkerEngine:
                 async def update_progress(progress: float, step: str) -> None:
                     async with get_session_context() as progress_session:
                         from sqlalchemy import update as sa_update
+
                         await progress_session.execute(
                             sa_update(TaskJob)
                             .where(TaskJob.id == active_job.id)
                             .values(progress=progress, current_step=step)
                         )
                         await progress_session.commit()
-                
+
                 # Execute the handler
                 result_data = await handler(active_job.payload, exec_session, update_progress)
-                
+
                 # Mark Success — use a fresh update to avoid stale ORM state after
                 # the service may have already committed exec_session internally.
                 from sqlalchemy import update as sa_update
+
                 await exec_session.execute(
                     sa_update(TaskJob)
                     .where(TaskJob.id == active_job.id)
@@ -114,7 +119,7 @@ class WorkerEngine:
                 )
                 await exec_session.commit()
                 logger.info("Task %s completed successfully", active_job.id)
-                
+
             except Exception as e:
                 tb = traceback.format_exc()
                 logger.exception("Task %s failed: %s", active_job.id, e)
@@ -125,6 +130,7 @@ class WorkerEngine:
         even if the execution session is in a broken/rolled-back state."""
         try:
             from sqlalchemy import update as sa_update
+
             async with get_session_context() as session:
                 await session.execute(
                     sa_update(TaskJob)
@@ -146,18 +152,17 @@ worker = WorkerEngine()
 
 def _ensure_tasks_registered() -> None:
     try:
-        import orion.queue.tasks  # noqa: F401
+        from orion.queue.tasks import register_all  # noqa: PLC0415
+
+        register_all()
     except Exception as e:
         logger.warning("Could not auto-register queue tasks: %s", e)
-
-
-_ensure_tasks_registered()
 
 
 async def main() -> None:
     """CLI entry point for running a standalone worker process."""
     _ensure_tasks_registered()
-    
+
     try:
         await worker.start()
     except KeyboardInterrupt:

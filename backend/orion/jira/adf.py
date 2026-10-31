@@ -50,11 +50,12 @@ def adf_to_text(node: dict | str | None) -> str:
 # Internal recursive renderer
 # ---------------------------------------------------------------------------
 
+
 def _render_node(node: dict, depth: int = 0, max_depth: int = 50) -> str:
     """Recursively render a single ADF node to text."""
     if depth > max_depth:
         return ""
-        
+
     node_type = node.get("type", "")
     content = node.get("content", [])
     text = node.get("text", "")
@@ -118,7 +119,9 @@ def _render_node(node: dict, depth: int = 0, max_depth: int = 50) -> str:
         items = []
         for i, child in enumerate(content):
             marker = "-" if node_type == "bulletList" else f"{i + 1}."
-            item_text = _render_children(child.get("content", []), depth=depth + 1, max_depth=max_depth)
+            item_text = _render_children(
+                child.get("content", []), depth=depth + 1, max_depth=max_depth
+            )
             items.append(f"{marker} {item_text.strip()}")
         return "\n".join(items) + "\n"
 
@@ -183,7 +186,11 @@ def _render_children(content: list, depth: int = 0, max_depth: int = 50) -> str:
     """Render a list of child ADF nodes into a concatenated string."""
     if not content:
         return ""
-    parts = [_render_node(child, depth=depth, max_depth=max_depth) for child in content if isinstance(child, dict)]
+    parts = [
+        _render_node(child, depth=depth, max_depth=max_depth)
+        for child in content
+        if isinstance(child, dict)
+    ]
     return "".join(parts)
 
 

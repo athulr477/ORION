@@ -33,6 +33,7 @@ async def enqueue_task(
     """
     if not workspace_id:
         from orion.models.workspace import Workspace
+
         stmt = select(Workspace.id).where(Workspace.name == "Default Workspace")
         result = await session.execute(stmt)
         workspace_id = result.scalar_one_or_none()
@@ -62,12 +63,12 @@ async def claim_next_task(session: AsyncSession) -> TaskJob | None:
 
     Uses PostgreSQL's `FOR UPDATE SKIP LOCKED` to ensure concurrent workers
     don't claim the same task.
-    
+
     This function modifies the state of the task to RUNNING. The caller must
     commit the transaction (this is typically done by the worker engine).
     """
     import datetime
-    
+
     # We use a subquery to select the ID of the next pending task with row-level locking
     subq = (
         select(TaskJob.id)
@@ -90,7 +91,7 @@ async def claim_next_task(session: AsyncSession) -> TaskJob | None:
 
     result = await session.execute(stmt)
     job = result.scalar_one_or_none()
-    
+
     # Do not commit here — we want the caller (worker) to commit the claim,
     # or it will automatically roll back if the worker crashes immediately.
     return job

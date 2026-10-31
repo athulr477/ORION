@@ -19,7 +19,7 @@ async def get_current_workspace(
     session: AsyncSession = Depends(get_session),
 ) -> Workspace:
     """Retrieve the selected workspace based on X-Workspace-ID header.
-    
+
     Verifies that the current user is a member of the requested workspace.
     Falls back to user's first membership workspace or Default Workspace if header is missing.
     """
@@ -31,24 +31,21 @@ async def get_current_workspace(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid workspace ID format",
             ) from exc
-            
+
         stmt = (
             select(Workspace)
             .join(WorkspaceMember, Workspace.id == WorkspaceMember.workspace_id)
-            .where(
-                Workspace.id == workspace_uuid,
-                WorkspaceMember.user_id == current_user.id
-            )
+            .where(Workspace.id == workspace_uuid, WorkspaceMember.user_id == current_user.id)
         )
         result = await session.execute(stmt)
         workspace = result.scalar_one_or_none()
-        
+
         if not workspace:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access to this workspace is forbidden or it does not exist",
             )
-            
+
         return workspace
 
     # Fallback 1: User's first workspace membership

@@ -62,6 +62,7 @@ class AuditLog(Base):
     def __repr__(self) -> str:
         return f"<AuditLog(user_id={self.user_id!r}, matrix_id={self.traceability_matrix_id!r})>"
 
+
 # Resolve forward references
 from orion.models.traceability_matrix import TraceabilityMatrix  # noqa: E402, F811
 from orion.models.user import User  # noqa: E402, F811

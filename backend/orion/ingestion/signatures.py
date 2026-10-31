@@ -64,7 +64,7 @@ async def verify_jira_signature(request: Request) -> None:
 
 async def verify_github_signature(request: Request) -> None:
     """FastAPI dependency to verify GitHub App webhook HMAC signatures.
-    
+
     Reads X-Hub-Signature-256 and compares it to the body signed with
     GITHUB_WEBHOOK_SECRET. Caches the body on request.state for downstream.
 
@@ -73,19 +73,19 @@ async def verify_github_signature(request: Request) -> None:
     github/routes.py that returns raw bytes and has no dev bypass.
     """
     secret = settings.github_webhook_secret
-    
+
     # Read the raw body once and attach it to the request state
     body = await request.body()
     request.state.body = body
 
     if not secret:
-        # We removed the silent dev-mode bypass here to ensure security 
+        # We removed the silent dev-mode bypass here to ensure security
         # consistency with the strict verifier.
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="GITHUB_WEBHOOK_SECRET is not configured.",
         )
-    
+
     raw_header = request.headers.get("X-Hub-Signature-256", "")
     if not raw_header:
         raise HTTPException(

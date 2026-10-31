@@ -32,6 +32,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
@@ -60,6 +61,7 @@ from orion.ingestion.service import enrich_requirement
 from orion.models.requirement import Requirement
 from orion.models.test_case import TestCase
 from orion.models.traceability_matrix import TraceabilityMatrix, TraceabilityStatus
+from orion.models.workspace import Workspace
 from orion.queue.broker import enqueue_task
 from orion.verbalization.service import verbalize_entry
 
@@ -74,6 +76,7 @@ _ANALYSED_ACTIONS = {"opened", "synchronize", "reopened"}
 # ---------------------------------------------------------------------------
 # Signature verification helper (inline — avoids coupling to ingestion pkg)
 # ---------------------------------------------------------------------------
+
 
 async def _verify_github_signature_raw(request: Request) -> bytes:
     """Read body and verify X-Hub-Signature-256.
@@ -113,6 +116,7 @@ async def _verify_github_signature_raw(request: Request) -> bytes:
 # Core analysis — runs in a background task
 # ---------------------------------------------------------------------------
 
+
 async def _analyse_pr(
     owner: str,
     repo: str,
@@ -138,7 +142,9 @@ async def _analyse_pr(
         if not test_files:
             logger.info(
                 "PR #%d in %s/%s: no test files changed — skipping analysis",
-                pull_number, owner, repo,
+                pull_number,
+                owner,
+                repo,
             )
             conclusion, title, summary = build_check_summary([])
             complete_check_run(owner, repo, check_run_id, conclusion, title, summary, token)
@@ -185,25 +191,30 @@ async def _analyse_pr(
             if r["status"] in ("Partial", "Drifted"):
                 level = "failure" if r["status"] == "Drifted" else "warning"
                 summary_text = r.get("audit_summary") or f"Requirement {r['req_id']} {r['status']}"
-                annotations.append({
-                    "path": r["file_path"],
-                    "start_line": r.get("start_line", 1),
-                    "end_line": r.get("end_line", 1),
-                    "annotation_level": level,
-                    "title": f"{r['status']}: {r['req_id']}",
-                    "message": f"{r['req_title']}\nStatus: {r['status']} | Risk: {r['risk_score']:.3f}\n{summary_text}",
-                })
+                annotations.append(
+                    {
+                        "path": r["file_path"],
+                        "start_line": r.get("start_line", 1),
+                        "end_line": r.get("end_line", 1),
+                        "annotation_level": level,
+                        "title": f"{r['status']}: {r['req_id']}",
+                        "message": f"{r['req_title']}\nStatus: {r['status']} | Risk: {r['risk_score']:.3f}\n{summary_text}",
+                    }
+                )
 
         # ------------------------------------------------------------------
         # Aggregate & complete Check Run
         # ------------------------------------------------------------------
         conclusion, title, summary = build_check_summary(results)
-        complete_check_run(owner, repo, check_run_id, conclusion, title, summary, token, annotations=annotations)
+        complete_check_run(
+            owner, repo, check_run_id, conclusion, title, summary, token, annotations=annotations
+        )
 
         # ------------------------------------------------------------------
         # Post drift alert comments to Jira for affected tickets
         # ------------------------------------------------------------------
         from orion.jira.client import post_drift_comment
+
         for r in results:
             if r["status"] in ("Partial", "Drifted"):
                 try:
@@ -222,13 +233,19 @@ async def _analyse_pr(
 
         logger.info(
             "PR #%d in %s/%s: analysis complete — %d pairs, conclusion=%s",
-            pull_number, owner, repo, len(results), conclusion,
+            pull_number,
+            owner,
+            repo,
+            len(results),
+            conclusion,
         )
 
     except Exception as exc:
         logger.exception(
             "Unhandled error analysing PR #%d in %s/%s",
-            pull_number, owner, repo,
+            pull_number,
+            owner,
+            repo,
         )
         fail_check_run(owner, repo, check_run_id, str(exc), token)
 
@@ -252,20 +269,15 @@ async def _classify_pair(
         Dict with classification results, or None if the requirement is not found in DB.
     """
     # Look up the requirement in the database
-    stmt = (
-        select(Requirement)
-        .where(
-            Requirement.external_id == req_external_id,
-            Requirement.workspace_id == workspace_id
-        )
+    stmt = select(Requirement).where(
+        Requirement.external_id == req_external_id, Requirement.workspace_id == workspace_id
     )
     result = await session.execute(stmt)
     requirement = result.scalar_one_or_none()
 
     if requirement is None:
         logger.warning(
-            "Requirement %s not found in DB — "
-            "it may need to be ingested first via /webhooks/jira",
+            "Requirement %s not found in DB — it may need to be ingested first via /webhooks/jira",
             req_external_id,
         )
         return None
@@ -303,7 +315,9 @@ async def _classify_pair(
         constraints_list = req_constraints.get("constraints") or []
         assertions_list = assertions_dict.get("assertions") or []
         for detail in match_result.match_details:
-            if detail.constraint_index < len(constraints_list) and detail.assertion_index < len(assertions_list):
+            if detail.constraint_index < len(constraints_list) and detail.assertion_index < len(
+                assertions_list
+            ):
                 c = constraints_list[detail.constraint_index]
                 a = assertions_list[detail.assertion_index]
                 c_op = c.get("operator")
@@ -311,15 +325,19 @@ async def _classify_pair(
                 c_val = c.get("value")
                 a_val = a.get("value")
                 if (
-                    c_op in ("<=", "<") and a_op in ("<=", "<")
-                    and isinstance(c_val, (int, float)) and isinstance(a_val, (int, float))
+                    c_op in ("<=", "<")
+                    and a_op in ("<=", "<")
+                    and isinstance(c_val, (int, float))
+                    and isinstance(a_val, (int, float))
                     and a_val > c_val * 1.15
                 ):
                     has_drift = True
                     break
                 if (
-                    c_op in (">", ">=") and a_op in ("<=", "<")
-                    and isinstance(c_val, (int, float)) and isinstance(a_val, (int, float))
+                    c_op in (">", ">=")
+                    and a_op in ("<=", "<")
+                    and isinstance(c_val, (int, float))
+                    and isinstance(a_val, (int, float))
                     and a_val > c_val
                 ):
                     has_drift = True
@@ -334,14 +352,14 @@ async def _classify_pair(
 
     # Find or create the TestCase record
     tc_stmt = select(TestCase).where(
-        TestCase.external_id == test_external_id,
-        TestCase.workspace_id == workspace_id
+        TestCase.external_id == test_external_id, TestCase.workspace_id == workspace_id
     )
     tc_result = await session.execute(tc_stmt)
     test_case = tc_result.scalar_one_or_none()
 
     if test_case is None:
         import uuid
+
         test_case = TestCase(
             id=uuid.uuid4(),
             external_id=test_external_id,
@@ -382,6 +400,7 @@ async def _classify_pair(
 
     if entry is None:
         import uuid
+
         entry = TraceabilityMatrix(
             id=uuid.uuid4(),
             requirement_id=requirement.id,
@@ -410,7 +429,8 @@ async def _classify_pair(
         except Exception:
             logger.warning(
                 "Verbalization failed for %s ↔ %s",
-                req_external_id, func_data.function_name,
+                req_external_id,
+                func_data.function_name,
                 exc_info=True,
             )
 
@@ -434,6 +454,7 @@ async def _classify_pair(
 # ---------------------------------------------------------------------------
 # Webhook endpoint
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/events",
@@ -465,29 +486,7 @@ async def github_app_events(
     knows which tenant to write results to. Example:
         https://your-host/api/v1/github/events?workspace_id=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     """
-    # Validate workspace_id before doing any other work
-    if not workspace_id:
-        logger.error(
-            "GitHub webhook received without workspace_id query parameter. "
-            "Re-register the webhook URL with ?workspace_id=<uuid> appended."
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Missing required 'workspace_id' query parameter. "
-                "Append ?workspace_id=<your-workspace-uuid> to the webhook URL "
-                "in your GitHub App settings."
-            ),
-        )
-    try:
-        import uuid as _uuid
-        _uuid.UUID(workspace_id)  # validate format
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid workspace_id format: {workspace_id!r} — must be a UUID.",
-        ) from exc
-    # 1. Verify signature and read body
+    # 1. Verify signature and read body first (ensures bad signatures return 401)
     body = await _verify_github_signature_raw(request)
 
     # 2. Check event type header
@@ -500,8 +499,40 @@ async def github_app_events(
         logger.debug("Ignoring GitHub event: %s", event_type)
         return {"status": "ignored", "event": event_type}
 
-    # 3. Parse payload
+    # 3. Resolve workspace_id (explicit query param or fallback to Default Workspace)
+    resolved_workspace_id: str | None = None
+    if workspace_id:
+        try:
+            resolved_workspace_id = str(uuid.UUID(workspace_id))
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid workspace_id format: {workspace_id!r} — must be a UUID.",
+            ) from exc
+    else:
+        # Fallback to default workspace so webhooks without query params work seamlessly
+        ws_stmt = select(Workspace).where(Workspace.name == "Default Workspace")
+        ws_result = await session.execute(ws_stmt)
+        default_ws = ws_result.scalar_one_or_none()
+        if not default_ws:
+            ws_stmt = select(Workspace).order_by(Workspace.created_at).limit(1)
+            default_ws = (await session.execute(ws_stmt)).scalar_one_or_none()
+        if default_ws:
+            resolved_workspace_id = str(default_ws.id)
+            logger.info(
+                "GitHub webhook using default workspace: %s (%s)",
+                default_ws.name,
+                resolved_workspace_id,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No workspace available to assign this GitHub PR analysis to.",
+            )
+
+    # 4. Parse payload
     import json
+
     try:
         raw = json.loads(body)
         payload = GitHubPRPayload.model_validate(raw)
@@ -512,7 +543,7 @@ async def github_app_events(
             detail=f"Invalid payload: {exc}",
         ) from exc
 
-    # 4. Filter by action
+    # 5. Filter by action
     if payload.action not in _ANALYSED_ACTIONS:
         logger.debug("Ignoring pull_request action: %s", payload.action)
         return {"status": "ignored", "action": payload.action}
@@ -523,22 +554,31 @@ async def github_app_events(
     head_sha = payload.head_sha
 
     if not all([owner, repo, pull_number, head_sha]):
-        logger.error("Incomplete PR payload: owner=%s repo=%s pr=%s sha=%s",
-                     owner, repo, pull_number, head_sha)
+        logger.error(
+            "Incomplete PR payload: owner=%s repo=%s pr=%s sha=%s",
+            owner,
+            repo,
+            pull_number,
+            head_sha,
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Incomplete pull_request payload — missing owner/repo/number/sha",
         )
 
-    # 5. Resolve installation ID (payload wins over settings)
+    # 6. Resolve installation ID (payload wins over settings)
     installation_id = payload.installation_id or settings.github_app_installation_id
 
     logger.info(
         "PR #%d opened/synced in %s/%s @ %s (installation=%s)",
-        pull_number, owner, repo, head_sha[:8], installation_id,
+        pull_number,
+        owner,
+        repo,
+        head_sha[:8],
+        installation_id,
     )
 
-    # 6. Get installation token + create Check Run immediately
+    # 7. Get installation token + create Check Run immediately
     try:
         token = get_installation_token(installation_id)
         check_run_id = create_check_run(owner, repo, head_sha, token)
@@ -549,7 +589,7 @@ async def github_app_events(
             detail=f"Could not authenticate with GitHub: {exc}",
         ) from exc
 
-    # 7. Enqueue background analysis using Phase 13 task queue
+    # 8. Enqueue background analysis using Phase 13 task queue
     payload_dict = {
         "owner": owner,
         "repo": repo,
@@ -558,7 +598,7 @@ async def github_app_events(
         "installation_id": installation_id,
         "check_run_id": check_run_id,
         "token": token,
-        "workspace_id": str(workspace_id) if workspace_id else None,
+        "workspace_id": resolved_workspace_id,
     }
     await enqueue_task(session, "pr_analysis", payload_dict)
 

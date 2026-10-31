@@ -101,7 +101,7 @@ export default function IntegrationsModal({ isOpen, onClose, onSyncComplete, onT
   };
 
   const handleCopyWebhook = () => {
-    const fullUrl = `${window.location.origin}/api/v1/github/events`;
+    const fullUrl = `${window.location.protocol}//${window.location.hostname}:8000/api/v1/github/events`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedWebhook(true);
     setTimeout(() => setCopiedWebhook(false), 2000);
@@ -368,7 +368,7 @@ export default function IntegrationsModal({ isOpen, onClose, onSyncComplete, onT
                         <input 
                           type="text" 
                           className="form-input" 
-                          value={`${window.location.origin}/api/v1/github/events`} 
+                          value={`${window.location.protocol}//${window.location.hostname}:8000/api/v1/github/events`} 
                           readOnly 
                         />
                         <button 
@@ -432,7 +432,7 @@ export default function IntegrationsModal({ isOpen, onClose, onSyncComplete, onT
                           {ollama.available ? 'Local Ollama LLM Service Online' : 'Ollama Offline (Deterministic Fallback Active)'}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          Model: <strong>{ollama.model}</strong> · Endpoint: {ollama.base_url}
+                          Model: <strong>{ollama.model || 'llama3.1:8b'}</strong> · Endpoint: {ollama.base_url || 'http://localhost:11434'}
                         </div>
                       </div>
                     </div>

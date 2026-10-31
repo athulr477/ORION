@@ -37,7 +37,7 @@ async def list_tasks(
     )
     result = await session.execute(stmt)
     tasks = result.scalars().all()
-    
+
     return [
         {
             "id": str(t.id),
@@ -65,17 +65,17 @@ async def get_task(
         task_uuid = uuid.UUID(task_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="Invalid task ID") from exc
-        
+
     stmt = select(TaskJob).where(
         TaskJob.id == task_uuid,
         TaskJob.workspace_id == current_workspace.id,
     )
     result = await session.execute(stmt)
     t = result.scalar_one_or_none()
-    
+
     if not t:
         raise HTTPException(status_code=404, detail="Task not found")
-        
+
     return {
         "id": str(t.id),
         "task_type": t.task_type,

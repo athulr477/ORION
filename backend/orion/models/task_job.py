@@ -15,6 +15,7 @@ from orion.database import Base
 
 class TaskStatus(enum.StrEnum):
     """Status lifecycle of a background task."""
+
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     SUCCESS = "SUCCESS"
@@ -24,6 +25,7 @@ class TaskStatus(enum.StrEnum):
 
 class TaskJob(Base):
     """Represents a queued or running background job."""
+
     __tablename__ = "task_jobs"
 
     id: Mapped[uuid.UUID] = mapped_column(

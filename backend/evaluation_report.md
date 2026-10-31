@@ -1,6 +1,6 @@
 # Orion RTM — Empirical Benchmark Evaluation Report
 
-> Generated: 2026-09-22 09:49:37
+> Generated: 2026-09-28 13:19:06
 > Dataset: `benchmark_30.json` — 30 requirement-test pairs (10 Covered, 10 Partial, 10 Drifted)
 > Embedding model: `BAAI/bge-small-en-v1.5` (ONNX, CPU inference)
 
@@ -24,26 +24,26 @@ Two classification engines were evaluated on the curated 30-pair benchmark datas
 
 | ID | Ground Truth | Semantic | Structural | Hybrid Risk | Hybrid Pred | Cosine Risk | Cosine Pred | H✓ | C✓ |
 |:--|:--|--:|--:|--:|:--|--:|:--|:--|:--|
-| P01 | Covered | 0.762 | 0.851 | 0.203 | Covered | 0.543 | Partial | ✓ | ✗ |
+| P01 | Covered | 0.762 | 0.818 | 0.216 | Covered | 0.543 | Partial | ✓ | ✗ |
 | P02 | Covered | 0.832 | 0.500 | 0.301 | Partial | 0.501 | Partial | ✗ | ✗ |
 | P03 | Covered | 0.693 | 0.500 | 0.384 | Partial | 0.584 | Partial | ✗ | ✗ |
-| P04 | Covered | 0.900 | 0.889 | 0.104 | Covered | 0.460 | Partial | ✓ | ✗ |
-| P05 | Covered | 0.784 | 0.439 | 0.354 | Partial | 0.530 | Partial | ✗ | ✗ |
+| P04 | Covered | 0.900 | 0.860 | 0.116 | Covered | 0.460 | Partial | ✓ | ✗ |
+| P05 | Covered | 0.784 | 0.534 | 0.316 | Partial | 0.530 | Partial | ✗ | ✗ |
 | P06 | Covered | 0.859 | 0.500 | 0.285 | Partial | 0.485 | Partial | ✗ | ✗ |
 | P07 | Covered | 0.803 | 0.500 | 0.319 | Partial | 0.518 | Partial | ✗ | ✗ |
-| P08 | Covered | 0.836 | 0.692 | 0.221 | Covered | 0.498 | Partial | ✓ | ✗ |
+| P08 | Covered | 0.836 | 0.860 | 0.154 | Covered | 0.498 | Partial | ✓ | ✗ |
 | P09 | Covered | 0.818 | 0.500 | 0.309 | Partial | 0.509 | Partial | ✗ | ✗ |
 | P10 | Covered | 0.802 | 0.500 | 0.319 | Partial | 0.518 | Partial | ✗ | ✗ |
-| P11 | Partial | 0.817 | 0.401 | 0.349 | Partial | 0.510 | Partial | ✓ | ✓ |
-| P12 | Partial | 0.736 | 0.478 | 0.367 | Partial | 0.559 | Partial | ✓ | ✓ |
-| P13 | Partial | 0.762 | 0.788 | 0.228 | Covered | 0.543 | Partial | ✗ | ✓ |
+| P11 | Partial | 0.817 | 0.476 | 0.319 | Partial | 0.510 | Partial | ✓ | ✓ |
+| P12 | Partial | 0.736 | 0.621 | 0.310 | Partial | 0.559 | Partial | ✓ | ✓ |
+| P13 | Partial | 0.762 | 0.755 | 0.241 | Covered | 0.543 | Partial | ✗ | ✓ |
 | P14 | Partial | 0.712 | 0.000 | 0.573 | Partial | 0.573 | Partial | ✓ | ✓ |
 | P15 | Partial | 0.783 | 0.500 | 0.330 | Partial | 0.530 | Partial | ✓ | ✓ |
 | P16 | Partial | 0.536 | 0.500 | 0.479 | Partial | 0.679 | Drifted | ✓ | ✗ |
-| P17 | Partial | 0.669 | 0.183 | 0.525 | Partial | 0.599 | Partial | ✓ | ✓ |
-| P18 | Partial | 0.723 | 0.295 | 0.448 | Partial | 0.566 | Partial | ✓ | ✓ |
-| P19 | Partial | 0.652 | 0.448 | 0.430 | Partial | 0.609 | Drifted | ✓ | ✗ |
-| P20 | Partial | 0.809 | 0.415 | 0.349 | Partial | 0.515 | Partial | ✓ | ✓ |
+| P17 | Partial | 0.669 | 0.371 | 0.451 | Partial | 0.599 | Partial | ✓ | ✓ |
+| P18 | Partial | 0.723 | 0.492 | 0.369 | Partial | 0.566 | Partial | ✓ | ✓ |
+| P19 | Partial | 0.652 | 0.502 | 0.408 | Partial | 0.609 | Drifted | ✓ | ✗ |
+| P20 | Partial | 0.809 | 0.483 | 0.321 | Partial | 0.515 | Partial | ✓ | ✓ |
 | P21 | Drifted | 0.648 | 0.500 | 0.411 | Partial | 0.611 | Drifted | ✗ | ✓ |
 | P22 | Drifted | 0.457 | 0.000 | 0.726 | Drifted | 0.726 | Drifted | ✓ | ✓ |
 | P23 | Drifted | 0.525 | 0.000 | 0.685 | Drifted | 0.685 | Drifted | ✓ | ✓ |

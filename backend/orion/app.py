@@ -25,23 +25,28 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start the embedded worker in the background for local development
+    # Register all task handlers FIRST so the worker can handle them
+    # immediately when it starts polling. register_all() uses a lazy import
+    # to avoid the tasks.py → worker.py circular import.
+    from orion.queue.tasks import register_all
     from orion.queue.worker import worker
-    import orion.queue.tasks  # noqa: F401
-    
-    # Run the worker engine as an asyncio background task
+
+    register_all()
     asyncio.create_task(worker.start(poll_interval=2.0))
     logger.info("Embedded task worker started in background.")
-    
+
     yield
-    
+
     logger.info("Shutting down embedded task worker...")
     await worker.stop()
 
+
 if settings.sentry_dsn:
     import sentry_sdk
+
     sentry_sdk.init(
         dsn=settings.sentry_dsn,
         traces_sample_rate=1.0,
@@ -68,12 +73,12 @@ app.add_middleware(
 )
 
 # Mount routers
-app.include_router(auth_router, prefix="/api/v1")      # Phase 12 — Authentication
+app.include_router(auth_router, prefix="/api/v1")  # Phase 12 — Authentication
 app.include_router(ingestion_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
-app.include_router(github_router, prefix="/api/v1")   # Phase 9 — GitHub App
-app.include_router(jira_router, prefix="/api/v1")     # Phase 11 — Jira REST API
-app.include_router(queue_router, prefix="/api/v1")    # Phase 13 — Task Queue
+app.include_router(github_router, prefix="/api/v1")  # Phase 9 — GitHub App
+app.include_router(jira_router, prefix="/api/v1")  # Phase 11 — Jira REST API
+app.include_router(queue_router, prefix="/api/v1")  # Phase 13 — Task Queue
 app.include_router(integrations_router, prefix="/api/v1")  # Workspace Integrations
 
 

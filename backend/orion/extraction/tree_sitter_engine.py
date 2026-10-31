@@ -142,7 +142,7 @@ _QUERIES = {
 
 def _get_node_text(node: tree_sitter.Node, source_code: bytes) -> str:
     """Extract text from a node."""
-    return source_code[node.start_byte:node.end_byte].decode("utf8")
+    return source_code[node.start_byte : node.end_byte].decode("utf8")
 
 
 class PolyglotExtractor:
@@ -153,70 +153,71 @@ class PolyglotExtractor:
         """Detect language from filename, defaulting to python."""
         if not filename:
             return "python"
-        
+
         import os
+
         _, ext = os.path.splitext(filename)
         return _EXTENSION_MAP.get(ext.lower(), "python")
 
     @classmethod
-    def extract(cls, source_code: str, filename: str = "", target_function: str = "") -> list[CodeExtractionResult]:
+    def extract(
+        cls, source_code: str, filename: str = "", target_function: str = ""
+    ) -> list[CodeExtractionResult]:
         """Extract assertions and metadata from code.
-        
+
         Returns a list of CodeExtractionResult. If target_function is specified,
         only returns results for that function.
         """
         language_name = cls.get_language(filename)
         language = _LANGUAGES[language_name]
         parser = tree_sitter.Parser(language)
-        
+
         source_bytes = source_code.encode("utf8")
         tree = parser.parse(source_bytes)
-        
+
         query_str = _QUERIES.get(language_name, _PY_QUERY)
         try:
             query = tree_sitter.Query(language, query_str)
         except ValueError as e:
             logger.error("Tree-sitter query failed for %s: %s", language_name, e)
             return []
-            
+
         cursor = tree_sitter.QueryCursor(query)
         captures_dict = cursor.captures(tree.root_node)
-        
+
         # We need to map captures to the specific function they belong to
         functions: dict[tree_sitter.Node, CodeExtractionResult] = {}
-        
+
         # 1. Identify all functions
         if "function" in captures_dict:
             for node in captures_dict["function"]:
                 func_name = "<unknown>"
-                
+
                 # We need to find the specific captures for this node
                 # query.matches or cursor.captures on the node itself
                 node_cursor = tree_sitter.QueryCursor(query)
                 node_captures = node_cursor.captures(node)
-                
+
                 if "func_name" in node_captures and node_captures["func_name"]:
                     func_name = _get_node_text(node_captures["func_name"][0], source_bytes)
-                
+
                 if target_function and func_name != target_function:
                     continue
-                    
+
                 docstring = None
                 if "docstring" in node_captures and node_captures["docstring"]:
                     docstring = _get_node_text(node_captures["docstring"][0], source_bytes)
-                    docstring = docstring.strip('\"\'')
-                        
+                    docstring = docstring.strip("\"'")
+
                 functions[node] = CodeExtractionResult(
-                    function_name=func_name,
-                    docstring=docstring,
-                    assertions=[]
+                    function_name=func_name, docstring=docstring, assertions=[]
                 )
-                
+
         # 2. Map assertions to functions
         for capture_name, nodes in captures_dict.items():
             if not capture_name.startswith("assert."):
                 continue
-                
+
             for node in nodes:
                 # Walk up to find the parent function
                 parent = node
@@ -226,18 +227,18 @@ class PolyglotExtractor:
                         parent_func = functions[parent]
                         break
                     parent = parent.parent
-                    
+
                 if not parent_func:
                     continue
-                    
+
                 # Extract assertion details
                 node_cursor = tree_sitter.QueryCursor(query)
                 sub_caps = node_cursor.captures(node)
-                
+
                 op_str = None
                 left_str = None
                 right_str = None
-                
+
                 for sub_cap_name, sub_nodes in sub_caps.items():
                     if not sub_nodes:
                         continue
@@ -248,7 +249,7 @@ class PolyglotExtractor:
                         left_str = text
                     elif sub_cap_name == "right":
                         right_str = text
-                        
+
                 parent_func.assertions.append(
                     AssertionData(
                         type="comparison" if right_str else "call",
@@ -257,6 +258,5 @@ class PolyglotExtractor:
                         right=right_str,
                     )
                 )
-            
-        return list(functions.values())
 
+        return list(functions.values())

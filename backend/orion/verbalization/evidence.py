@@ -2,8 +2,6 @@
 
 Builds the evidence tuple (requirement_delta, test_implementation_summary, status)
 that the LLM will verbalize.  This module is purely deterministic — no LLM calls.
-
-Only called for Partial/Drifted entries; returns None for Covered.
 """
 
 from __future__ import annotations
@@ -29,16 +27,14 @@ logger = logging.getLogger(__name__)
 #   risk = 1 - (SEMANTIC_WEIGHT * 0.5 + STRUCTURAL_WEIGHT * struct)
 #   risk > midpoint  ↔  struct < (1 - midpoint - SEMANTIC_WEIGHT * 0.5) / STRUCTURAL_WEIGHT
 _PARTIAL_MIDPOINT = (THRESHOLD_COVERED + THRESHOLD_DRIFTED) / 2.0
-_STRUCTURAL_LOW = max(0.0, min(1.0,
-    (1.0 - _PARTIAL_MIDPOINT - SEMANTIC_WEIGHT * 0.5) / STRUCTURAL_WEIGHT
-))
+_STRUCTURAL_LOW = max(
+    0.0, min(1.0, (1.0 - _PARTIAL_MIDPOINT - SEMANTIC_WEIGHT * 0.5) / STRUCTURAL_WEIGHT)
+)
 # Semantic is "low" if, even with perfect structural (1.0), the entry
 # can't reach Covered:
 #   risk = 1 - (SEMANTIC_WEIGHT * sem + STRUCTURAL_WEIGHT * 1.0) < THRESHOLD_COVERED
 #   sem > (1 - THRESHOLD_COVERED - STRUCTURAL_WEIGHT) / SEMANTIC_WEIGHT
-_SEMANTIC_LOW = max(0.0, min(1.0,
-    (1.0 - THRESHOLD_COVERED - STRUCTURAL_WEIGHT) / SEMANTIC_WEIGHT
-))
+_SEMANTIC_LOW = max(0.0, min(1.0, (1.0 - THRESHOLD_COVERED - STRUCTURAL_WEIGHT) / SEMANTIC_WEIGHT))
 
 
 # ---------------------------------------------------------------------------
@@ -92,8 +88,8 @@ class EvidenceTuple:
 
         return (
             f"- Status: {self.status} (risk_score={self.risk_score:.4f})\n"
-            f"- Requirement: \"{self.requirement_summary}\"\n"
-            f"- Test: \"{self.test_summary}\"\n"
+            f'- Requirement: "{self.requirement_summary}"\n'
+            f'- Test: "{self.test_summary}"\n'
             f"- Delta: {delta_text}\n"
             f"- Structural match: {self.structural_score:.4f} ({match_text})"
         )
@@ -242,8 +238,6 @@ def build_evidence_tuple(
 ) -> EvidenceTuple | None:
     """Build the deterministic evidence tuple from Phases 5–6 output.
 
-    Only builds for Partial/Drifted entries. Returns None for Covered.
-
     Args:
         status: Classification from Phase 5 ("Covered", "Partial", "Drifted").
         risk_score: Combined risk score from Phase 5.
@@ -259,16 +253,8 @@ def build_evidence_tuple(
         structural_match_details: Optional match details from structural matcher.
 
     Returns:
-        EvidenceTuple for Partial/Drifted, None for Covered.
+        EvidenceTuple for the entry.
     """
-    # Short-circuit: Covered entries don't need verbalization
-    if status == "Covered":
-        logger.debug(
-            "Skipping evidence tuple for Covered entry %s",
-            requirement_external_id,
-        )
-        return None
-
     # Build requirement summary
     constraint_text = _summarize_constraints(requirement_constraints)
     req_summary = requirement_title
